@@ -40,13 +40,14 @@ extlinks = {
 
 description = 'A scheduler service to train and serve machine learning models asynchronously'
 # -- Option for HTML output -----------------------------------------------
+
+html_static_path = ['_static']
 html_theme_options = {
     'logo': 'download.png',
     'logo_name': 'true',
     'description': description,
     'github_button': 'false'
 }
-html_static_path = ['_static']
 
 # Custom sidebar templates, maps document names to template names.
 html_sidebars = {
@@ -72,9 +73,6 @@ html_last_updated_fmt = '%b %d, %Y'
 html_split_index = False
 
 
-html_sidebars = {
-   '**': ['searchbox.html', 'globaltoc.html', 'sourcelink.html'],
-}
 html_short_title = '%s-%s' % (project, version)
 
 napoleon_use_ivar = True
