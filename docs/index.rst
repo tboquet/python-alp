@@ -1,7 +1,6 @@
 .. image:: _static/last_bouquetin.png
-   :height: 100px
+   :height: 200px
    :width: 200 px
-   :scale: 50 %
    :align: center
 
 ========
