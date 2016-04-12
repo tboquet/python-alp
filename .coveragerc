@@ -1,0 +1,14 @@
+[paths]
+source =
+   src/alp
+   */site-packages/alp
+
+[run]
+branch = True
+source = alp
+parallel = true
+
+[report]
+show_missing = true
+precision = 2
+omit = *migrations*
