@@ -13,12 +13,6 @@ Overview
       - | |travis| |requires|
         | |coveralls| |codecov|
         | |codacy| |codeclimate|
-    * - package
-      - |version|  |supported-versions| |supported-implementations|
-
-.. |docs| image:: https://readthedocs.org/projects/python-alp/badge/?style=flat
-    :target: https://readthedocs.org/projects/python-alp
-    :alt: Documentation Status
 
 .. |travis| image:: https://travis-ci.org/tboquet/python-alp.svg?branch=master
     :alt: Travis-CI Build Status
@@ -36,7 +30,7 @@ Overview
     :alt: Coverage Status
     :target: https://codecov.io/github/tboquet/python-alp
 
-.. |codacy| image:: https://img.shields.io/codacy/REPLACE_WITH_PROJECT_ID.svg?style=flat
+.. |codacy| image:: https://img.shields.io/codacy/b7f6d79244d8480099a3593db2de9560.svg?style=flat
     :target: https://www.codacy.com/app/tboquet/python-alp
     :alt: Codacy Code Quality Status
 
