@@ -54,7 +54,7 @@ Installation
 Documentation
 =============
 
-https://python-alp.readthedocs.org/
+
 
 Development
 ===========
