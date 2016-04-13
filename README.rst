@@ -14,11 +14,8 @@ Overview
         | |coveralls| |codecov|
         | |codacy| |codeclimate|
     * - package
-      - |version| |downloads| |wheel| |supported-versions| |supported-implementations|
+      - |version| |supported-versions| |supported-implementations|
 
-.. |docs| image:: https://readthedocs.org/projects/python-alp/badge/?style=flat
-    :target: https://readthedocs.org/projects/python-alp
-    :alt: Documentation Status
 
 .. |travis| image:: https://travis-ci.org/tboquet/python-alp.svg?branch=master
     :alt: Travis-CI Build Status
@@ -47,26 +44,6 @@ Overview
 .. |codeclimate| image:: https://codeclimate.com/github/tboquet/python-alp/badges/gpa.svg
    :target: https://codeclimate.com/github/tboquet/python-alp
    :alt: CodeClimate Quality Status
-
-.. |version| image:: https://img.shields.io/pypi/v/alp.svg?style=flat
-    :alt: PyPI Package latest release
-    :target: https://pypi.python.org/pypi/alp
-
-.. |downloads| image:: https://img.shields.io/pypi/dm/alp.svg?style=flat
-    :alt: PyPI Package monthly downloads
-    :target: https://pypi.python.org/pypi/alp
-
-.. |wheel| image:: https://img.shields.io/pypi/wheel/alp.svg?style=flat
-    :alt: PyPI Wheel
-    :target: https://pypi.python.org/pypi/alp
-
-.. |supported-versions| image:: https://img.shields.io/pypi/pyversions/alp.svg?style=flat
-    :alt: Supported versions
-    :target: https://pypi.python.org/pypi/alp
-
-.. |supported-implementations| image:: https://img.shields.io/pypi/implementation/alp.svg?style=flat
-    :alt: Supported implementations
-    :target: https://pypi.python.org/pypi/alp
 
 
 .. end-badges
