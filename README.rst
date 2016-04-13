@@ -10,20 +10,19 @@ Overview
     * - docs
       - |docs|
     * - tests
-      - | |travis| |appveyor| |requires|
+      - | |travis| |requires|
         | |coveralls| |codecov|
         | |codacy| |codeclimate|
     * - package
-      - |version| |supported-versions| |supported-implementations|
+      - |version|  |supported-versions| |supported-implementations|
 
+.. |docs| image:: https://readthedocs.org/projects/python-alp/badge/?style=flat
+    :target: https://readthedocs.org/projects/python-alp
+    :alt: Documentation Status
 
 .. |travis| image:: https://travis-ci.org/tboquet/python-alp.svg?branch=master
     :alt: Travis-CI Build Status
     :target: https://travis-ci.org/tboquet/python-alp
-
-.. |appveyor| image:: https://ci.appveyor.com/api/projects/status/github/tboquet/python-alp?branch=master&svg=true
-    :alt: AppVeyor Build Status
-    :target: https://ci.appveyor.com/project/tboquet/python-alp
 
 .. |requires| image:: https://requires.io/github/tboquet/python-alp/requirements.svg?branch=master
     :alt: Requirements Status
@@ -44,7 +43,6 @@ Overview
 .. |codeclimate| image:: https://codeclimate.com/github/tboquet/python-alp/badges/gpa.svg
    :target: https://codeclimate.com/github/tboquet/python-alp
    :alt: CodeClimate Quality Status
-
 
 .. end-badges
 
