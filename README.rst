@@ -4,15 +4,7 @@ Overview
 
 .. start-badges
 
-.. list-table::
-    :stub-columns: 1
-
-    * - docs
-      - |docs|
-    * - tests
-      - | |travis| |requires|
-        | |coveralls| |codecov|
-        | |codacy| |codeclimate|
+|travis| |requires| |coveralls| |codecov| |codacy| |codeclimate|
 
 .. |travis| image:: https://travis-ci.org/tboquet/python-alp.svg?branch=master
     :alt: Travis-CI Build Status
