@@ -18,12 +18,10 @@ def build_predict_func(mod):
     """
     if "graph" in mod.name:
         inputs = [mod.inputs[inp].input for inp in mod.input_order]
-        outputs = []
-        for out in mod.output_order:
-            outputs.append(mod.outputs[out].get_output(train=False))
     elif "sequential" in mod.name:
         inputs = mod.inputs
-        outputs = mod.outputs
+
+    outputs = mod.outputs
 
     return K.function(inputs, outputs, updates=mod.state_updates)
 
@@ -38,7 +36,7 @@ def train_model(model_str, custom_objects, datas, datas_val, batch_size,
     model = model_from_json(model_str, custom_objects=custom_objects)
 
     # fit the model according to the input/output type
-    if model.name == 'Graph':
+    if 'graph' in model.name:
         for d, dv in zip(datas, datas_val):
             h = model.fit(data=d,
                             batch_size=batch_size,
@@ -49,7 +47,7 @@ def train_model(model_str, custom_objects, datas, datas_val, batch_size,
             loss += h.history['loss']
             if 'val_loss' in h.history:
                 val_loss += h.history['val_loss']
-    elif model.name == 'Sequential':
+    elif "sequential" in model.name:
         # unpack data
         for d, dv in zip(datas, datas_val):
             X, y = d['X'], d['y']
