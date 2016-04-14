@@ -1,16 +1,12 @@
 """Tests for the Keras backend"""
 
 import pytest
-import os
-import sys
 import numpy as np
 np.random.seed(1337)
 
-from keras import callbacks
 from keras.models import Graph, Sequential
 from keras.layers.core import Dense
 from keras.utils.test_utils import get_test_data
-from keras import backend as K
 from keras.utils import np_utils
 from alp.backend import keras_backend as KTB
 
