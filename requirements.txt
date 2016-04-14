@@ -1,4 +1,4 @@
 numpy
 scipy
--e git+git://github.com/Theano/Theano.git
+-e git+git://github.com/Theano/Theano.git#egg=package
 keras
