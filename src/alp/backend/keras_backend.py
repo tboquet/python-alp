@@ -33,20 +33,21 @@ def train_model(model_str, custom_objects, datas, datas_val, batch_size,
     if 'graph' in model.name:
         for d, dv in zip(datas, datas_val):
             h = model.fit(data=d,
-                            batch_size=batch_size,
-                            nb_epoch=nb_epoch,
-                            verbose=1,
-                            callbacks=callbacks,
-                            validation_data=dv)
+                          batch_size=batch_size,
+                          nb_epoch=nb_epoch,
+                          verbose=1,
+                          callbacks=callbacks,
+                          validation_data=dv)
             loss += h.history['loss']
             if 'val_loss' in h.history:
                 val_loss += h.history['val_loss']
+
     elif "sequential" in model.name:
         # unpack data
         for d, dv in zip(datas, datas_val):
             X, y = d['X'], d['y']
             X_val, y_val = dv['X'], dv['y']
-            h = model.fit(X=X,
+            h = model.fit(x=X,
                           y=y,
                           batch_size=batch_size,
                           nb_epoch=nb_epoch,
