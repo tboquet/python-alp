@@ -80,7 +80,7 @@ def test_train_model():
                   metrics=['accuracy'])
 
     model_str = model.to_json()
-    res = KTB.train_model(model_str, [], datas, datas_val, batch_size,
+    res = KTB.train_model(model_str, [], [datas], [datas_val], batch_size,
                       2, [])
 
     assert 0 == 0

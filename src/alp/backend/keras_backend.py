@@ -47,12 +47,12 @@ def train_model(model_str, custom_objects, datas, datas_val, batch_size,
             X, y = d['X'], d['y']
             X_val, y_val = dv['X'], dv['y']
             h = model.fit(X=X,
-                            y=y,
-                            batch_size=batch_size,
-                            nb_epoch=nb_epoch,
-                            verbose=1,
-                            callbacks=callbacks,
-                            validation_data=(X_val, y_val))
+                          y=y,
+                          batch_size=batch_size,
+                          nb_epoch=nb_epoch,
+                          verbose=1,
+                          callbacks=callbacks,
+                          validation_data=(X_val, y_val))
             loss += h.history['loss']
             if 'val_loss' in h.history:
                 val_loss += h.history['val_loss']
