@@ -16,16 +16,14 @@ def build_predict_func(mod):
     Returns:
         a Keras (Theano or Tensorflow) function
     """
-    # get inputs
     if "graph" in mod.name:
         inputs = [mod.inputs[inp].input for inp in mod.input_order]
+        outputs = []
+        for out in mod.output_order:
+            outputs.append(mod.outputs[out].get_output(train=False))
     elif "sequential" in mod.name:
         inputs = mod.inputs
-
-    # get outputs
-    outputs = []
-    for out in mod.output_order:
-        outputs.append(mod.outputs[out].get_output(train=False))
+        outputs = mod.outputs
 
     return K.function(inputs, outputs, updates=mod.state_updates)
 
