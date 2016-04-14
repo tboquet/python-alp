@@ -60,4 +60,3 @@ def train_model(model_str, custom_objects, datas, datas_val, batch_size,
         raise NotImplementedError('This type of model is not supported')
 
     return loss, val_loss, model
-
