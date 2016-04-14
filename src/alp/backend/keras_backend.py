@@ -20,7 +20,7 @@ def build_predict_func(mod):
     if "graph" in mod.name:
         inputs = [mod.inputs[inp].input for inp in mod.input_order]
     elif "sequential" in mod.name:
-        inputs = model.inputs
+        inputs = mod.inputs
 
     # get outputs
     outputs = []
