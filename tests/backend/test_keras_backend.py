@@ -84,3 +84,7 @@ def test_train_model():
                       2, [])
 
     assert 0 == 0
+
+
+if __name__ == "__main__":
+    pytest.main([__file__])
