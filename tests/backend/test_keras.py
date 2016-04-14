@@ -29,9 +29,6 @@ def test_build_predict_func():
                                                classification=True,
                                                nb_class=nb_class)
 
-    y_test = np_utils.to_categorical(y_test)
-    y_train = np_utils.to_categorical(y_train)
-
     model = Sequential()
     model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
     model.add(Dense(nb_class, activation='softmax'))
@@ -52,6 +49,9 @@ def test_train_model():
                                                input_shape=(input_dim,),
                                                classification=True,
                                                nb_class=nb_class)
+
+    y_train = np_utils.to_categorical(y_tr)
+
     datas, datas_val = dict(), dict()
 
     datas["X"] = X_tr
