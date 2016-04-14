@@ -34,7 +34,7 @@ def test_build_predict_func():
                   metrics=['accuracy'])
 
     pred_func = KTB.build_predict_func(model)
-    res = pred_func([X_test])
+    res = pred_func([X_te])
 
     assert 0 == 0
 
@@ -48,6 +48,9 @@ def test_build_predict_func():
                    input='Dense1')
     model.add_output(name='output', input='last_dense')
     model.compile(optimizer='sgd', loss={'output': 'mse'})
+
+    pred_func = KTB.build_predict_func(model)
+    res = pred_func([X_te])
 
     assert 0 == 0
 
