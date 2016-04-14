@@ -1,4 +1,5 @@
 """Tests for the Keras backend"""
+
 import pytest
 import os
 import sys
@@ -11,7 +12,7 @@ from keras.layers.core import Dense
 from keras.utils.test_utils import get_test_data
 from keras import backend as K
 from keras.utils import np_utils
-
+from alp.backend import keras_backend as KTB
 
 input_dim = 2
 nb_hidden = 4
@@ -36,7 +37,7 @@ def test_build_predict_func():
                   optimizer='rmsprop',
                   metrics=['accuracy'])
 
-    pred_func = build_predict_func(model)
+    pred_func = KTB.build_predict_func(model)
     res = pred_func([X_test])
 
     assert 0 == 0
@@ -50,7 +51,7 @@ def test_train_model():
                                                classification=True,
                                                nb_class=nb_class)
 
-    y_train = np_utils.to_categorical(y_tr)
+    y_tr = np_utils.to_categorical(y_tr)
 
     datas, datas_val = dict(), dict()
 
@@ -68,7 +69,7 @@ def test_train_model():
                   metrics=['accuracy'])
 
     model_str = model.to_json()
-    res = train_model(model_str, [], datas, datas_val, batch_size,
+    res = KTB.train_model(model_str, [], datas, datas_val, batch_size,
                       2, [])
 
     assert 0 == 0
