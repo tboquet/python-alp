@@ -38,6 +38,18 @@ def test_build_predict_func():
 
     assert 0 == 0
 
+    model = Graph()
+    model.add_input(name='X_vars', input_shape=(input_dim, ))
+
+    model.add_node(Dense(nb_hidden, activation="sigmoid"),
+                   name='Dense1', input='X_vars')
+    model.add_node(Dense(nb_class, activation="softmax"),
+                   name='last_dense',
+                   input='Dense1')
+    model.add_output(name='output', input='last_dense')
+    model.compile(optimizer='sgd', loss={'output': 'mse'})
+
+    assert 0 == 0
 
 def test_train_model():
     "Test the training of a serialized model"
