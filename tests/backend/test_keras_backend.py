@@ -80,6 +80,7 @@ def test_train_model():
                   metrics=['accuracy'])
 
     model_str = model.to_json()
+    assert 'optimizer' in model_str
     res = KTB.train_model(model_str, [], [datas], [datas_val], batch_size,
                       2, [])
 

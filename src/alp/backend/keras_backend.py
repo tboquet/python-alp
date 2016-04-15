@@ -13,17 +13,17 @@ def build_from_json(model_str, custom_objects=None):
     config = json.loads(model_str)
 
     if 'optimizer' in config:
-        model_name = config.get('name')
+        model_name = config.get('class_name')
         # if it has an optimizer, the model is assumed to be compiled
         loss = config.get('loss')
 
         # if a custom loss function is passed replace it in loss
-        if 'graph' in model_name:
+        if model_name is "Graph":
             for l in loss:
                 for c in custom_objects:
                     if loss[l] == c:
                         loss[l] = custom_objects[c]
-        elif 'sequential' in model_name and loss in custom_objects:
+        elif model_name is "Sequential" and loss in custom_objects:
             loss = custom_objects[loss]
 
         class_mode = config.get('class_mode')
@@ -33,13 +33,13 @@ def build_from_json(model_str, custom_objects=None):
         optimizer_name = optimizer_params.pop('name')
         optimizer = optimizers.get(optimizer_name, optimizer_params)
 
-        if "sequential" in model_name:
+        if model_name is "Sequential":
             sample_weight_mode = config.get('sample_weight_mode')
             model.compile(loss=loss,
                           optimizer=optimizer,
                           class_mode=class_mode,
                           sample_weight_mode=sample_weight_mode)
-        elif "graph" in model_name:
+        elif model_name is "Graph":
             sample_weight_modes = config.get('sample_weight_modes', {})
             loss_weights = config.get('loss_weights', {})
             model.compile(loss=loss,
@@ -75,7 +75,7 @@ def train_model(model_str, custom_objects, datas, datas_val, batch_size,
     model = build_from_json(model_str, custom_objects=custom_objects)
 
     # fit the model according to the input/output type
-    if 'graph' in model.name:
+    if model.class_name is "Graph":
         for d, dv in zip(datas, datas_val):
             h = model.fit(data=d,
                           batch_size=batch_size,
@@ -87,7 +87,7 @@ def train_model(model_str, custom_objects, datas, datas_val, batch_size,
             if 'val_loss' in h.history:
                 val_loss += h.history['val_loss']
 
-    elif "sequential" in model.name:
+    elif model.class_name is "Sequential":
         # unpack data
         for d, dv in zip(datas, datas_val):
             X, y = d['X'], d['y']
