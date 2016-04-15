@@ -60,7 +60,7 @@ def test_build_predict_func():
 
 def test_train_model():
     "Test the training of a serialized model"
-
+    import keras.backend as K
     def categorical_crossentropy(y_true, y_pred):
         '''A test of custom loss function
         '''
