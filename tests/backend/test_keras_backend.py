@@ -2,11 +2,11 @@
 
 import numpy as np
 import pytest
-
 from keras.models import Graph, Sequential
 from keras.layers.core import Dense
 from keras.utils.test_utils import get_test_data
 from keras.utils import np_utils
+
 from alp.backend import keras_backend as KTB
 
 
@@ -21,15 +21,15 @@ train_samples = 20
 test_samples = 20
 
 
-(X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
-                                            nb_test=test_samples,
-                                            input_shape=(input_dim,),
-                                            classification=True,
-                                            nb_class=nb_class)
-
 def test_build_predict_func():
     """Test the build of a model"""
+    (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
+                                                nb_test=test_samples,
+                                                input_shape=(input_dim,),
+                                                classification=True,
+                                                nb_class=nb_class)
 
+    y_tr -= 0
     model = Sequential()
     model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
     model.add(Dense(nb_class, activation='softmax'))
@@ -60,6 +60,12 @@ def test_build_predict_func():
 
 def test_train_model():
     "Test the training of a serialized model"
+
+    (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
+                                                nb_test=test_samples,
+                                                input_shape=(input_dim,),
+                                                classification=True,
+                                                nb_class=nb_class)
 
     y_tr = np_utils.to_categorical(y_tr)
 
