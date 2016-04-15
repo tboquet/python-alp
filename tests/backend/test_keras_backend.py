@@ -110,7 +110,7 @@ def test_train_model():
                    name='last_dense',
                    input='Dense1')
     model.add_output(name='output', input='last_dense')
-    model.compile(optimizer='sgd', loss={'output': 'mse'})
+    model.compile(optimizer='sgd', loss={'output': categorical_crossentropy})
 
     model_json = KTB.to_json_w_opt(model)
     res = KTB.train_model(model_json, [datas], [datas_val], batch_size,
