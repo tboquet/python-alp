@@ -61,6 +61,11 @@ def test_build_predict_func():
 def test_train_model():
     "Test the training of a serialized model"
 
+    def categorical_crossentropy(y_true, y_pred):
+        '''A test of custom loss function
+        '''
+        return K.categorical_crossentropy(y_pred, y_true)
+
     (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
                                                 nb_test=test_samples,
                                                 input_shape=(input_dim,),
@@ -77,16 +82,18 @@ def test_train_model():
     datas_val["X"] = X_tr
     datas_val["y"] = y_tr
 
+    custom_objects = {"categorical_crossentropy": categorical_crossentropy}
+
     model = Sequential()
     model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
     model.add(Dense(nb_class, activation='softmax'))
-    model.compile(loss='categorical_crossentropy',
+    model.compile(loss=categorical_crossentropy,
                   optimizer='rmsprop',
                   metrics=['accuracy'])
 
     model_json = KTB.to_json_w_opt(model)
-    res = KTB.train_model(model_json, [], [datas], [datas_val], batch_size,
-                      2, [])
+    res = KTB.train_model(model_json, [datas], [datas_val], batch_size,
+                          2, [], custom_objects)
 
     datas["X_vars"] = X_tr
     datas["output"] = y_tr
@@ -107,7 +114,8 @@ def test_train_model():
 
     model_json = KTB.to_json_w_opt(model)
     res = KTB.train_model(model_json, None, [datas], [datas_val], batch_size,
-                          2, [])
+                          2, [],
+                          custom_objects)
     assert 0 == 0
 
 

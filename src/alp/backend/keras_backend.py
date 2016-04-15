@@ -9,6 +9,8 @@ from keras.models import model_from_json
 
 
 def to_json_w_opt(model):
+    """Serialize a model and add the config of the optimizer and the loss.
+    """
     config = dict()
     config['config'] = model.to_json()
     if hasattr(model, 'optimizer'):
@@ -24,6 +26,8 @@ def to_json_w_opt(model):
 
 
 def build_from_json(model_json, custom_objects=None):
+    """Builds a model from a serialized model using ``to_json_w_opt`
+    """
     if custom_objects is None:
         custom_objects = []
     model = model_from_json(model_json['config'],
@@ -65,6 +69,8 @@ def build_from_json(model_json, custom_objects=None):
 
 
 def get_function_name(o):
+    """Utility function to return the model's name
+    """
     if isinstance(o, six.string_types):
         return o
     else:
@@ -87,8 +93,8 @@ def build_predict_func(mod):
     return K.function(mod.inputs, mod.outputs, updates=mod.state_updates)
 
 
-def train_model(model_json, custom_objects, datas, datas_val, batch_size,
-                nb_epoch, callbacks):
+def train_model(model_json, datas, datas_val, batch_size,
+                nb_epoch, callbacks, custom_objects):
     """Train a model given hyperparameters and a serialized model"""
 
     loss = []
