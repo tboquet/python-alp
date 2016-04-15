@@ -3,6 +3,7 @@
 from keras.models import model_from_json
 import keras.backend as K
 import json
+from keras import optimizers
 
 
 def build_from_json(model_str, custom_objects=None):
@@ -32,13 +33,13 @@ def build_from_json(model_str, custom_objects=None):
         optimizer_name = optimizer_params.pop('name')
         optimizer = optimizers.get(optimizer_name, optimizer_params)
 
-        if model_name == 'Sequential':
+        if "sequential" in model_name:
             sample_weight_mode = config.get('sample_weight_mode')
             model.compile(loss=loss,
                           optimizer=optimizer,
                           class_mode=class_mode,
                           sample_weight_mode=sample_weight_mode)
-        elif model_name == 'Graph':
+        elif "graph" in model_name:
             sample_weight_modes = config.get('sample_weight_modes', {})
             loss_weights = config.get('loss_weights', {})
             model.compile(loss=loss,
