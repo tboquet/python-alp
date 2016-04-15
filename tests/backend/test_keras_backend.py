@@ -113,7 +113,7 @@ def test_train_model():
     model.compile(optimizer='sgd', loss={'output': 'mse'})
 
     model_json = KTB.to_json_w_opt(model)
-    res = KTB.train_model(model_json, None, [datas], [datas_val], batch_size,
+    res = KTB.train_model(model_json, [datas], [datas_val], batch_size,
                           2, [],
                           custom_objects)
     assert 0 == 0
