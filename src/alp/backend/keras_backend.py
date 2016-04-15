@@ -2,6 +2,50 @@
 
 from keras.models import model_from_json
 import keras.backend as K
+import json
+
+
+def build_from_json(model_str, custom_objects=None):
+    if custom_objects is None:
+        custom_objects = []
+    model = model_from_json(model_str, custom_objects=custom_objects)
+    config = json.loads(model_str)
+
+    if 'optimizer' in config:
+        model_name = config.get('name')
+        # if it has an optimizer, the model is assumed to be compiled
+        loss = config.get('loss')
+
+        # if a custom loss function is passed replace it in loss
+        if 'graph' in model_name:
+            for l in loss:
+                for c in custom_objects:
+                    if loss[l] == c:
+                        loss[l] = custom_objects[c]
+        elif 'sequential' in model_name and loss in custom_objects:
+            loss = custom_objects[loss]
+
+        class_mode = config.get('class_mode')
+
+        optimizer_params = dict([(k, v)
+                                 for k, v in config.get('optimizer').items()])
+        optimizer_name = optimizer_params.pop('name')
+        optimizer = optimizers.get(optimizer_name, optimizer_params)
+
+        if model_name == 'Sequential':
+            sample_weight_mode = config.get('sample_weight_mode')
+            model.compile(loss=loss,
+                          optimizer=optimizer,
+                          class_mode=class_mode,
+                          sample_weight_mode=sample_weight_mode)
+        elif model_name == 'Graph':
+            sample_weight_modes = config.get('sample_weight_modes', {})
+            loss_weights = config.get('loss_weights', {})
+            model.compile(loss=loss,
+                          optimizer=optimizer,
+                          sample_weight_modes=sample_weight_modes,
+                          loss_weights=loss_weights)
+    return model
 
 
 def build_predict_func(mod):
@@ -27,7 +71,7 @@ def train_model(model_str, custom_objects, datas, datas_val, batch_size,
     loss = []
     val_loss = []
     # load model
-    model = model_from_json(model_str, custom_objects=custom_objects)
+    model = build_from_json(model_str, custom_objects=custom_objects)
 
     # fit the model according to the input/output type
     if 'graph' in model.name:
