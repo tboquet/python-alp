@@ -98,7 +98,7 @@ def train_model(model_json, custom_objects, datas, datas_val, batch_size,
     model = build_from_json(model_json, custom_objects=custom_objects)
 
     # fit the model according to the input/output type
-    if model.class_name is "Graph":
+    if model.__class__.__name__ is "Graph":
         for d, dv in zip(datas, datas_val):
             h = model.fit(data=d,
                           batch_size=batch_size,
@@ -110,7 +110,7 @@ def train_model(model_json, custom_objects, datas, datas_val, batch_size,
             if 'val_loss' in h.history:
                 val_loss += h.history['val_loss']
 
-    elif model.class_name is "Sequential":
+    elif model.__class__.__name__ is "Sequential":
         # unpack data
         for d, dv in zip(datas, datas_val):
             X, y = d['X'], d['y']
