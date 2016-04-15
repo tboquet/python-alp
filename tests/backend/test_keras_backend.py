@@ -21,13 +21,14 @@ train_samples = 20
 test_samples = 20
 
 
+(X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
+                                            nb_test=test_samples,
+                                            input_shape=(input_dim,),
+                                            classification=True,
+                                            nb_class=nb_class)
+
 def test_build_predict_func():
     """Test the build of a model"""
-    (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
-                                               nb_test=test_samples,
-                                               input_shape=(input_dim,),
-                                               classification=True,
-                                               nb_class=nb_class)
 
     model = Sequential()
     model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
@@ -59,11 +60,6 @@ def test_build_predict_func():
 
 def test_train_model():
     "Test the training of a serialized model"
-    (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
-                                               nb_test=test_samples,
-                                               input_shape=(input_dim,),
-                                               classification=True,
-                                               nb_class=nb_class)
 
     y_tr = np_utils.to_categorical(y_tr)
 
@@ -86,6 +82,26 @@ def test_train_model():
     res = KTB.train_model(model_json, [], [datas], [datas_val], batch_size,
                       2, [])
 
+    datas["X_vars"] = X_tr
+    datas["output"] = y_tr
+
+    datas_val["X_vars"] = X_tr
+    datas_val["output"] = y_tr
+
+    model = Graph()
+    model.add_input(name='X_vars', input_shape=(input_dim, ))
+
+    model.add_node(Dense(nb_hidden, activation="sigmoid"),
+                   name='Dense1', input='X_vars')
+    model.add_node(Dense(nb_class, activation="softmax"),
+                   name='last_dense',
+                   input='Dense1')
+    model.add_output(name='output', input='last_dense')
+    model.compile(optimizer='sgd', loss={'output': 'mse'})
+
+    model_json = KTB.to_json_w_opt(model)
+    res = KTB.train_model(model_json, None, [datas], [datas_val], batch_size,
+                          2, [])
     assert 0 == 0
 
 

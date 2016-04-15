@@ -49,7 +49,6 @@ def build_from_json(model_json, custom_objects=None):
         optimizer = optimizers.get(optimizer_name, optimizer_params)
 
         if model_name == "Sequential":
-            print("yeah")
             sample_weight_mode = config.get('sample_weight_mode')
             model.compile(loss=loss,
                           optimizer=optimizer,
