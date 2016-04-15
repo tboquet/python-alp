@@ -1,14 +1,17 @@
 """Tests for the Keras backend"""
 
-import pytest
 import numpy as np
-np.random.seed(1337)
+import pytest
 
 from keras.models import Graph, Sequential
 from keras.layers.core import Dense
 from keras.utils.test_utils import get_test_data
 from keras.utils import np_utils
 from alp.backend import keras_backend as KTB
+
+
+np.random.seed(1337)
+
 
 input_dim = 2
 nb_hidden = 4

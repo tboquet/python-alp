@@ -38,7 +38,7 @@ extlinks = {
     'pr': ('https://github.com/tboquet/python-alp/pull/%s', 'PR #'),
 }
 
-description = 'A scheduler service to train and serve machine learning models asynchronously'
+description = 'Schedule and save your machine learning experiments'
 # -- Option for HTML output -----------------------------------------------
 
 html_static_path = ['_static']

@@ -32,7 +32,7 @@ Overview
 
 .. end-badges
 
-Machine learning for teams
+   ALP (Asynchronous Learning Platform) helps you experiment quickly. It proposes you a simple way of scheduling and recording experiments.
 
 * Free software: BSD license
 

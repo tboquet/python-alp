@@ -1,10 +1,10 @@
 """Adaptor for the Keras backend"""
 
-from keras.models import model_from_json
-import keras.backend as K
-import json
-from keras import optimizers
 import six
+import json
+import keras.backend as K
+from keras import optimizers
+from keras.models import model_from_json
 
 
 def to_json_w_opt(model):

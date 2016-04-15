@@ -1,10 +1,6 @@
-.. image:: _static/download.png
-   :height: 120 px
-   :align: center
-
-========
-Contents
-========
+===============================
+Welcome on ALP's documentation!
+===============================
 
 .. toctree::
    :maxdepth: 2
