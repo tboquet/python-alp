@@ -1,6 +1,5 @@
-.. image:: _static/last_bouquetin.png
-   :height: 300px
-   :width: 246 px
+.. image:: _static/download.png
+   :height: 120 px
    :align: center
 
 ========

@@ -43,7 +43,7 @@ description = 'A scheduler service to train and serve machine learning models as
 
 html_static_path = ['_static']
 html_theme_options = {
-    'logo': 'download.png',
+    'logo': 'last_bouquetin.png',
     'logo_name': 'true',
     'description': description,
     'github_button': 'false'
