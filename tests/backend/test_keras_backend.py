@@ -2,10 +2,11 @@
 
 import numpy as np
 import pytest
-from keras.models import Graph, Sequential
+from keras.models import Graph
+from keras. models import Sequential
+from keras.utils import np_utils
 from keras.layers.core import Dense
 from keras.utils.test_utils import get_test_data
-from keras.utils import np_utils
 
 from alp.backend import keras_backend as KTB
 
