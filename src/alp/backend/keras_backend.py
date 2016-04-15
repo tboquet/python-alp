@@ -4,7 +4,6 @@ from keras.models import model_from_json
 import keras.backend as K
 import json
 from keras import optimizers
-import copy
 import six
 
 
