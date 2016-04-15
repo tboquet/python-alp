@@ -54,8 +54,8 @@ def build_from_json(model_json, custom_objects=None):
                           optimizer=optimizer,
                           sample_weight_mode=sample_weight_mode)
         elif model_name == "Graph":
-            sample_weight_modes = config.get('sample_weight_modes', {})
-            loss_weights = config.get('loss_weights', {})
+            sample_weight_modes = config.get('sample_weight_modes', None)
+            loss_weights = config.get('loss_weights', None)
             model.compile(loss=loss,
                           optimizer=optimizer,
                           sample_weight_modes=sample_weight_modes,
