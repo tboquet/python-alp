@@ -79,8 +79,8 @@ def test_train_model():
                   optimizer='rmsprop',
                   metrics=['accuracy'])
 
-    model_str = model.to_json()
-    res = KTB.train_model(model_str, [], [datas], [datas_val], batch_size,
+    model_json = KTB.to_json_w_opt(model)
+    res = KTB.train_model(model_json, [], [datas], [datas_val], batch_size,
                       2, [])
 
     assert 0 == 0
