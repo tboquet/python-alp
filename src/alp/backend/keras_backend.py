@@ -11,7 +11,7 @@ def to_dict_w_opt(model):
     """
     config = dict()
     config_m = model.get_config()
-    config = {
+    config['config'] = {
         'class_name': model.__class__.__name__,
         'config': config_m,
     }
@@ -34,7 +34,7 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
         custom_objects = {}
 
     model = layer_from_config(model_dict['config'],
-                            custom_objects=custom_objects)
+                              custom_objects=custom_objects)
 
     if 'optimizer' in model_dict:
         model_name = model_dict.get('class_name')
