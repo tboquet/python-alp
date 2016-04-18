@@ -84,6 +84,7 @@ def test_train_model():
 
     custom_objects = {"categorical_crossentropy": categorical_crossentropy}
 
+    # Case 1 sequential model
     model = Sequential()
     model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
     model.add(Dense(nb_class, activation='softmax'))
@@ -101,6 +102,7 @@ def test_train_model():
     datas_val["X_vars"] = X_tr
     datas_val["output"] = y_tr
 
+    # Case 2 Graph model
     model = Graph()
     model.add_input(name='X_vars', input_shape=(input_dim, ))
 
@@ -116,6 +118,19 @@ def test_train_model():
     res = KTB.train_model(model_json, [datas], [datas_val], batch_size,
                           2, [],
                           custom_objects)
+
+    # Case 3 without custom objects
+
+    model = Sequential()
+    model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
+    model.add(Dense(nb_class, activation='softmax'))
+    model.compile(loss='categorical_crossentropy',
+                  optimizer='rmsprop',
+                  metrics=['accuracy'])
+
+    model_json = KTB.to_dict_w_opt(model)
+    res = KTB.train_model(model_json, [datas], [datas_val], batch_size,
+                          2, [])
     assert 0 == 0
 
 
