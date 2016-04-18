@@ -96,7 +96,7 @@ def test_train_model():
 
     model_json = to_dict_w_opt(model)
     res = KTB.train_model(model_json, [datas], [datas_val], batch_size,
-                          2, [], custom_objects)
+                          2, None, custom_objects)
 
     datas["X_vars"] = X_tr
     datas["output"] = y_tr
@@ -118,8 +118,7 @@ def test_train_model():
 
     model_json = to_dict_w_opt(model)
     res = KTB.train_model(model_json, [datas], [datas_val], batch_size,
-                          2, [],
-                          custom_objects)
+                          2, [], custom_objects)
 
     # Case 3 without custom objects
     model = Sequential()

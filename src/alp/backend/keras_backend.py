@@ -59,7 +59,5 @@ def train_model(model_dict, datas, datas_val, batch_size=32,
             loss += h.history['loss']
             if 'val_loss' in h.history:
                 val_loss += h.history['val_loss']
-    else:
-        raise NotImplementedError('This type of model is not supported')
 
     return loss, val_loss, model
