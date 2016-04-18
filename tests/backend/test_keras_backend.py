@@ -97,7 +97,7 @@ def test_train_model():
     res = KTB.train_model(model_json, [datas], [datas_val], batch_size,
                           2, None, custom_objects)
 
-    assert length(res(0)) == 2
+    assert length(res[0]) == 2
 
     # Case 3 without custom objects
     model = Sequential()
@@ -111,7 +111,7 @@ def test_train_model():
     res = KTB.train_model(model_json, [datas], [datas_val], batch_size,
                           2, [])
 
-    assert length(res(0)) == 2
+    assert length(res[0]) == 2
 
     datas["X_vars"] = X_tr
     datas["output"] = y_tr
@@ -135,7 +135,7 @@ def test_train_model():
     res = KTB.train_model(model_json, [datas], [datas_val], batch_size,
                           2, [], custom_objects)
 
-    assert length(res(0)) == 2
+    assert length(res[0]) == 2
 
 
 def test_utils():
