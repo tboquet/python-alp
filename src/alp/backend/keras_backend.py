@@ -5,7 +5,6 @@ import json
 import keras.backend as K
 import six
 from keras import optimizers
-import json
 
 
 def model_from_json(json_string, custom_objects={}):
@@ -23,7 +22,7 @@ def to_json_w_opt(model):
     config_m = model.get_config()
     config = {
         'class_name': self.__class__.__name__,
-        'config': config,
+        'config': config_m,
     }
     if hasattr(model, 'optimizer'):
         config['optimizer'] = model.optimizer.get_config()
@@ -41,7 +40,7 @@ def build_from_json(model_json, custom_objects=None):
     """Builds a model from a serialized model using ``to_json_w_opt`
     """
     if custom_objects is None:
-        custom_objects = []
+        custom_objects = {}
         model = model_from_json(model_json['config'],
                                 custom_objects=custom_objects)
     if 'optimizer' in model_json:
