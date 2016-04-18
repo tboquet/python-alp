@@ -9,6 +9,7 @@ from keras.utils import np_utils
 from keras.utils.test_utils import get_test_data
 
 from alp.backend import keras_backend as KTB
+from alp.backend.utils.keras_utils import to_dict_w_opt
 
 np.random.seed(1337)
 
@@ -92,7 +93,7 @@ def test_train_model():
                   optimizer='rmsprop',
                   metrics=['accuracy'])
 
-    model_json = KTB.to_dict_w_opt(model)
+    model_json = to_dict_w_opt(model)
     res = KTB.train_model(model_json, [datas], [datas_val], batch_size,
                           2, [], custom_objects)
 
