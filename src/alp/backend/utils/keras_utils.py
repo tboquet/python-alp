@@ -1,6 +1,5 @@
 """Utilities for the Keras abstract backend"""
 
-import keras.backend as K
 import six
 from keras import optimizers
 from keras.utils.layer_utils import layer_from_config
