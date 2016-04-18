@@ -1,49 +1,7 @@
 """Adaptor for the Keras backend"""
 
+import keras.backend as K
 from .utils.keras_utils import model_from_dict_w_opt
-
-
-def model_from_dict_w_opt(model_dict, custom_objects=None):
-    """Builds a model from a serialized model using ``to_dict_w_opt`
-    """
-    if custom_objects is None:
-        custom_objects = {}
-
-    model = layer_from_config(model_dict['config'],
-                              custom_objects=custom_objects)
-
-    if 'optimizer' in model_dict:
-        model_name = model_dict['config'].get('class_name')
-        # if it has an optimizer, the model is assumed to be compiled
-        loss = model_dict.get('loss')
-
-        # if a custom loss function is passed replace it in loss
-        if model_name == "Graph":
-            for l in loss:
-                for c in custom_objects:
-                    if loss[l] == c:
-                        loss[l] = custom_objects[c]
-        elif model_name == "Sequential" and loss in custom_objects:
-            loss = custom_objects[loss]
-
-        optimizer_params = dict([(
-            k, v) for k, v in model_dict.get('optimizer').items()])
-        optimizer_name = optimizer_params.pop('name')
-        optimizer = optimizers.get(optimizer_name, optimizer_params)
-
-        if model_name == "Sequential":
-            sample_weight_mode = model_dict.get('sample_weight_mode')
-            model.compile(loss=loss,
-                          optimizer=optimizer,
-                          sample_weight_mode=sample_weight_mode)
-        elif model_name == "Graph":
-            sample_weight_modes = model_dict.get('sample_weight_modes', None)
-            loss_weights = model_dict.get('loss_weights', None)
-            model.compile(loss=loss,
-                          optimizer=optimizer,
-                          sample_weight_modes=sample_weight_modes,
-                          loss_weights=loss_weights)
-    return model
 
 
 def build_predict_func(mod):
