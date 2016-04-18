@@ -17,7 +17,7 @@ def to_dict_w_opt(model):
     if hasattr(model, 'optimizer'):
         config['optimizer'] = model.optimizer.get_config()
     if hasattr(model, 'loss'):
-        if type(model.loss) == dict:
+        if isinstance(model.loss, dict):
             config['loss'] = dict([(k, get_function_name(v))
                                    for k, v in model.loss.items()])
         else:
