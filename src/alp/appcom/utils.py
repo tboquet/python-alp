@@ -18,7 +18,9 @@ def sliced(data, nb_train, nb_test, offset):
         `beg`, `endt`, `endv`, the indexes corresponding to
          the beginning, the end of training end the end of
          testing."""
-    first = data.keys()[0]
+    for k in data.keys():
+        first = k
+        break
     assert len(data[first]) > nb_train + nb_test + offset, \
         'nb or nb + offset too large:' \
         ' len(data):{}' \
