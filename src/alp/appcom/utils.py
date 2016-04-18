@@ -2,7 +2,6 @@
 
 ----------------------------------------------------------------------------
 """
-from functools import wraps
 
 
 def sliced(data, nb_train, nb_test, offset):
@@ -24,7 +23,7 @@ def sliced(data, nb_train, nb_test, offset):
         'nb or nb + offset too large:' \
         ' len(data):{}' \
         ', len(selection): {}'.format(len(data[first]),
-                                  nb_train + nb_test + offset)
+                                      nb_train + nb_test + offset)
     beg = offset - len(data[first])
     endt = beg + nb_train
     endv = endt + nb_test
