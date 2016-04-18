@@ -91,7 +91,7 @@ def test_train_model():
                   optimizer='rmsprop',
                   metrics=['accuracy'])
 
-    model_json = KTB.to_json_w_opt(model)
+    model_json = KTB.to_dict_w_opt(model)
     res = KTB.train_model(model_json, [datas], [datas_val], batch_size,
                           2, [], custom_objects)
 
@@ -112,7 +112,7 @@ def test_train_model():
     model.add_output(name='output', input='last_dense')
     model.compile(optimizer='sgd', loss={'output': categorical_crossentropy})
 
-    model_json = KTB.to_json_w_opt(model)
+    model_json = KTB.to_dict_w_opt(model)
     res = KTB.train_model(model_json, [datas], [datas_val], batch_size,
                           2, [],
                           custom_objects)

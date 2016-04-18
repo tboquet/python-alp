@@ -7,21 +7,21 @@ import six
 from keras import optimizers
 
 
-def model_from_json(json_string, custom_objects={}):
+def model_from_dict(model_dict, custom_objects={}):
     '''Parses a JSON model configuration file
     and returns a model instance.
     '''
     from keras.utils.layer_utils import layer_from_config
-    return layer_from_config(config, custom_objects=custom_objects)
+    return layer_from_config(model_dict, custom_objects=custom_objects)
 
 
-def to_json_w_opt(model):
+def to_dict_w_opt(model):
     """Serialize a model and add the config of the optimizer and the loss.
     """
     config = dict()
     config_m = model.get_config()
     config = {
-        'class_name': self.__class__.__name__,
+        'class_name': model.__class__.__name__,
         'config': config_m,
     }
     if hasattr(model, 'optimizer'):
@@ -36,18 +36,19 @@ def to_json_w_opt(model):
     return config
 
 
-def build_from_json(model_json, custom_objects=None):
-    """Builds a model from a serialized model using ``to_json_w_opt`
+def model_from_dict(model_dict, custom_objects=None):
+    """Builds a model from a serialized model using ``to_dict_w_opt`
     """
     if custom_objects is None:
         custom_objects = {}
-        model = model_from_json(model_json['config'],
-                                custom_objects=custom_objects)
-    if 'optimizer' in model_json:
-        model_name = config.get('class_name')
-        print(model_name, model_name is "Sequential")
+
+    model = model_from_dict(model_dict['config'],
+                            custom_objects=custom_objects)
+
+    if 'optimizer' in model_dict:
+        model_name = model_dict.get('class_name')
         # if it has an optimizer, the model is assumed to be compiled
-        loss = model_json.get('loss')
+        loss = model_dict.get('loss')
 
         # if a custom loss function is passed replace it in loss
         if model_name == "Graph":
@@ -59,18 +60,18 @@ def build_from_json(model_json, custom_objects=None):
             loss = custom_objects[loss]
 
         optimizer_params = dict([(
-            k, v) for k, v in model_json.get('optimizer').items()])
+            k, v) for k, v in model_dict.get('optimizer').items()])
         optimizer_name = optimizer_params.pop('name')
         optimizer = optimizers.get(optimizer_name, optimizer_params)
 
         if model_name == "Sequential":
-            sample_weight_mode = config.get('sample_weight_mode')
+            sample_weight_mode = model_dict.get('sample_weight_mode')
             model.compile(loss=loss,
                           optimizer=optimizer,
                           sample_weight_mode=sample_weight_mode)
         elif model_name == "Graph":
-            sample_weight_modes = config.get('sample_weight_modes', None)
-            loss_weights = config.get('loss_weights', None)
+            sample_weight_modes = model_dict.get('sample_weight_modes', None)
+            loss_weights = model_dict.get('loss_weights', None)
             model.compile(loss=loss,
                           optimizer=optimizer,
                           sample_weight_modes=sample_weight_modes,
@@ -103,14 +104,14 @@ def build_predict_func(mod):
     return K.function(mod.inputs, mod.outputs, updates=mod.state_updates)
 
 
-def train_model(model_json, datas, datas_val, batch_size,
+def train_model(model_dict, datas, datas_val, batch_size,
                 nb_epoch, callbacks, custom_objects):
     """Train a model given hyperparameters and a serialized model"""
 
     loss = []
     val_loss = []
     # load model
-    model = build_from_json(model_json, custom_objects=custom_objects)
+    model = model_from_dict(model_dict, custom_objects=custom_objects)
 
     # fit the model according to the input/output type
     if model.__class__.__name__ is "Graph":
