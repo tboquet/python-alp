@@ -37,7 +37,7 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
                               custom_objects=custom_objects)
 
     if 'optimizer' in model_dict:
-        model_name = model_dict.get('class_name')
+        model_name = model_dict['config'].get('class_name')
         # if it has an optimizer, the model is assumed to be compiled
         loss = model_dict.get('loss')
 
