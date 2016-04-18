@@ -41,7 +41,7 @@ def test_build_predict_func():
     pred_func = KTB.build_predict_func(model)
     res = pred_func([X_tr])
 
-    assert len(res) == len(X_tr)
+    assert len(res[0]) == len(X_tr)
 
     model = Graph()
     model.add_input(name='X_vars', input_shape=(input_dim, ))
@@ -57,7 +57,7 @@ def test_build_predict_func():
     pred_func = KTB.build_predict_func(model)
     res = pred_func([X_te])
 
-    assert len(res) == len(X_te)
+    assert len(res[0]) == len(X_te)
 
 
 def test_train_model():
