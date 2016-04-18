@@ -5,14 +5,26 @@ import json
 import keras.backend as K
 import six
 from keras import optimizers
-from keras.models import model_from_json
+import json
+
+
+def model_from_json(json_string, custom_objects={}):
+    '''Parses a JSON model configuration file
+    and returns a model instance.
+    '''
+    from keras.utils.layer_utils import layer_from_config
+    return layer_from_config(config, custom_objects=custom_objects)
 
 
 def to_json_w_opt(model):
     """Serialize a model and add the config of the optimizer and the loss.
     """
     config = dict()
-    config['config'] = model.to_json()
+    config_m = model.get_config()
+    config = {
+        'class_name': self.__class__.__name__,
+        'config': config,
+    }
     if hasattr(model, 'optimizer'):
         config['optimizer'] = model.optimizer.get_config()
     if hasattr(model, 'loss'):
@@ -30,9 +42,8 @@ def build_from_json(model_json, custom_objects=None):
     """
     if custom_objects is None:
         custom_objects = []
-    model = model_from_json(model_json['config'],
-                            custom_objects=custom_objects)
-    config = json.loads(model_json['config'])
+        model = model_from_json(model_json['config'],
+                                custom_objects=custom_objects)
     if 'optimizer' in model_json:
         model_name = config.get('class_name')
         print(model_name, model_name is "Sequential")

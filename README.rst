@@ -40,9 +40,11 @@ Installation
 ============
 
 ::
+
     git clone https://github.com/tboquet/python-alp.git
     cd python-alp
     python setup.py install
+
 
 Documentation
 =============
