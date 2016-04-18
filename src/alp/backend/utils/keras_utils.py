@@ -77,19 +77,3 @@ def get_function_name(o):
         return o
     else:
         return o.__name__
-
-
-def build_predict_func(mod):
-    """Build Keras prediction functions based on a Keras model
-
-    Using inputs and outputs of the graph a prediction function
-    (forward pass) is compiled for prediction purpose.
-
-    Args:
-        mod(keras.models): a Graph or Sequential model
-
-    Returns:
-        a Keras (Theano or Tensorflow) function
-    """
-
-    return K.function(mod.inputs, mod.outputs, updates=mod.state_updates)

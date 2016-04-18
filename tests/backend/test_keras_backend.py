@@ -10,6 +10,7 @@ from keras.utils.test_utils import get_test_data
 
 from alp.backend import keras_backend as KTB
 from alp.backend.utils.keras_utils import to_dict_w_opt
+from alp.backend.utils.keras_utils import get_function_name
 
 np.random.seed(1337)
 
@@ -132,6 +133,10 @@ def test_train_model():
     res = KTB.train_model(model_json, [datas], [datas_val], batch_size,
                           2, [])
     assert 0 == 0
+
+
+def test_utils():
+    assert get_function_name("bob") == "bob"
 
 
 if __name__ == "__main__":
