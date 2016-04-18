@@ -20,10 +20,12 @@ def build_predict_func(mod):
     return K.function(mod.inputs, mod.outputs, updates=mod.state_updates)
 
 
-def train_model(model_dict, datas, datas_val, batch_size,
-                nb_epoch, callbacks, custom_objects):
+def train_model(model_dict, datas, datas_val, batch_size=32,
+                nb_epoch=10, callbacks=None, custom_objects=None):
     """Train a model given hyperparameters and a serialized model"""
 
+    if callbacks is None:
+        callbacks = []
     loss = []
     val_loss = []
     # load model
