@@ -1,18 +1,9 @@
 """Adaptor for the Keras backend"""
 
-import json
-
 import keras.backend as K
 import six
 from keras import optimizers
-
-
-def model_from_dict(model_dict, custom_objects={}):
-    '''Parses a JSON model configuration file
-    and returns a model instance.
-    '''
-    from keras.utils.layer_utils import layer_from_config
-    return layer_from_config(model_dict, custom_objects=custom_objects)
+from keras.utils.layer_utils import layer_from_config
 
 
 def to_dict_w_opt(model):
@@ -36,13 +27,13 @@ def to_dict_w_opt(model):
     return config
 
 
-def model_from_dict(model_dict, custom_objects=None):
+def model_from_dict_w_opt(model_dict, custom_objects=None):
     """Builds a model from a serialized model using ``to_dict_w_opt`
     """
     if custom_objects is None:
         custom_objects = {}
 
-    model = model_from_dict(model_dict['config'],
+    model = layer_from_config(model_dict['config'],
                             custom_objects=custom_objects)
 
     if 'optimizer' in model_dict:
@@ -111,7 +102,7 @@ def train_model(model_dict, datas, datas_val, batch_size,
     loss = []
     val_loss = []
     # load model
-    model = model_from_dict(model_dict, custom_objects=custom_objects)
+    model = model_from_dict_w_opt(model_dict, custom_objects=custom_objects)
 
     # fit the model according to the input/output type
     if model.__class__.__name__ is "Graph":
