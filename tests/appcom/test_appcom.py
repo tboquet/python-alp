@@ -25,7 +25,7 @@ def test_appbackend():
         assert "ABE" in sys.modules.keys()
 
     mod = {"backend": "keras"}
-    bob = Dumobj("backend")
+    bob = Dumobj()
 
     decoratedfunction(bob, mod)
 

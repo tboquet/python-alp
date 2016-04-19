@@ -63,16 +63,16 @@ def train_model(model_dict, datas, datas_val, batch_size=32,
     return loss, val_loss, model
 
 
-def fit():
+def fit(model, data, params):
     """Dummy fit for now"""
     pass
 
 
-def build():
+def build(model):
     """Dummy build for now"""
     pass
 
 
-def predict():
+def predict(model, data):
     """Dummy predict for now"""
     pass
