@@ -3,6 +3,8 @@
 import numpy as np
 import pytest
 from alp.appcom.utils import sliced
+from alp.appcom.utils import appbackend
+
 
 def test_sliced():
     data = {k: np.ones((100,2)) for k in range(10)}
@@ -10,6 +12,16 @@ def test_sliced():
     assert len(data[1][:indices[0]]) == 10
     assert len(data[1][indices[0]:indices[1]]) == 30
     assert len(data[1][indices[1]:indices[2]]) == 20
+
+
+def test_appbackend():
+    @appbackend
+    def decoratedfunction(mod):
+        import sys
+        assert "ABE" in sys.modules.keys()
+
+    mod = {"backend": "keras"}
+    decoratedfunction(mod)
 
 
 if __name__ == "__main__":

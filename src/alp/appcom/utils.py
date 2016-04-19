@@ -2,6 +2,7 @@
 
 ----------------------------------------------------------------------------
 """
+from functools import wraps
 
 
 def sliced(data, nb_train, nb_test, offset):
@@ -30,3 +31,21 @@ def sliced(data, nb_train, nb_test, offset):
     endt = beg + nb_train
     endv = endt + nb_test
     return beg, endt, endv
+
+
+def appbackend(f):
+    """A simple decorator to run a function using the correct backend"""
+    @wraps(f)
+    def f_async(mod, *args, **kwargs):
+        """Wrapped function
+
+        Returns:
+            the same function where we load the correct backend
+        """
+        if "ABE" not in f.__globals__:
+            if mod['backend'] == 'keras':
+                from ..backend import keras_backend as ABE
+
+            f.__globals__['ABE'] = ABE
+        return f(mod, *args, **kwargs)
+    return f_async
