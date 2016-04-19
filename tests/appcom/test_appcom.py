@@ -16,12 +16,13 @@ def test_sliced():
 
 def test_appbackend():
     @appbackend
-    def decoratedfunction(mod):
+    def decoratedfunction(bob, mod):
         import sys
         assert "ABE" in sys.modules.keys()
 
     mod = {"backend": "keras"}
-    decoratedfunction(mod)
+    bob = dict()
+    decoratedfunction(bob, mod)
 
 
 if __name__ == "__main__":
