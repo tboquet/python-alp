@@ -54,8 +54,6 @@ class Experience(object):
             self.m_to_build = model_dict
         elif self.model_dict is not None:
             self.m_to_build = self.model_dict
-        else:
-            raise Exception("You must provide a model.")
 
         self.built_model = self.backend.build(self.m_to_build)
 
@@ -63,8 +61,6 @@ class Experience(object):
         if self.built_model is not None:
             res = self.backend.fit(self.built_model, data, params)
             self.trained = True
-        else:
-            raise Exception("You nust have built a model.")
 
         return res
 
