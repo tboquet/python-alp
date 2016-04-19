@@ -14,21 +14,5 @@ def test_sliced():
     assert len(data[1][indices[1]:indices[2]]) == 20
 
 
-def test_appbackend():
-    class Dumobj(object):
-        def __init__(self):
-            self.backend = None
-
-    @appbackend
-    def decoratedfunction(bob, mod):
-        import sys
-        assert "ABE" in sys.modules.keys()
-
-    backend = {"backend": "keras"}
-    bob = Dumobj()
-
-    decoratedfunction(bob, backend)
-
-
 if __name__ == "__main__":
     pytest.main([__file__])

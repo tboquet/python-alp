@@ -147,12 +147,13 @@ def test_utils():
 
 
 def test_experience():
-    expe = Experience("keras", model)
-
-    assert expe.backend is not None
     model = {"dummy": "dummy"}
     data = {}
     params = {}
+
+    expe = Experience("keras", model)
+
+    assert expe.backend is not None
 
     expe.build()
     expe.fit(model, data, params)
