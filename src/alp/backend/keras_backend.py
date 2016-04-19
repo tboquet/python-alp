@@ -1,8 +1,9 @@
 """Adaptor for the Keras backend"""
 
 import keras.backend as K
-from .utils.keras_utils import model_from_dict_w_opt
+
 from ..celapp import app
+from .utils.keras_utils import model_from_dict_w_opt
 
 
 def build_predict_func(mod):
