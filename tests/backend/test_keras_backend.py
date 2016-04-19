@@ -153,7 +153,7 @@ def test_experience():
     assert expe.backend is not None
     data = {}
     params = {}
-    
+
     expe.build()
     expe.fit(data, params)
     expe.predict(data)
