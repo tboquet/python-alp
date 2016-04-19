@@ -30,8 +30,6 @@ in memory compiled function, this function is used instead.
 """
 
 from celery import Celery
-import dataReader as dr
-from utils import serialise
 from utils import appbackend
 
 COMPILED_MODELS = dict()
