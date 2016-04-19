@@ -9,6 +9,7 @@ from keras.utils import np_utils
 from keras.utils.test_utils import get_test_data
 
 from alp.backend import keras_backend as KTB
+from alp.appcom.core import Experience
 from alp.backend.utils.keras_utils import get_function_name
 from alp.backend.utils.keras_utils import to_dict_w_opt
 
@@ -130,6 +131,7 @@ def test_train_model():
     model.add_node(Dense(nb_class, activation="softmax"),
                    name='last_dense',
                    input='Dense1')
+
     model.add_output(name='output', input='last_dense')
     model.compile(optimizer='sgd', loss={'output': categorical_crossentropy})
 
@@ -143,6 +145,18 @@ def test_train_model():
 def test_utils():
     assert get_function_name("bob") == "bob"
 
+
+def test_experience():
+    model = {"dummy": "dummy"}
+    expe = Experience("keras", model)
+
+    assert expe.backend is not None
+    data = {}
+    params = {}
+    
+    expe.build()
+    expe.fit(data, params)
+    expe.predict(data)
 
 if __name__ == "__main__":
     pytest.main([__file__])
