@@ -50,6 +50,7 @@ class Experience(object):
     @appbackend
     def __init__(self, backend, model_dict=None):
         self.model_dict = model_dict
+        self.built_model = None
 
     def build(self, model_dict=None):
         """Build a model
@@ -65,7 +66,7 @@ class Experience(object):
 
     @app.task(default_retry_delay=60 * 10, max_retries=3, rate_limit='120/m')
     def fit(self, data, params):
-        if self.built_model:
+        if self.built_model is not None:
             res = self.backend.fit(self.built_model, data, params)
             self.trained = True
         else:
