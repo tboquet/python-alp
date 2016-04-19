@@ -30,7 +30,7 @@ in memory compiled function, this function is used instead.
 """
 
 from celery import Celery
-from ..backend.utils import appbackend
+from .utils import appbackend
 
 COMPILED_MODELS = dict()
 
