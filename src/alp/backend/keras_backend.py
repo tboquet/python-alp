@@ -67,9 +67,11 @@ def fit():
     """Dummy fit for now"""
     pass
 
+
 def build():
     """Dummy build for now"""
     pass
+
 
 def predict():
     """Dummy predict for now"""

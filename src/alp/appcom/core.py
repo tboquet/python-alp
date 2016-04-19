@@ -53,13 +53,13 @@ class Experience(object):
         """Build a model
         """
         if model_dict is not None:
-            m_to_build = model_dict
+            self.m_to_build = model_dict
         elif self.model_dict is not None:
-            m_to_build = self.model_dict
+            self.m_to_build = self.model_dict
         else:
             raise Exception("You must provide a model.")
 
-        self.built_model = self.backend.build(model_dict)
+        self.built_model = self.backend.build(self.m_to_build)
 
     @app.task(default_retry_delay=60 * 10, max_retries=3, rate_limit='120/m')
     def fit(self, data, params):
