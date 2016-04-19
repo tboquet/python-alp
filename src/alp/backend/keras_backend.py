@@ -1,5 +1,6 @@
 """Adaptor for the Keras backend"""
 
+from celery import Celery
 import keras.backend as K
 from .utils.keras_utils import model_from_dict_w_opt
 
@@ -63,6 +64,7 @@ def train_model(model_dict, datas, datas_val, batch_size=32,
     return loss, val_loss, model
 
 
+@app.task(default_retry_delay=60 * 10, max_retries=3, rate_limit='120/m')
 def fit(model, data, params):
     """Dummy fit for now"""
     return model

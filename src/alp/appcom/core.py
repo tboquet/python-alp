@@ -29,7 +29,6 @@ in memory compiled function, this function is used instead.
 ----------------------------------------------------------------------------
 """
 
-from celery import Celery
 from .utils import appbackend
 
 COMPILED_MODELS = dict()
@@ -64,7 +63,6 @@ class Experience(object):
 
         self.built_model = self.backend.build(self.m_to_build)
 
-    @app.task(default_retry_delay=60 * 10, max_retries=3, rate_limit='120/m')
     def fit(self, data, params):
         if self.built_model is not None:
             res = self.backend.fit(self.built_model, data, params)

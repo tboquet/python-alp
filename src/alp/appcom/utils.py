@@ -42,7 +42,7 @@ def appbackend(f):
         Returns:
             the same function where we load the correct backend
         """
-        if not self.backend:
+        if self.backend is None:
             if backend == 'keras':
                 from ..backend import keras_backend as ABE
                 self.backend = ABE
