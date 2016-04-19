@@ -2,7 +2,6 @@
 
 import numpy as np
 import pytest
-from alp.appcom.utils import appbackend
 from alp.appcom.utils import sliced
 
 
