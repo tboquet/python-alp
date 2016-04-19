@@ -34,10 +34,6 @@ from .utils import appbackend
 COMPILED_MODELS = dict()
 
 
-app = Celery(broker='amqp://guest:guest@rabbitmq:5672//',
-             backend='mongodb://mongo_r:27017')
-
-
 class Experience(object):
     """An Experience train, predict, save and log a model
 
