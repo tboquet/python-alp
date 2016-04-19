@@ -15,14 +15,17 @@ def test_sliced():
 
 
 def test_appbackend():
+    class Dumobj(object):
+        def __init__(self):
+            self.backend = None
+
     @appbackend
     def decoratedfunction(bob, mod):
         import sys
         assert "ABE" in sys.modules.keys()
 
     mod = {"backend": "keras"}
-    bob = object()
-    bob.backend = "keras"
+    bob = Dumobj("backend")
 
     decoratedfunction(bob, mod)
 

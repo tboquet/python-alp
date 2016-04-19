@@ -44,7 +44,7 @@ def appbackend(f):
         """
         if not self.backend:
             if backend == 'keras':
-                import keras as ABE
+                from ..backend import keras_backend as ABE
             self.backend = ABE
 
         return f(self, backend, *args, **kwargs)
