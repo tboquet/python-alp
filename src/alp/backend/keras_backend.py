@@ -74,7 +74,7 @@ def build(model):
     """Dummy build for now"""
     return model
 
-
+@app.task
 def predict(model, data):
     """Dummy predict for now"""
     return model

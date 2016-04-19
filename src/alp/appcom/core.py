@@ -68,7 +68,6 @@ class Experience(object):
 
         return res
 
-    @app.task
     def predict(self, data):
         if self.trained:
             return self.backend.predict(self.built_model, data)
