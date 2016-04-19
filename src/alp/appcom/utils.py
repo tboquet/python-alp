@@ -45,7 +45,7 @@ def appbackend(f):
         if not self.backend:
             if backend == 'keras':
                 from ..backend import keras_backend as ABE
-            self.backend = ABE
+                self.backend = ABE
 
         return f(self, backend, *args, **kwargs)
     return f_async

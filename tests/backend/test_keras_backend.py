@@ -147,16 +147,16 @@ def test_utils():
 
 
 def test_experience():
-    model = {"dummy": "dummy"}
     expe = Experience("keras", model)
 
     assert expe.backend is not None
+    model = {"dummy": "dummy"}
     data = {}
     params = {}
 
     expe.build()
-    expe.fit(data, params)
-    expe.predict(data)
+    expe.fit(model, data, params)
+    expe.predict(model, data)
 
 if __name__ == "__main__":
     pytest.main([__file__])

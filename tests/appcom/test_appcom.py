@@ -24,10 +24,10 @@ def test_appbackend():
         import sys
         assert "ABE" in sys.modules.keys()
 
-    mod = {"backend": "keras"}
+    backend = {"backend": "keras"}
     bob = Dumobj()
 
-    decoratedfunction(bob, mod)
+    decoratedfunction(bob, backend)
 
 
 if __name__ == "__main__":

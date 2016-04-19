@@ -65,14 +65,14 @@ def train_model(model_dict, datas, datas_val, batch_size=32,
 
 def fit(model, data, params):
     """Dummy fit for now"""
-    pass
+    return model
 
 
 def build(model):
     """Dummy build for now"""
-    pass
+    return model
 
 
 def predict(model, data):
     """Dummy predict for now"""
-    pass
+    return model

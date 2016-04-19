@@ -66,7 +66,7 @@ class Experience(object):
     @app.task(default_retry_delay=60 * 10, max_retries=3, rate_limit='120/m')
     def fit(self, data, params):
         if self.built_model:
-            res = self.backend.fit(self.model_dict, data, params)
+            res = self.backend.fit(self.built_model, data, params)
             self.trained = True
         else:
             raise Exception("You nust have built a model.")
