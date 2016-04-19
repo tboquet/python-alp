@@ -156,8 +156,8 @@ def test_experience():
     assert expe.backend is not None
 
     expe.build()
-    expe.fit(model, data, params)
-    expe.predict(model, data)
+    expe.fit(data, params)
+    expe.predict(data)
 
 if __name__ == "__main__":
     pytest.main([__file__])
