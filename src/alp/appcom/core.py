@@ -45,7 +45,7 @@ class Experience(object):
     Attributes:
         backend(str): the backend to use
         model_dict(dict, optionnal): the model to experience with"""
-    self.backend = None
+    backend = None
 
     @appbackend
     def __init__(self, backend, model_dict=None):
