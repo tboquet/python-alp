@@ -156,8 +156,12 @@ def test_experience():
     assert expe.backend is not None
 
     expe.build()
+    expe.build(model)
     expe.fit(data, params)
     expe.predict(data)
+
+    expe = Experience("keras")
+    expe.build()
 
 if __name__ == "__main__":
     pytest.main([__file__])
