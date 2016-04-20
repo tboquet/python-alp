@@ -69,20 +69,20 @@ def train_model(model_dict, datas, datas_val, batch_size=32,
 @app.task(default_retry_delay=60 * 10, max_retries=3, rate_limit='120/m')
 def fit(model, data, data_val, *args, **kwargs):
     """Fit a model given hyperparameters and a serialized model"""
-    custom_object = kwargs.pop('custom_objects')
+    custom_objects = kwargs.pop('custom_objects')
     loss = []
     val_loss = []
     # load model
     model = model_from_dict_w_opt(model, custom_objects=custom_objects)
 
-    batch_size, nb_epoch, verbose, callbacks = get_params(params)
     # fit the model according to the input/output type
     if model.__class__.__name__ is "Graph":
         for d, dv in zip(data, data_val):
             h = model.fit(data=d,
                           verbose=1,
                           validation_data=dv,
-                          **params)
+                          *args,
+                          **kwargs)
             loss += h.history['loss']
             if 'val_loss' in h.history:
                 val_loss += h.history['val_loss']
@@ -95,7 +95,8 @@ def fit(model, data, data_val, *args, **kwargs):
                           y=y,
                           verbose=1,
                           validation_data=(X_val, y_val),
-                          **params)
+                          *args,
+                          **args)
             loss += h.history['loss']
             if 'val_loss' in h.history:
                 val_loss += h.history['val_loss']
