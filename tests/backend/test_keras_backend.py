@@ -8,7 +8,7 @@ from keras. models import Sequential
 from keras.utils import np_utils
 from keras.utils.test_utils import get_test_data
 
-from alp.appcom.core import Experience
+from alp.appcom.core import Experiment
 from alp.backend import keras_backend as KTB
 from alp.backend.utils.keras_utils import get_function_name
 from alp.backend.utils.keras_utils import to_dict_w_opt
@@ -146,18 +146,46 @@ def test_utils():
     assert get_function_name("bob") == "bob"
 
 
-def test_experience():
-    model = {"dummy": "dummy"}
-    data = {}
-    params = {}
+def test_experiment():
+    """Test the Experiment class"""
+    import keras.backend as K
 
-    expe = Experience("keras", model)
+    (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
+                                                nb_test=test_samples,
+                                                input_shape=(input_dim,),
+                                                classification=True,
+                                                nb_class=nb_class)
+    datas, datas_val = dict(), dict()
+
+    data["X"] = X_tr
+    data["y"] = y_tr
+
+    data_val["X"] = X_te
+    data_val["y"] = y_te
+
+    custom_objects = {"categorical_crossentropy": categorical_crossentropy}
+
+    def categorical_crossentropy(y_true, y_pred):
+        '''A test of custom loss function
+        '''
+        return K.categorical_crossentropy(y_pred, y_true)
+
+    hparams = {"nb_epoch": 2, "batch_size": batch_size,
+              "custom_objects": custom_objects}
+
+    model = Sequential()
+    model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
+    model.add(Dense(nb_class, activation='softmax'))
+    model.compile(loss='categorical_crossentropy',
+                  optimizer='rmsprop',
+                  metrics=['accuracy'])
+
+    model_dict = to_dict_w_opt(model)
+    expe = Experiment("keras", model_dict)
 
     assert expe.backend is not None
 
-    expe.build()
-    expe.build(model)
-    expe.fit(data, params)
+    expe.fit([data], [data_val], hparams)
     expe.predict(data)
 
 

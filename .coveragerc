@@ -12,3 +12,6 @@ parallel = true
 show_missing = true
 precision = 2
 omit = *migrations*
+exclude_lines =
+    raise Exception
+    raise NotImplementedError

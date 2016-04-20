@@ -4,6 +4,7 @@ import keras.backend as K
 
 from ..celapp import app
 from .utils.keras_utils import model_from_dict_w_opt
+from ..utils.keras_utils import get_params
 
 
 def build_predict_func(mod):
@@ -66,14 +67,44 @@ def train_model(model_dict, datas, datas_val, batch_size=32,
 
 
 @app.task(default_retry_delay=60 * 10, max_retries=3, rate_limit='120/m')
-def fit(model, data, params):
-    """Dummy fit for now"""
-    return model
+def fit(model, params, data, data_val):
+    """Fit a model given hyperparameters and a serialized model"""
+    if callbacks is None:
+        callbacks = []
+    custom_objects = params.pop("custom_objects")
+    if custom_objects is None:
+        custom_object = []
+    loss = []
+    val_loss = []
+    # load model
+    model = model_from_dict_w_opt(model, custom_objects=custom_objects)
 
+    batch_size, nb_epoch, verbose, callbacks = get_params(params)
+    # fit the model according to the input/output type
+    if model.__class__.__name__ is "Graph":
+        for d, dv in zip(data, data_val):
+            h = model.fit(data=d,
+                          verbose=1,
+                          validation_data=dv,
+                          **params)
+            loss += h.history['loss']
+            if 'val_loss' in h.history:
+                val_loss += h.history['val_loss']
 
-def build(model):
-    """Dummy build for now"""
-    return model
+    elif model.__class__.__name__ is "Sequential":
+        for d, dv in zip(datas, datas_val):
+            X, y = d['X'], d['y']
+            X_val, y_val = dv['X'], dv['y']
+            h = model.fit(x=X,
+                          y=y,
+                          verbose=1,
+                          validation_data=(X_val, y_val),
+                          **params)
+            loss += h.history['loss']
+            if 'val_loss' in h.history:
+                val_loss += h.history['val_loss']
+
+    return loss, val_loss, model
 
 
 @app.task

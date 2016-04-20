@@ -34,7 +34,7 @@ from .utils import appbackend
 COMPILED_MODELS = dict()
 
 
-class Experience(object):
+class Experiment(object):
     """An Experience train, predict, save and log a model
 
     Attributes:
@@ -45,25 +45,21 @@ class Experience(object):
     @appbackend
     def __init__(self, backend, model_dict=None):
         self.model_dict = model_dict
-        self.built_model = None
+        self.trained = False
 
-    def build(self, model_dict=None):
-        """Build a model
-        """
+    def fit(self, data, data_val, hparams, model_dict):
+        """Build and fit a model given data and hyperparameters"""
         if model_dict is not None:
-            self.m_to_build = model_dict
-        elif self.model_dict is not None:
-            self.m_to_build = self.model_dict
+            self.model_dict = model_dict
+        if self.model_dict is None:
+            raise Exception("You must pass a model to an Experiment")
+        self.res = self.backend.fit(self.model_dict, data, data_val,
+                                    *args, **kwargs)
+        self.trained = True
 
-        self.built_model = self.backend.build(self.m_to_build)
-
-    def fit(self, data, params):
-        if self.built_model is not None:
-            res = self.backend.fit(self.built_model, data, params)
-            self.trained = True
-
-        return res
+        return self.res
 
     def predict(self, data):
+        """Make predictions given data"""
         if self.trained:
-            return self.backend.predict(self.built_model, data)
+            return self.backend.predict(self.model_dict, data)
