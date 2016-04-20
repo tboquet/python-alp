@@ -29,7 +29,9 @@ in memory compiled function, this function is used instead.
 ----------------------------------------------------------------------------
 """
 
+import copy
 from .utils import appbackend
+
 
 COMPILED_MODELS = dict()
 
@@ -44,13 +46,13 @@ class Experiment(object):
 
     @appbackend
     def __init__(self, backend, model_dict=None):
-        self.model_dict = model_dict
+        self.model_dict = copy.deepcopy(model_dict)
         self.trained = False
 
     def fit(self, data, data_val, model_dict=None, *args, **kwargs):
         """Build and fit a model given data and hyperparameters"""
         if model_dict is not None:
-            self.model_dict = model_dict
+            self.model_dict = copy.deepcopy(model_dict)
         if self.model_dict is None:
             raise Exception("You must pass a model to an Experiment")
         self.res = self.backend.fit(self.model_dict, data, data_val,
