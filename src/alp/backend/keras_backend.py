@@ -4,7 +4,6 @@ import keras.backend as K
 
 from ..celapp import app
 from .utils.keras_utils import model_from_dict_w_opt
-from ..utils.keras_utils import get_params
 
 
 def build_predict_func(mod):
