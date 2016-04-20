@@ -155,6 +155,9 @@ def test_experiment():
                                                 input_shape=(input_dim,),
                                                 classification=True,
                                                 nb_class=nb_class)
+    y_tr = np_utils.to_categorical(y_tr)
+    y_te = np_utils.to_categorical(y_te)
+
     data, data_val = dict(), dict()
 
     data["X"] = X_tr
