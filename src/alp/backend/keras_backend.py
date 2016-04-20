@@ -67,13 +67,9 @@ def train_model(model_dict, datas, datas_val, batch_size=32,
 
 
 @app.task(default_retry_delay=60 * 10, max_retries=3, rate_limit='120/m')
-def fit(model, params, data, data_val):
+def fit(model, data, data_val, *args, **kwargs):
     """Fit a model given hyperparameters and a serialized model"""
-    if callbacks is None:
-        callbacks = []
-    custom_objects = params.pop("custom_objects")
-    if custom_objects is None:
-        custom_object = []
+    custom_object = kwargs.pop('custom_objects')
     loss = []
     val_loss = []
     # load model
@@ -92,7 +88,7 @@ def fit(model, params, data, data_val):
                 val_loss += h.history['val_loss']
 
     elif model.__class__.__name__ is "Sequential":
-        for d, dv in zip(datas, datas_val):
+        for d, dv in zip(data, data_val):
             X, y = d['X'], d['y']
             X_val, y_val = dv['X'], dv['y']
             h = model.fit(x=X,

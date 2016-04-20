@@ -47,7 +47,7 @@ class Experiment(object):
         self.model_dict = model_dict
         self.trained = False
 
-    def fit(self, data, data_val, hparams, model_dict):
+    def fit(self, data, data_val, hparams, model_dict, *args, **kwargs):
         """Build and fit a model given data and hyperparameters"""
         if model_dict is not None:
             self.model_dict = model_dict

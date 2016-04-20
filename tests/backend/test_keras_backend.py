@@ -185,7 +185,7 @@ def test_experiment():
 
     assert expe.backend is not None
 
-    expe.fit([data], [data_val], hparams)
+    expe.fit([data], [data_val])
     expe.predict(data)
 
 
