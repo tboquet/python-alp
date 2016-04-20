@@ -160,8 +160,6 @@ def test_experience():
     expe.fit(data, params)
     expe.predict(data)
 
-    expe = Experience("keras")
-    expe.build()
 
 if __name__ == "__main__":
     pytest.main([__file__])
