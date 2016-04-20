@@ -191,11 +191,15 @@ def test_experiment():
     expe.predict(data)
 
     # Case 2 Graph model
-    datas["X_vars"] = X_tr
-    datas["output"] = y_tr
 
-    datas_val["X_vars"] = X_te
-    datas_val["output"] = y_te
+    data = dict()
+    data_val = dict()
+
+    data["X_vars"] = X_tr
+    data["output"] = y_tr
+
+    data_val["X_vars"] = X_te
+    data_val["output"] = y_te
 
     model = Graph()
     model.add_input(name='X_vars', input_shape=(input_dim, ))
