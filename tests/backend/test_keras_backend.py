@@ -163,15 +163,13 @@ def test_experiment():
     data_val["X"] = X_te
     data_val["y"] = y_te
 
-    custom_objects = {"categorical_crossentropy": categorical_crossentropy}
 
     def categorical_crossentropy(y_true, y_pred):
         '''A test of custom loss function
         '''
         return K.categorical_crossentropy(y_pred, y_true)
 
-    hparams = {"nb_epoch": 2, "batch_size": batch_size,
-              "custom_objects": custom_objects}
+    custom_objects = {"categorical_crossentropy": categorical_crossentropy}
 
     model = Sequential()
     model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
@@ -185,7 +183,8 @@ def test_experiment():
 
     assert expe.backend is not None
 
-    expe.fit([data], [data_val])
+    expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
+             batch_size=batch_size)
     expe.predict(data)
 
 
