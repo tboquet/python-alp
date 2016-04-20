@@ -95,7 +95,7 @@ def fit(model, data, data_val, *args, **kwargs):
                           verbose=1,
                           validation_data=(X_val, y_val),
                           *args,
-                          **args)
+                          **kwargs)
             loss += h.history['loss']
             if 'val_loss' in h.history:
                 val_loss += h.history['val_loss']
