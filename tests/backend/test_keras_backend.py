@@ -155,7 +155,7 @@ def test_experiment():
                                                 input_shape=(input_dim,),
                                                 classification=True,
                                                 nb_class=nb_class)
-    datas, datas_val = dict(), dict()
+    data, data_val = dict(), dict()
 
     data["X"] = X_tr
     data["y"] = y_tr
