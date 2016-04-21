@@ -97,7 +97,7 @@ def test_train_model():
                   metrics=['accuracy'])
 
     model_json = to_dict_w_opt(model)
-    res = KTB.train_model(model_json, [datas], [datas_val], batch_size,
+    res = KTB.train_model(model_json, [data], [data_val], batch_size,
                           2, None, custom_objects)
 
     assert len(res[0]) == 2
@@ -118,11 +118,13 @@ def test_train_model():
 
     assert len(res[0]) == 2
 
-    datas["X_vars"] = X_tr
-    datas["output"] = y_tr
+    data, data_val = dict(), dict()
 
-    datas_val["X_vars"] = X_te
-    datas_val["output"] = y_te
+    data["X_vars"] = X_tr
+    data["output"] = y_tr
+
+    data_val["X_vars"] = X_te
+    data_val["output"] = y_te
 
     # Case 2 Graph model
     model = Graph()
@@ -138,7 +140,7 @@ def test_train_model():
     model.compile(optimizer='sgd', loss={'output': categorical_crossentropy})
 
     model_json = to_dict_w_opt(model)
-    res = KTB.train_model(model_json, [datas], [datas_val], batch_size,
+    res = KTB.train_model(model_json, [data], [data_val], batch_size,
                           2, [], custom_objects)
 
     assert len(res[0]) == 2
