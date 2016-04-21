@@ -67,7 +67,8 @@ def train_model(model_dict, datas, datas_val, batch_size=32,
 
 def fit(model, data, data_val, *args, **kwargs):
     """Fit a model given hyperparameters and a serialized model"""
-    custom_objects = kwargs.get('custom_objects')
+    if 'custom_objects' in kwargs:
+        custom_objects = kwargs.pop('custom_objects')
     loss = []
     val_loss = []
     # load model
@@ -134,9 +135,9 @@ def fit2(model, data, data_val, *args, **kwargs):
     # get the models collection
     models = get_models()
 
-    first = data.keys()[0]
-    un_data_m = data[first].mean()
-    un_data_f = data[first][0]
+    first = data[0].keys()[0]
+    un_data_m = data[0][first].mean()
+    un_data_f = data[0][first][0]
 
     # create the model hash from the stringified json
     mh = hashlib.md5()
