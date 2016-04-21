@@ -167,7 +167,7 @@ def fit2(model, data, data_val, *args, **kwargs):
                                            data_val,
                                            batch_size=batch_size,
                                            *args, **kwargs)
-        upres = models.update({"_id": mod_id}, {'$set': {
+        models.update({"_id": mod_id}, {'$set': {
             'train_loss': loss,
             'min_tloss': np.min(loss),
             'valid_loss': val_loss,
