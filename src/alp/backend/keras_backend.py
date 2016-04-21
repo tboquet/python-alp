@@ -84,6 +84,7 @@ def fit(model, data, data_val, *args, **kwargs):
             loss += h.history['loss']
             if 'val_loss' in h.history:
                 val_loss += h.history['val_loss']
+        max_iter = h.epoch[-1]
 
     elif model.__class__.__name__ is "Sequential":
         for d, dv in zip(data, data_val):
@@ -98,7 +99,7 @@ def fit(model, data, data_val, *args, **kwargs):
             loss += h.history['loss']
             if 'val_loss' in h.history:
                 val_loss += h.history['val_loss']
-            max_iter = h.epoch[-1]
+        max_iter = h.epoch[-1]
     else:
         raise NotImplementedError("This type of mode lis not supported")
 
@@ -118,7 +119,7 @@ def fit2(model, data, data_val, *args, **kwargs):
     Returns:
         the unique id of the model"""
 
-    from databasesetup import get_models
+    from .databasecon import get_models
     from datetime import datetime
     import hashlib
     import json

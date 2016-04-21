@@ -32,9 +32,13 @@ Overview
 
 .. end-badges
 
-   ALP (Asynchronous Learning Platform) helps you experiment quickly. It proposes you a simple way of scheduling and recording experiments.
 
-* Free software: BSD license
+ALP (Asynchronous Learning Platform) helps you experiment with a lot of machine learning models quickly. It provide you with a simple way of scheduling and recording experiments.
+
+You can easily define how many workers and how many clients are available in a configuration file.
+
+
+This library has been developped to work well with Keras but can suit a lot of other frameworks. 
 
 Installation
 ============
@@ -74,3 +78,5 @@ Note, to combine the coverage data from all the tox environments run:
       - ::
 
             PYTEST_ADDOPTS=--cov-append tox
+
+* Free software: BSD license
