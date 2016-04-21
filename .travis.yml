@@ -15,9 +15,7 @@ env:
     - TOXENV=py34,coveralls,codecov
     - TOXENV=py35,coveralls,codecov
 before_install:
-  - docker run -d -e RABBITMQ_NODENAME=rabbrok \
-       --hostname=rabrokp --name=rabbitmq_sched -p 8080:15672 -p 5672:5672\
-       --restart=always rabbitmq:3-management
+  - docker run -d -e RABBITMQ_NODENAME=rabbrok --hostname=rabrokp --name=rabbitmq_sched -p 8080:15672 -p 5672:5672 --restart=always rabbitmq:3-management
   - python --version
   - uname -a
   - lsb_release -a
