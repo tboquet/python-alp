@@ -67,7 +67,8 @@ def train_model(model_dict, datas, datas_val, batch_size=32,
 
 def fit(model, data, data_val, *args, **kwargs):
     """Fit a model given hyperparameters and a serialized model"""
-    custom_object = None
+    custom_objects = None
+
     if 'custom_objects' in kwargs:
         custom_objects = kwargs.pop('custom_objects')
     loss = []
