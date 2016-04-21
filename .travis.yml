@@ -13,6 +13,7 @@ env:
     - TOXENV=py34,coveralls,codecov
     - TOXENV=py35,coveralls,codecov
 before_install:
+  - sudo apt-get -qq update
   - python --version
   - uname -a
   - lsb_release -a

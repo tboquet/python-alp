@@ -103,7 +103,95 @@ def fit(model, data, data_val, *args, **kwargs):
     return loss, val_loss, model
 
 
+def fit(model, data, data_val, *args, **kwargs):
+    """A function to train models given a datagenerator,a serialized model,
+
+    Args:
+        model_str(str): the model dumped with the `to_json` method
+        data_gen(generator): a generator yielding (mini) batches of train and
+            validation data
+        offset(int): how many datapoints to burn
+
+    Returns:
+        the unique id of the model"""
+
+    from databasesetup import get_models
+    from datetime import datetime
+    import hashlib
+    import json
+    import numpy as np
+
+    batch_size = kwargs.pop("batch_size")
+    if batch_size is None:
+        batch_size = 32
+    if custom_objects == None:
+        custom_objects = []
+    if callbacks == None:
+        callbacks = []
+    # convert string to json
+    model_str = json.dumps(model)
+
+    # get the models collection
+    models = get_models()
+
+    first = data_t.keys()[0]
+    un_data_m = data_t[first].mean()
+    un_data_f = data_t[first][0]
+
+    # create the model hash from the stringified json
+    mh = hashlib.md5()
+    mh.update(model_str + str(batch_size))
+    hexdi_m = mh.hexdigest()
+
+    # create the data hash
+    dh = hashlib.md5()
+    dh.update(str(un_data) + str(un_data_f))
+    hexdi_d = dh.hexdigest()
+
+    params_dump = "/parameters_h5/" + hexdi_m + hexdi_d + '.h5'
+
+    # update the full json
+    full_json = {'keras_model': model_json,
+                 'datetime': datetime.now(),
+                 'hashed_mod': hexdi_m,
+                 'data_id': hexdi_d,
+                 'params_dump': params_dump,
+                 'batch_size': batch_size,
+                 'trained': 0,
+                 'data_path': "sent",
+                 'root': "sent",
+                 'data_s': "sent"}
+    mod_id = models.insert_one(full_json).inserted_id
+
+    try:
+        loss, val_loss, model = train_model(model, data,
+                                            data_val,
+                                            batch_size=batch_size,
+                                            nb_epoch=nb_epoch,
+                                            callbacks=callbacks)
+        upres = models.update({"_id": mod_id}, {'$set': {
+            'train_loss': loss,
+            'min_tloss': np.min(loss),
+            'valid_loss': val_loss,
+            'min_vloss': np.min(val_loss),
+            'iter_stopped': nb_epoch * len(datas),
+            'trained': 1,
+            'date_finished_trained': datetime.now()
+        }})
+
+        model.save_weights(params_dump, overwrite=True)
+
+    except MemoryError as e:
+        models.delete_one({'hashed_mod': hexdi})
+        raise self.retry(exc=exc)
+
+    except Exception as e:
+        upres = models.update({"_id": mod_id}, {'$set': {'error': 1}})
+        raise e
+    return hexdi
+
+
 @app.task
-def predict(model, data):
+def predict(model, data, *args, **kwargs):
     """Dummy predict for now"""
     return model

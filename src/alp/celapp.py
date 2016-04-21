@@ -1,6 +1,9 @@
 """Simple celery config"""
 
 from celery import Celery
+from config import BACKEND
+from config import BROKER
 
-app = Celery(broker='amqp://guest:guest@rabbitmq:5672//',
-             backend='mongodb://mongo_r:27017')
+
+app = Celery(BROKER,
+             BACKEND)
