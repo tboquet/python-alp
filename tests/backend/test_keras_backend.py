@@ -78,13 +78,13 @@ def test_train_model():
     y_tr = np_utils.to_categorical(y_tr)
     y_te = np_utils.to_categorical(y_te)
 
-    datas, datas_val = dict(), dict()
+    data, data_val = dict(), dict()
 
-    datas["X"] = X_tr
-    datas["y"] = y_tr
+    data["X"] = X_tr
+    data["y"] = y_tr
 
-    datas_val["X"] = X_te
-    datas_val["y"] = y_te
+    data_val["X"] = X_te
+    data_val["y"] = y_te
 
     custom_objects = {"categorical_crossentropy": categorical_crossentropy}
 
@@ -111,8 +111,10 @@ def test_train_model():
                   metrics=['accuracy'])
 
     model_json = to_dict_w_opt(model)
-    res = KTB.train_model(model_json, [datas], [datas_val], batch_size,
+    res = KTB.train_model(model_json, [data], [data_val], batch_size,
                           2, [])
+
+    res = KTB.fit2(model_json, [data], [data_val])
 
     assert len(res[0]) == 2
 
