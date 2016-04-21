@@ -4,3 +4,4 @@ scipy
 keras
 celery
 pymongo
+h5py
