@@ -17,6 +17,8 @@ env:
     - TOXENV=py34,coveralls,codecov
     - TOXENV=py35,coveralls,codecov
 before_install:
+  - sudo apt-get install build-essential
+  - sudo apt-get install libhdf5-dev
   - python --version
   - uname -a
   - lsb_release -a
