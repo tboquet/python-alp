@@ -180,8 +180,8 @@ def fit2(model, data, data_val, *args, **kwargs):
         model.save_weights(params_dump, overwrite=True)
 
     except MemoryError as e:
-        models.delete_one({'hashed_mod': hexdi_m})
-        raise self.retry(exc=exc) # pragma: no cover
+        models.delete_one({'hashed_mod': hexdi_m}) 
+        raise self.retry(exc=exc)  # pragma: no cover
 
     except Exception as e:
         models.update({"_id": mod_id}, {'$set': {'error': 1}})
