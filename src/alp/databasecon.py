@@ -3,7 +3,6 @@
 ----------------------------------------------------------------------------
 """
 
-import os
 from pymongo import MongoClient
 from config import COLLECTION_NAME
 from config import DB_NAME
