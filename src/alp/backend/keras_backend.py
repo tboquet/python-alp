@@ -98,7 +98,7 @@ def fit(model, data, data_val, *args, **kwargs):
             loss += h.history['loss']
             if 'val_loss' in h.history:
                 val_loss += h.history['val_loss']
-            max_iter = h.history
+            max_iter = np.max(h.epoch)
     else:
         raise NotImplementedError("This type of mode lis not supported")
 
@@ -172,7 +172,7 @@ def fit2(model, data, data_val, *args, **kwargs):
             'min_tloss': np.min(loss),
             'valid_loss': val_loss,
             'min_vloss': np.min(val_loss),
-            'iter_stopped': nb_epoch * len(data),
+            'iter_stopped': iters * len(data),
             'trained': 1,
             'date_finished_trained': datetime.now()
         }})
