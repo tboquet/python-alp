@@ -67,7 +67,7 @@ def train_model(model_dict, datas, datas_val, batch_size=32,
 
 def fit(model, data, data_val, *args, **kwargs):
     """Fit a model given hyperparameters and a serialized model"""
-    custom_objects = kwargs.pop('custom_objects')
+    custom_objects = kwargs.get('custom_objects')
     loss = []
     val_loss = []
     # load model
@@ -125,7 +125,7 @@ def fit2(model, data, data_val, *args, **kwargs):
     import json
     import numpy as np
 
-    batch_size = kwargs.pop("batch_size")
+    batch_size = kwargs.get("batch_size")
     if batch_size is None:
         batch_size = 32
     # convert string to json
