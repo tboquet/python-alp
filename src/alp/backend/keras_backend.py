@@ -151,7 +151,7 @@ def fit2(model, data, data_val, *args, **kwargs):
     dh.update(str(un_data_m) + str(un_data_f))
     hexdi_d = dh.hexdigest()
 
-    params_dump = "/parameters_h5/" + hexdi_m + hexdi_d + '.h5'
+    params_dump = + hexdi_m + hexdi_d + '.h5'
 
     # update the full json
     full_json = {'keras_model': model,
