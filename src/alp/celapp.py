@@ -5,5 +5,5 @@ from .config import BACKEND
 from .config import BROKER
 
 
-app = Celery(BROKER,
-             BACKEND)
+app = Celery(broker=BROKER,
+             backend=BACKEND)
