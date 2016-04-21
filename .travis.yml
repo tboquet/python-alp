@@ -23,6 +23,7 @@ before_install:
   - uname -a
   - lsb_release -a
 install:
+  - pip install cython
   - pip install tox
   - virtualenv --version
   - easy_install --version
