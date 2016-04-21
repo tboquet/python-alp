@@ -119,7 +119,7 @@ def fit2(model, data, data_val, *args, **kwargs):
     Returns:
         the unique id of the model"""
 
-    from .databasecon import get_models
+    from ..databasecon import get_models
     from datetime import datetime
     import hashlib
     import json
