@@ -3,7 +3,7 @@ python: '3.5'
 sudo: required
 services:
   - rabbitmq
-  - mongod
+  - mongodb
 env:
   global:
     - LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so

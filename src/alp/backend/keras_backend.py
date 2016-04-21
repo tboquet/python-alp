@@ -65,7 +65,6 @@ def train_model(model_dict, datas, datas_val, batch_size=32,
     return loss, val_loss, model
 
 
-@app.task(default_retry_delay=60 * 10, max_retries=3, rate_limit='120/m')
 def fit(model, data, data_val, *args, **kwargs):
     """Fit a model given hyperparameters and a serialized model"""
     custom_objects = kwargs.pop('custom_objects')
@@ -99,11 +98,15 @@ def fit(model, data, data_val, *args, **kwargs):
             loss += h.history['loss']
             if 'val_loss' in h.history:
                 val_loss += h.history['val_loss']
+            max_iter = h.history
+    else:
+        raise NotImplementedError("This type of mode lis not supported")
 
-    return loss, val_loss, model
+    return loss, val_loss, max_iter, model
 
 
-def fit(model, data, data_val, *args, **kwargs):
+@app.task(default_retry_delay=60 * 10, max_retries=3, rate_limit='120/m')
+def fit2(model, data, data_val, *args, **kwargs):
     """A function to train models given a datagenerator,a serialized model,
 
     Args:
@@ -124,19 +127,15 @@ def fit(model, data, data_val, *args, **kwargs):
     batch_size = kwargs.pop("batch_size")
     if batch_size is None:
         batch_size = 32
-    if custom_objects == None:
-        custom_objects = []
-    if callbacks == None:
-        callbacks = []
     # convert string to json
     model_str = json.dumps(model)
 
     # get the models collection
     models = get_models()
 
-    first = data_t.keys()[0]
-    un_data_m = data_t[first].mean()
-    un_data_f = data_t[first][0]
+    first = data.keys()[0]
+    un_data_m = data[first].mean()
+    un_data_f = data[first][0]
 
     # create the model hash from the stringified json
     mh = hashlib.md5()
@@ -145,13 +144,13 @@ def fit(model, data, data_val, *args, **kwargs):
 
     # create the data hash
     dh = hashlib.md5()
-    dh.update(str(un_data) + str(un_data_f))
+    dh.update(str(un_data_m) + str(un_data_f))
     hexdi_d = dh.hexdigest()
 
     params_dump = "/parameters_h5/" + hexdi_m + hexdi_d + '.h5'
 
     # update the full json
-    full_json = {'keras_model': model_json,
+    full_json = {'keras_model': model,
                  'datetime': datetime.now(),
                  'hashed_mod': hexdi_m,
                  'data_id': hexdi_d,
@@ -164,17 +163,16 @@ def fit(model, data, data_val, *args, **kwargs):
     mod_id = models.insert_one(full_json).inserted_id
 
     try:
-        loss, val_loss, model = train_model(model, data,
-                                            data_val,
-                                            batch_size=batch_size,
-                                            nb_epoch=nb_epoch,
-                                            callbacks=callbacks)
+        loss, val_loss, iters, model = fit(model, data,
+                                           data_val,
+                                           batch_size=batch_size,
+                                           *args, **kwargs)
         upres = models.update({"_id": mod_id}, {'$set': {
             'train_loss': loss,
             'min_tloss': np.min(loss),
             'valid_loss': val_loss,
             'min_vloss': np.min(val_loss),
-            'iter_stopped': nb_epoch * len(datas),
+            'iter_stopped': nb_epoch * len(data),
             'trained': 1,
             'date_finished_trained': datetime.now()
         }})
@@ -182,13 +180,13 @@ def fit(model, data, data_val, *args, **kwargs):
         model.save_weights(params_dump, overwrite=True)
 
     except MemoryError as e:
-        models.delete_one({'hashed_mod': hexdi})
-        raise self.retry(exc=exc)
+        models.delete_one({'hashed_mod': hexdi_m})
+        raise self.retry(exc=exc) # pragma: no cover
 
     except Exception as e:
-        upres = models.update({"_id": mod_id}, {'$set': {'error': 1}})
+        models.update({"_id": mod_id}, {'$set': {'error': 1}})
         raise e
-    return hexdi
+    return hexdi_m, hexdi_d
 
 
 @app.task
