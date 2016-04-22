@@ -23,7 +23,7 @@ addons:
     packages:
       - libhdf5-serial-dev
 before_install:
-  - sudo mkdir /parameters_h5
+  - mkdir /parameters_h5
   - sudo apt-get install build-essential
   - python --version
   - uname -a
