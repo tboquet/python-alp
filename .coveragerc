@@ -15,5 +15,6 @@ omit = *migrations*
 exclude_lines =
     pragma: no cover
     raise Exception
+    except Exception as e:
     raise NotImplementedError
     except MemoryError
