@@ -21,3 +21,4 @@ PATH_H5 = '/parameters_h5/'
 if os.getenv("TEST_MODE") == "ON":
     HOST_ADRESS = '127.0.0.1'
     BACKEND = 'mongodb://127.0.0.1:27017'
+    PATH_H5 = ''

@@ -23,7 +23,6 @@ addons:
     packages:
       - libhdf5-serial-dev
 before_install:
-  - mkdir /parameters_h5
   - sudo apt-get install build-essential
   - python --version
   - uname -a
@@ -31,7 +30,7 @@ before_install:
 install:
   - pip install auxlib
   - pip install conda
-  - conda install -y cython
+  - conda install -y cython h5py
   - pip install tox
   - virtualenv --version
   - easy_install --version
