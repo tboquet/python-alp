@@ -116,7 +116,7 @@ def test_train_model():
 
     res = KTB.fit2(model_json, [data], [data_val])
 
-    assert len(res[0]) == 2
+    assert len(res) == 2
 
     data, data_val = dict(), dict()
 
