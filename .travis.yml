@@ -29,6 +29,7 @@ before_install:
   - uname -a
   - lsb_release -a
 install:
+  - pip install auxlib
   - pip install conda
   - conda install -y cython
   - pip install tox
