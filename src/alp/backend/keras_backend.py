@@ -149,7 +149,7 @@ def fit2(model, data, data_val, *args, **kwargs):
 
     # create the data hash
     dh = hashlib.md5()
-    dh.update(str(un_data_m) + str(un_data_f))
+    dh.update(un_data_m.encode('utf-8') + str(un_data_f))
     hexdi_d = dh.hexdigest()
 
     params_dump = PATH_H5 + hexdi_m + hexdi_d + '.h5'

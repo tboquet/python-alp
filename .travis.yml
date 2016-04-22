@@ -28,9 +28,6 @@ before_install:
   - uname -a
   - lsb_release -a
 install:
-  - pip install auxlib
-  - pip install conda
-  - conda install -y cython h5py
   - pip install tox
   - virtualenv --version
   - easy_install --version

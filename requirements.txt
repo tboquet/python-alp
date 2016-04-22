@@ -1,3 +1,6 @@
+wheel
+cython
+h5py
 numpy
 scipy
 -e git+git://github.com/Theano/Theano.git#egg=package
