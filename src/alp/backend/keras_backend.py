@@ -4,6 +4,7 @@ import keras.backend as K
 
 from ..celapp import app
 from .utils.keras_utils import model_from_dict_w_opt
+from ..config import PATH_H5
 
 
 def build_predict_func(mod):
@@ -151,7 +152,7 @@ def fit2(model, data, data_val, *args, **kwargs):
     dh.update(str(un_data_m) + str(un_data_f))
     hexdi_d = dh.hexdigest()
 
-    params_dump = + hexdi_m + hexdi_d + '.h5'
+    params_dump = PATH_H5 + hexdi_m + hexdi_d + '.h5'
 
     # update the full json
     full_json = {'keras_model': model,
