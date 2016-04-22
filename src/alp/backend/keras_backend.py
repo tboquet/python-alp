@@ -144,13 +144,14 @@ def fit2(model, data, data_val, *args, **kwargs):
 
     # create the model hash from the stringified json
     mh = hashlib.md5()
-    str_concat = str(model_str) + str(batch_size)
-    mh.update(str_concat.encode('utf-8'))
+    str_concat_m = str(model_str) + str(batch_size)
+    mh.update(str_concat_m.encode('utf-8'))
     hexdi_m = mh.hexdigest()
 
     # create the data hash
     dh = hashlib.md5()
-    dh.update(str(un_data_m) + str(un_data_f))
+    str_concat_d = str(un_data_m) + str(un_data_f)
+    dh.update(str_concat_d.encode('utf-8'))
     hexdi_d = dh.hexdigest()
 
     params_dump = PATH_H5 + hexdi_m + hexdi_d + '.h5'
