@@ -3,8 +3,8 @@
 import keras.backend as K
 
 from ..celapp import app
-from .utils.keras_utils import model_from_dict_w_opt
 from ..config import PATH_H5
+from .utils.keras_utils import model_from_dict_w_opt
 
 
 def build_predict_func(mod):
@@ -138,7 +138,7 @@ def fit2(model, data, data_val, *args, **kwargs):
     # get the models collection
     models = get_models()
 
-    first = data[0].keys()[0]
+    first = list(data[0].keys())[0]
     un_data_m = data[0][first].mean()
     un_data_f = data[0][first][0]
 
