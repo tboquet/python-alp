@@ -100,6 +100,7 @@ def test_fit():
 
     model_json = to_dict_w_opt(model)
 
+    res = KTB.train(model_json, [data], [data_val])
     res = KTB.fit(model_json, [data], [data_val])
 
     assert len(res) == 2
