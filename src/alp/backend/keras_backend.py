@@ -1,12 +1,12 @@
 """Adaptor for the Keras backend"""
 
 import keras.backend as K
-
-from ..celapp import app
-from ..config import PATH_H5
 import six
 from keras import optimizers
 from keras.utils.layer_utils import layer_from_config
+
+from ..celapp import app
+from ..config import PATH_H5
 
 
 # Serialization utilities
