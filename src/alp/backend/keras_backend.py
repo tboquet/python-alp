@@ -141,7 +141,9 @@ def train(model, data, data_val, *args, **kwargs):
                 val_loss += h.history['val_loss']
         max_iter = h.epoch[-1]
     else:
-        raise NotImplementedError("This type of mode lis not supported")
+        mod_name = model.__class__.__name__
+        raise NotImplementedError("This type of model"
+                                  "is not supported: {}".format(mod_name))
 
     return loss, val_loss, max_iter, model
 
