@@ -22,7 +22,7 @@ addons:
       repo_token: dfe5865d21322900ba6972d30da44e2859d3533fead6c26cdf217ebb540000ce
   apt:
     packages:
-      - libhdf5-serial-dev
+      - libhdf5-dev
 before_install:
   - sudo apt-get install build-essential
   - python --version
