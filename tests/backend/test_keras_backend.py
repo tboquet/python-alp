@@ -98,7 +98,7 @@ def test_fit():
 
     assert len(res) == 2
 
-    # Case 3 without custom objects
+    # Case 2 without custom objects
     model = Sequential()
     model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
     model.add(Dense(nb_class, activation='softmax'))
@@ -112,6 +112,8 @@ def test_fit():
 
     assert len(res) == 2
 
+    # Case 3 Graph model
+
     data, data_val = dict(), dict()
 
     data["X_vars"] = X_tr
@@ -120,7 +122,6 @@ def test_fit():
     data_val["X_vars"] = X_te
     data_val["output"] = y_te
 
-    # Case 2 Graph model
     model = Graph()
     model.add_input(name='X_vars', input_shape=(input_dim, ))
 
@@ -228,11 +229,9 @@ def test_experiment():
              custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
     expe.predict(data)
-    expe.trained = False
-    expe.predict(data)
 
-    # Case 3 Model
-    # this returns a tensor
+    # Case 4 Model
+
     inputs = Input(shape=(input_dim,))
 
     # a layer instance is callable on a tensor, and returns a tensor
@@ -246,6 +245,17 @@ def test_experiment():
     model.compile(optimizer='rmsprop',
                 loss=categorical_crossentropy,
                 metrics=['accuracy'])
+
+    expe = Experiment("keras", model)
+
+    assert expe.backend is not None
+
+    expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
+             batch_size=batch_size)
+    expe.fit([data], [data_val], model=model,
+             custom_objects=custom_objects, nb_epoch=2,
+             batch_size=batch_size)
+    expe.predict(data)
 
 
 if __name__ == "__main__":

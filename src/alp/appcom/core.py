@@ -65,5 +65,5 @@ class Experiment(object):
         if self.trained:
             return self.backend.predict(self.model_dict, data)
         else:
-            raise Exception("You must have a trained model" \
+            raise Exception("You must have a trained model"
                             "in order to make prediction")
