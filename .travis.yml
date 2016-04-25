@@ -4,7 +4,6 @@ sudo: required
 dist: trusty
 services:
   - rabbitmq
-  - mongodb
 env:
   global:
     - LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so

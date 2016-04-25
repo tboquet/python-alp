@@ -28,12 +28,7 @@ test_samples = 20
 
 def test_build_predict_func():
     """Test the build of a model"""
-    (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
-                                                nb_test=test_samples,
-                                                input_shape=(input_dim,),
-                                                classification=True,
-                                                nb_class=nb_class)
-
+    X_tr = np.ones((train_samples, input_dim))
     model = Sequential()
     model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
     model.add(Dense(nb_class, activation='softmax'))
@@ -58,9 +53,9 @@ def test_build_predict_func():
     model.compile(optimizer='sgd', loss={'output': 'mse'})
 
     pred_func = KTB.build_predict_func(model)
-    res = pred_func([X_te])
+    res = pred_func([X_tr])
 
-    assert len(res[0]) == len(X_te)
+    assert len(res[0]) == len(X_tr)
 
 
 def test_fit():
