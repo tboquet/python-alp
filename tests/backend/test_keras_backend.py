@@ -256,6 +256,10 @@ def test_experiment():
              custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
     expe.predict(data)
+    expe.trained = False
+    expe.predict(data)
+    expe.trained = False
+    expe.predict(data)
 
 
 if __name__ == "__main__":
