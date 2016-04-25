@@ -86,9 +86,8 @@ def fit(model, data, data_val, *args, **kwargs):
     import json
     import numpy as np
 
-    batch_size = kwargs.get("batch_size")
-    if batch_size is None:
-        batch_size = 32
+    if kwargs.get("batch_size") is None:
+        kwargs['batch_size'] = 32
     # convert string to json
     model_str = json.dumps(model)
 
@@ -129,7 +128,6 @@ def fit(model, data, data_val, *args, **kwargs):
     try:
         loss, val_loss, iters, model = train(model, data,
                                              data_val,
-                                             batch_size=batch_size,
                                              *args, **kwargs)
         models.update({"_id": mod_id}, {'$set': {
             'train_loss': loss,
