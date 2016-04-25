@@ -2,9 +2,11 @@
 
 import numpy as np
 import pytest
-from keras.layers.core import Dense
+from keras.layers import Dense
+from keras.layers import Input
 from keras.models import Graph
-from keras. models import Sequential
+from keras.models import Model
+from keras.models import Sequential
 from keras.utils import np_utils
 from keras.utils.test_utils import get_test_data
 
@@ -145,6 +147,25 @@ def test_train_model():
 
     assert len(res[0]) == 2
 
+    # this returns a tensor
+    inputs = Input(shape=(input_dim,))
+
+    # a layer instance is callable on a tensor, and returns a tensor
+    x = Dense(nb_hidden, activation='relu')(inputs)
+    x = Dense(nb_hidden, activation='relu')(x)
+    predictions = Dense(nb_class, activation='softmax')(x)
+
+    # this creates a model that includes
+    # the Input layer and three Dense layers
+    model = Model(input=inputs, output=predictions)
+    model.compile(optimizer='rmsprop',
+                loss=categorical_crossentropy,
+                metrics=['accuracy'])
+
+    model_json = to_dict_w_opt(model)
+    res = KTB.train_model(model_json, [data], [data_val], batch_size,
+                          2, [], custom_objects)
+                          
 
 def test_utils():
     assert get_function_name("bob") == "bob"
