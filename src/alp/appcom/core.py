@@ -46,13 +46,13 @@ class Experiment(object):
 
     @appbackend
     def __init__(self, backend, model=None):
-        self.model_dict = to_dict_w_opt(copy.deepcopy(model_dict))
+        self.model_dict = self.backend.to_dict_w_opt(copy.deepcopy(model_dict))
         self.trained = False
 
     def fit(self, data, data_val, model=None, *args, **kwargs):
         """Build and fit a model given data and hyperparameters"""
-        if model_dict is not None:
-            self.model_dict = to_dict_w_opt(copy.deepcopy(model_dict))
+        if model is not None:
+            self.model_dict = self.backend.to_dict_w_opt(copy.deepcopy(model))
         if self.model_dict is None:
             raise Exception("You must pass a model to an Experiment")
         self.res = self.backend.fit(self.model_dict, data, data_val,
