@@ -100,9 +100,9 @@ def test_fit():
 
     model_json = to_dict_w_opt(model)
 
-    res = KTB.fit2(model_json, [data], [data_val])
+    res = KTB.fit(model_json, [data], [data_val])
 
-    assert len(res[0]) == 2
+    assert len(res) == 2
 
     # Case 3 without custom objects
     model = Sequential()
@@ -114,7 +114,7 @@ def test_fit():
 
     model_json = to_dict_w_opt(model)
 
-    res = KTB.fit2(model_json, [data], [data_val])
+    res = KTB.fit(model_json, [data], [data_val])
 
     assert len(res) == 2
 
@@ -140,12 +140,12 @@ def test_fit():
     model.compile(optimizer='sgd', loss={'output': categorical_crossentropy})
 
     model_json = to_dict_w_opt(model)
-    res = KTB.fit2(model_json, [data], [data_val])
+    res = KTB.fit(model_json, [data], [data_val])
 
     assert len(res[0]) == 2
 
     model_json = to_dict_w_opt(model)
-    res = KTB.fit2(model_json, [data], [data_val])
+    res = KTB.fit(model_json, [data], [data_val])
                           
     assert len(res[0]) == 2
 

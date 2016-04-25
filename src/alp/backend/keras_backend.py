@@ -68,7 +68,7 @@ def train(model, data, data_val, *args, **kwargs):
 
 
 @app.task(default_retry_delay=60 * 10, max_retries=3, rate_limit='120/m')
-def fit2(model, data, data_val, *args, **kwargs):
+def fit(model, data, data_val, *args, **kwargs):
     """A function to train models given a datagenerator,a serialized model,
 
     Args:
