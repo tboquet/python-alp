@@ -196,6 +196,10 @@ def test_experiment():
 
     expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
+
+    expe.fit([data], [data_val], model_dict=model_dict,
+             custom_objects=custom_objects, nb_epoch=2,
+             batch_size=batch_size)
     expe.predict(data)
 
     # Case 2 Graph model
