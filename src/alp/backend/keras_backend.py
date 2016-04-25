@@ -100,7 +100,7 @@ def fit(model, data, data_val, *args, **kwargs):
 
     # create the model hash from the stringified json
     mh = hashlib.md5()
-    str_concat_m = str(model_str) + str(batch_size)
+    str_concat_m = str(model_str) + str(kwargs['batch_size'])
     mh.update(str_concat_m.encode('utf-8'))
     hexdi_m = mh.hexdigest()
 
@@ -118,7 +118,7 @@ def fit(model, data, data_val, *args, **kwargs):
                  'hashed_mod': hexdi_m,
                  'data_id': hexdi_d,
                  'params_dump': params_dump,
-                 'batch_size': batch_size,
+                 'batch_size': kwargs['batch_size'],
                  'trained': 0,
                  'data_path': "sent",
                  'root': "sent",
