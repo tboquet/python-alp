@@ -31,7 +31,6 @@ in memory compiled function, this function is used instead.
 
 import copy
 from .utils import appbackend
-from ..backend.utils.keras_utils import to_dict_w_opt
 
 COMPILED_MODELS = dict()
 
@@ -46,7 +45,7 @@ class Experiment(object):
 
     @appbackend
     def __init__(self, backend, model=None):
-        self.model_dict = self.backend.to_dict_w_opt(copy.deepcopy(model_dict))
+        self.model_dict = self.backend.to_dict_w_opt(copy.deepcopy(model))
         self.trained = False
 
     def fit(self, data, data_val, model=None, *args, **kwargs):
