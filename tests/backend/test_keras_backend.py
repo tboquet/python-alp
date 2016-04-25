@@ -63,7 +63,7 @@ def test_build_predict_func():
     assert len(res[0]) == len(X_te)
 
 
-def test_train_model():
+def test_fit():
     "Test the training of a serialized model"
     import keras.backend as K
     def categorical_crossentropy(y_true, y_pred):
@@ -99,8 +99,8 @@ def test_train_model():
                   metrics=['accuracy'])
 
     model_json = to_dict_w_opt(model)
-    res = KTB.train_model(model_json, [data], [data_val], batch_size,
-                          2, None, custom_objects)
+
+    res = KTB.fit2(model_json, [data], [data_val])
 
     assert len(res[0]) == 2
 
@@ -113,8 +113,6 @@ def test_train_model():
                   metrics=['accuracy'])
 
     model_json = to_dict_w_opt(model)
-    res = KTB.train_model(model_json, [data], [data_val], batch_size,
-                          2, [])
 
     res = KTB.fit2(model_json, [data], [data_val])
 
@@ -142,30 +140,15 @@ def test_train_model():
     model.compile(optimizer='sgd', loss={'output': categorical_crossentropy})
 
     model_json = to_dict_w_opt(model)
-    res = KTB.train_model(model_json, [data], [data_val], batch_size,
-                          2, [], custom_objects)
+    res = KTB.fit2(model_json, [data], [data_val])
 
     assert len(res[0]) == 2
 
-    # this returns a tensor
-    inputs = Input(shape=(input_dim,))
-
-    # a layer instance is callable on a tensor, and returns a tensor
-    x = Dense(nb_hidden, activation='relu')(inputs)
-    x = Dense(nb_hidden, activation='relu')(x)
-    predictions = Dense(nb_class, activation='softmax')(x)
-
-    # this creates a model that includes
-    # the Input layer and three Dense layers
-    model = Model(input=inputs, output=predictions)
-    model.compile(optimizer='rmsprop',
-                loss=categorical_crossentropy,
-                metrics=['accuracy'])
-
     model_json = to_dict_w_opt(model)
-    res = KTB.train_model(model_json, [data], [data_val], batch_size,
-                          2, [], custom_objects)
+    res = KTB.fit2(model_json, [data], [data_val])
                           
+    assert len(res[0]) == 2
+
 
 def test_utils():
     assert get_function_name("bob") == "bob"
@@ -252,6 +235,22 @@ def test_experiment():
     expe.predict(data)
     expe.trained = False
     expe.predict(data)
+
+    # Case 3 Model
+    # this returns a tensor
+    inputs = Input(shape=(input_dim,))
+
+    # a layer instance is callable on a tensor, and returns a tensor
+    x = Dense(nb_hidden, activation='relu')(inputs)
+    x = Dense(nb_hidden, activation='relu')(x)
+    predictions = Dense(nb_class, activation='softmax')(x)
+
+    # this creates a model that includes
+    # the Input layer and three Dense layers
+    model = Model(input=inputs, output=predictions)
+    model.compile(optimizer='rmsprop',
+                loss=categorical_crossentropy,
+                metrics=['accuracy'])
 
 
 if __name__ == "__main__":

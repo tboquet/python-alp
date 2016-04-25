@@ -23,50 +23,7 @@ def build_predict_func(mod):
     return K.function(mod.inputs, mod.outputs, updates=mod.state_updates)
 
 
-def train_model(model_dict, datas, datas_val, batch_size=32,
-                nb_epoch=10, callbacks=None, custom_objects=None):
-    """Train a model given hyperparameters and a serialized model"""
-
-    if callbacks is None:
-        callbacks = []
-    loss = []
-    val_loss = []
-    # load model
-    model = model_from_dict_w_opt(model_dict, custom_objects=custom_objects)
-
-    # fit the model according to the input/output type
-    if model.__class__.__name__ is "Graph":
-        for d, dv in zip(datas, datas_val):
-            h = model.fit(data=d,
-                          batch_size=batch_size,
-                          nb_epoch=nb_epoch,
-                          verbose=1,
-                          callbacks=callbacks,
-                          validation_data=dv)
-            loss += h.history['loss']
-            if 'val_loss' in h.history:
-                val_loss += h.history['val_loss']
-
-    elif model.__class__.__name__ is "Sequential":
-        # unpack data
-        for d, dv in zip(datas, datas_val):
-            X, y = d['X'], d['y']
-            X_val, y_val = dv['X'], dv['y']
-            h = model.fit(x=X,
-                          y=y,
-                          batch_size=batch_size,
-                          nb_epoch=nb_epoch,
-                          verbose=1,
-                          callbacks=callbacks,
-                          validation_data=(X_val, y_val))
-            loss += h.history['loss']
-            if 'val_loss' in h.history:
-                val_loss += h.history['val_loss']
-
-    return loss, val_loss, model
-
-
-def fit(model, data, data_val, *args, **kwargs):
+def train(model, data, data_val, *args, **kwargs):
     """Fit a model given hyperparameters and a serialized model"""
     custom_objects = None
 
@@ -170,10 +127,10 @@ def fit2(model, data, data_val, *args, **kwargs):
     mod_id = models.insert_one(full_json).inserted_id
 
     try:
-        loss, val_loss, iters, model = fit(model, data,
-                                           data_val,
-                                           batch_size=batch_size,
-                                           *args, **kwargs)
+        loss, val_loss, iters, model = train(model, data,
+                                             data_val,
+                                             batch_size=batch_size,
+                                             *args, **kwargs)
         models.update({"_id": mod_id}, {'$set': {
             'train_loss': loss,
             'min_tloss': np.min(loss),
