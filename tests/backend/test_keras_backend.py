@@ -189,15 +189,14 @@ def test_experiment():
                   optimizer='rmsprop',
                   metrics=['accuracy'])
 
-    model_dict = to_dict_w_opt(model)
-    expe = Experiment("keras", model_dict)
+    expe = Experiment("keras", model)
 
     assert expe.backend is not None
 
     expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
 
-    expe.fit([data], [data_val], model_dict=model_dict,
+    expe.fit([data], [data_val], model=model,
              custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
     expe.predict(data)
@@ -225,15 +224,13 @@ def test_experiment():
     model.add_output(name='output', input='last_dense')
     model.compile(optimizer='sgd', loss={'output': categorical_crossentropy})
 
-    model_dict = to_dict_w_opt(model)
-
-    expe = Experiment("keras", model_dict)
+    expe = Experiment("keras", model)
 
     assert expe.backend is not None
 
     expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
-    expe.fit([data], [data_val], model_dict=model_dict,
+    expe.fit([data], [data_val], model=model,
              custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
     expe.predict(data)

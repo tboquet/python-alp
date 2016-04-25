@@ -31,7 +31,7 @@ in memory compiled function, this function is used instead.
 
 import copy
 from .utils import appbackend
-
+from ..backend.utils.keras_utils import to_dict_w_opt
 
 COMPILED_MODELS = dict()
 
@@ -45,14 +45,14 @@ class Experiment(object):
     backend = None
 
     @appbackend
-    def __init__(self, backend, model_dict=None):
-        self.model_dict = copy.deepcopy(model_dict)
+    def __init__(self, backend, model=None):
+        self.model_dict = to_dict_w_opt(copy.deepcopy(model_dict))
         self.trained = False
 
-    def fit(self, data, data_val, model_dict=None, *args, **kwargs):
+    def fit(self, data, data_val, model=None, *args, **kwargs):
         """Build and fit a model given data and hyperparameters"""
         if model_dict is not None:
-            self.model_dict = copy.deepcopy(model_dict)
+            self.model_dict = to_dict_w_opt(copy.deepcopy(model_dict))
         if self.model_dict is None:
             raise Exception("You must pass a model to an Experiment")
         self.res = self.backend.fit(self.model_dict, data, data_val,
