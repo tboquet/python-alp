@@ -88,8 +88,6 @@ def test_fit():
     data_val["X"] = X_te
     data_val["y"] = y_te
 
-    custom_objects = {"categorical_crossentropy": categorical_crossentropy}
-
     # Case 1 sequential model
     model = Sequential()
     model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
@@ -147,7 +145,7 @@ def test_fit():
 
     model_json = to_dict_w_opt(model)
     res = KTB.fit(model_json, [data], [data_val])
-                          
+
     assert len(res) == 2
 
 
