@@ -142,12 +142,12 @@ def test_fit():
     model_json = to_dict_w_opt(model)
     res = KTB.fit(model_json, [data], [data_val])
 
-    assert len(res[0]) == 2
+    assert len(res) == 2
 
     model_json = to_dict_w_opt(model)
     res = KTB.fit(model_json, [data], [data_val])
                           
-    assert len(res[0]) == 2
+    assert len(res) == 2
 
 
 def test_utils():
