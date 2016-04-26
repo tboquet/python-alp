@@ -23,7 +23,7 @@ def to_dict_w_opt(model, metrics=None):
     if hasattr(model, 'optimizer'):
         config['optimizer'] = model.optimizer.get_config()
     if hasattr(model, 'loss'):
-        name_out = [l.name for l  in model.output_layers]
+        name_out = [l.name for l in model.output_layers]
         if isinstance(model.loss, dict):
             config['loss'] = dict([(k, get_function_name(v))
                                    for k, v in model.loss.items()])
@@ -32,7 +32,6 @@ def to_dict_w_opt(model, metrics=None):
         else:
             config['loss'] = dict(zip(name_out,
                                       [get_function_name(model.loss)]))
-            
     if metrics is not None:
         config['metrics'] = metrics
 
