@@ -23,15 +23,16 @@ def to_dict_w_opt(model, metrics=None):
     if hasattr(model, 'optimizer'):
         config['optimizer'] = model.optimizer.get_config()
     if hasattr(model, 'loss'):
-        name_out = [l.name for l in model.output_layers]
+        name_out = [l.name for l  in model.output_layers]
         if isinstance(model.loss, dict):
             config['loss'] = dict([(k, get_function_name(v))
                                    for k, v in model.loss.items()])
         elif isinstance(model.loss, list):
             config['loss'] = dict(zip(name_out, [l for l in model.loss]))
         else:
-            config['loss'] = get_function_name(model.loss)
-
+            config['loss'] = dict(zip(name_out,
+                                      [get_function_name(model.loss)]))
+            
     if metrics is not None:
         config['metrics'] = metrics
 
@@ -241,25 +242,25 @@ def fit(model, data, data_val, *args, **kwargs):
                  'data_s': "sent"}
     mod_id = models.insert_one(full_json).inserted_id
 
-    # try:
-    loss, val_loss, iters, model = train(model, data,
-                                            data_val,
-                                            *args, **kwargs)
-    models.update({"_id": mod_id}, {'$set': {
-        'train_loss': loss,
-        'min_tloss': np.min(loss),
-        'valid_loss': val_loss,
-        'min_vloss': np.min(val_loss),
-        'iter_stopped': iters * len(data),
-        'trained': 1,
-        'date_finished_trained': datetime.now()
-    }})
+    try:
+        loss, val_loss, iters, model = train(model, data,
+                                             data_val,
+                                             *args, **kwargs)
+        models.update({"_id": mod_id}, {'$set': {
+            'train_loss': loss,
+            'min_tloss': np.min(loss),
+            'valid_loss': val_loss,
+            'min_vloss': np.min(val_loss),
+            'iter_stopped': iters * len(data),
+            'trained': 1,
+            'date_finished_trained': datetime.now()
+        }})
 
-    model.save_weights(params_dump, overwrite=True)
+        model.save_weights(params_dump, overwrite=True)
 
-    # except Exception as e:
-    #     models.update({"_id": mod_id}, {'$set': {'error': 1}})
-    #     raise e
+    except Exception as e:
+        models.update({"_id": mod_id}, {'$set': {'error': 1}})
+        raise e
     return hexdi_m, hexdi_d
 
 
