@@ -11,7 +11,7 @@ from ..config import PATH_H5
 
 # Serialization utilities
 
-def to_dict_w_opt(model):
+def to_dict_w_opt(model, metrics=None):
     """Serialize a model and add the config of the optimizer and the loss.
     """
     config = dict()
@@ -23,11 +23,17 @@ def to_dict_w_opt(model):
     if hasattr(model, 'optimizer'):
         config['optimizer'] = model.optimizer.get_config()
     if hasattr(model, 'loss'):
+        name_out = [l.name for l  in model.output_layers]
         if isinstance(model.loss, dict):
             config['loss'] = dict([(k, get_function_name(v))
                                    for k, v in model.loss.items()])
+        elif isinstance(model.loss, list):
+            config['loss'] = dict(zip(name_out, [l for l in model.loss]))
         else:
             config['loss'] = get_function_name(model.loss)
+            
+    if metrics is not None:
+        config['metrics'] = metrics
 
     return config
 
@@ -42,6 +48,8 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
                               custom_objects=custom_objects)
 
     if 'optimizer' in model_dict:
+        metrics = model_dict.get("metrics")
+        print(metrics)
         model_name = model_dict['config'].get('class_name')
         # if it has an optimizer, the model is assumed to be compiled
         loss = model_dict.get('loss')
@@ -54,6 +62,11 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
                         loss[l] = custom_objects[c]
         elif model_name == "Sequential" and loss in custom_objects:
             loss = custom_objects[loss]
+        elif model_name == "Model":
+            for l in loss:
+                for c in custom_objects:
+                    if loss[l] == c:
+                        loss[l] = custom_objects[c]
 
         optimizer_params = dict([(
             k, v) for k, v in model_dict.get('optimizer').items()])
@@ -64,7 +77,8 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
             sample_weight_mode = model_dict.get('sample_weight_mode')
             model.compile(loss=loss,
                           optimizer=optimizer,
-                          sample_weight_mode=sample_weight_mode)
+                          sample_weight_mode=sample_weight_mode,
+                          metrics=metrics)
         elif model_name == "Graph":
             sample_weight_modes = model_dict.get('sample_weight_modes', None)
             loss_weights = model_dict.get('loss_weights', None)
@@ -72,6 +86,16 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
                           optimizer=optimizer,
                           sample_weight_modes=sample_weight_modes,
                           loss_weights=loss_weights)
+        elif model_name == "Model":
+
+            sample_weight_mode = model_dict.get('sample_weight_mode')
+            loss_weights = model_dict.get('loss_weights', None)
+            print(loss_weights)
+            model.compile(loss=loss,
+                          optimizer=optimizer,
+                          sample_weight_mode=sample_weight_mode,
+                          loss_weights=loss_weights,
+                          metrics=metrics)
     return model
 
 

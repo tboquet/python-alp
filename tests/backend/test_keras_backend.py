@@ -84,14 +84,16 @@ def test_fit():
     data_val["y"] = y_te
 
     # Case 1 sequential model
+    metrics = ['accuracy']
+
     model = Sequential()
     model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
     model.add(Dense(nb_class, activation='softmax'))
     model.compile(loss=categorical_crossentropy,
                   optimizer='rmsprop',
-                  metrics=['accuracy'])
+                  metrics=metrics)
 
-    model_json = to_dict_w_opt(model)
+    model_json = to_dict_w_opt(model, metrics)
 
     res = KTB.train(model_json, [data], [data_val])
     res = KTB.fit(model_json, [data], [data_val])
@@ -106,7 +108,7 @@ def test_fit():
                   optimizer='rmsprop',
                   metrics=['accuracy'])
 
-    model_json = to_dict_w_opt(model)
+    model_json = to_dict_w_opt(model, metrics)
 
     res = KTB.fit(model_json, [data], [data_val])
 
@@ -134,12 +136,12 @@ def test_fit():
     model.add_output(name='output', input='last_dense')
     model.compile(optimizer='sgd', loss={'output': categorical_crossentropy})
 
-    model_json = to_dict_w_opt(model)
+    model_json = to_dict_w_opt(model, metrics)
     res = KTB.fit(model_json, [data], [data_val])
 
     assert len(res) == 2
 
-    model_json = to_dict_w_opt(model)
+    model_json = to_dict_w_opt(model, metrics)
     res = KTB.fit(model_json, [data], [data_val])
 
     assert len(res) == 2
