@@ -196,6 +196,33 @@ def test_experiment():
              batch_size=batch_size)
     expe.predict(data)
 
+    # Case 4 Model
+
+    inputs = Input(shape=(input_dim,))
+
+    # a layer instance is callable on a tensor, and returns a tensor
+    x = Dense(nb_hidden, activation='relu')(inputs)
+    x = Dense(nb_hidden, activation='relu')(x)
+    predictions = Dense(nb_class, activation='softmax')(x)
+
+    # this creates a model that includes
+    # the Input layer and three Dense layers
+    model = Model(input=inputs, output=predictions)
+    model.compile(optimizer='rmsprop',
+                loss=categorical_crossentropy,
+                metrics=['accuracy'])
+
+    expe = Experiment("keras", model)
+
+    assert expe.backend is not None
+
+    expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
+             batch_size=batch_size)
+    expe.fit([data], [data_val], model=model,
+             custom_objects=custom_objects, nb_epoch=2,
+             batch_size=batch_size)
+    expe.predict(data)
+
     # Case 2 Graph model
 
     data = dict()
@@ -218,33 +245,6 @@ def test_experiment():
 
     model.add_output(name='output', input='last_dense')
     model.compile(optimizer='sgd', loss={'output': categorical_crossentropy})
-
-    expe = Experiment("keras", model)
-
-    assert expe.backend is not None
-
-    expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
-             batch_size=batch_size)
-    expe.fit([data], [data_val], model=model,
-             custom_objects=custom_objects, nb_epoch=2,
-             batch_size=batch_size)
-    expe.predict(data)
-
-    # Case 4 Model
-
-    inputs = Input(shape=(input_dim,))
-
-    # a layer instance is callable on a tensor, and returns a tensor
-    x = Dense(nb_hidden, activation='relu')(inputs)
-    x = Dense(nb_hidden, activation='relu')(x)
-    predictions = Dense(nb_class, activation='softmax')(x)
-
-    # this creates a model that includes
-    # the Input layer and three Dense layers
-    model = Model(input=inputs, output=predictions)
-    model.compile(optimizer='rmsprop',
-                loss=categorical_crossentropy,
-                metrics=['accuracy'])
 
     expe = Experiment("keras", model)
 

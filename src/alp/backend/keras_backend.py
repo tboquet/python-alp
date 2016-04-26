@@ -140,6 +140,20 @@ def train(model, data, data_val, *args, **kwargs):
             if 'val_loss' in h.history:
                 val_loss += h.history['val_loss']
         max_iter = h.epoch[-1]
+    elif model.__class__.__name__ is "Model":
+        for d, dv in zip(data, data_val):
+            X, y = d['X'], d['y']
+            X_val, y_val = dv['X'], dv['y']
+            h = model.fit(x=X,
+                          y=y,
+                          verbose=1,
+                          validation_data=(X_val, y_val),
+                          *args,
+                          **kwargs)
+            loss += h.history['loss']
+            if 'val_loss' in h.history:
+                val_loss += h.history['val_loss']
+        max_iter = h.epoch[-1]
     else:
         mod_name = model.__class__.__name__
         raise NotImplementedError("This type of model"
