@@ -55,18 +55,10 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
         loss = model_dict.get('loss')
 
         # if a custom loss function is passed replace it in loss
-        if model_name == "Graph":
-            for l in loss:
-                for c in custom_objects:
-                    if loss[l] == c:
-                        loss[l] = custom_objects[c]
-        elif model_name == "Sequential" and loss in custom_objects:
-            loss = custom_objects[loss]
-        elif model_name == "Model":
-            for l in loss:
-                for c in custom_objects:
-                    if loss[l] == c:
-                        loss[l] = custom_objects[c]
+        for l in loss:
+            for c in custom_objects:
+                if loss[l] == c:
+                    loss[l] = custom_objects[c]
 
         optimizer_params = dict([(
             k, v) for k, v in model_dict.get('optimizer').items()])
