@@ -7,4 +7,3 @@ scipy
 -e git+git://github.com/Theano/Theano.git#egg=package
 keras
 celery
-pymongo

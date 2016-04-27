@@ -23,6 +23,9 @@ if os.getenv('SPELLCHECK'):
     spelling_show_suggestions = True
     spelling_lang = 'en_US'
 
+# on_rtd is whether we are on readthedocs.org
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+
 source_suffix = '.rst'
 master_doc = 'index'
 project = u'ALP'
@@ -66,8 +69,10 @@ html_show_sourcelink = True
 
 
 # Add any paths that contain custom themes here, relative to this directory.
-html_theme = 'alabaster'
-html_theme_path = [alabaster.get_path()]
+
+if not on_rtd:  # only set the theme if we're building docs locally
+    html_theme = 'alabaster'
+    html_theme_path = [alabaster.get_path()]
 html_use_smartypants = True
 html_last_updated_fmt = '%b %d, %Y'
 html_split_index = False
