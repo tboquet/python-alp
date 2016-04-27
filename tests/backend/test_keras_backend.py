@@ -217,6 +217,8 @@ def test_experiment_model():
     y_tr = np_utils.to_categorical(y_tr)
     y_te = np_utils.to_categorical(y_te)
 
+    custom_objects = {"categorical_crossentropy": categorical_crossentropy}
+
     data, data_val = dict(), dict()
 
     data["X"] = X_tr
@@ -289,6 +291,8 @@ def test_experiment_legacy():
 
     y_tr = np_utils.to_categorical(y_tr)
     y_te = np_utils.to_categorical(y_te)
+
+    custom_objects = {"categorical_crossentropy": categorical_crossentropy}
 
     data = dict()
     data_val = dict()
