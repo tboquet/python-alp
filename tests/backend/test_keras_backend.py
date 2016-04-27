@@ -151,15 +151,21 @@ def test_utils():
     assert get_function_name("bob") == "bob"
 
 
-def test_experiment():
-    """Test the Experiment class"""
+def test_experiment_sequential():
+    """Test the Experiment class with Sequential"""
     import keras.backend as K
+
+    def categorical_crossentropy(y_true, y_pred):
+        '''A test of custom loss function
+        '''
+        return K.categorical_crossentropy(y_pred, y_true)
 
     (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
                                                 nb_test=test_samples,
                                                 input_shape=(input_dim,),
                                                 classification=True,
                                                 nb_class=nb_class)
+
     y_tr = np_utils.to_categorical(y_tr)
     y_te = np_utils.to_categorical(y_te)
 
@@ -170,12 +176,6 @@ def test_experiment():
 
     data_val["X"] = X_te
     data_val["y"] = y_te
-
-
-    def categorical_crossentropy(y_true, y_pred):
-        '''A test of custom loss function
-        '''
-        return K.categorical_crossentropy(y_pred, y_true)
 
     custom_objects = {"categorical_crossentropy": categorical_crossentropy}
 
@@ -198,7 +198,34 @@ def test_experiment():
              batch_size=batch_size)
     expe.predict(data)
 
-    # Case 4 Model
+
+def test_experiment_model():
+    """Test the Experiment class with Model"""
+    import keras.backend as K
+
+    def categorical_crossentropy(y_true, y_pred):
+        '''A test of custom loss function
+        '''
+        return K.categorical_crossentropy(y_pred, y_true)
+
+    (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
+                                                nb_test=test_samples,
+                                                input_shape=(input_dim,),
+                                                classification=True,
+                                                nb_class=nb_class)
+
+    y_tr = np_utils.to_categorical(y_tr)
+    y_te = np_utils.to_categorical(y_te)
+
+    data, data_val = dict(), dict()
+
+    data["X"] = X_tr
+    data["y"] = y_tr
+
+    data_val["X"] = X_te
+    data_val["y"] = y_te
+
+    metrics = ['accuracy']
 
     inputs = Input(shape=(input_dim,))
 
@@ -209,34 +236,59 @@ def test_experiment():
     model = Model(input=inputs, output=predictions)
     model.compile(optimizer='rmsprop',
                 loss=categorical_crossentropy,
-                metrics=['accuracy'])
+                  metrics=metrics)
 
     expe = Experiment("keras", model)
 
+    # Backend test
     assert expe.backend is not None
 
+    # Fit test
     expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
+
+    # Fit test using a new model
     expe.fit([data], [data_val], model=model,
              custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
+
+    # Predict test
     expe.predict(data)
 
+    # Using a predefined loss
     model.compile(optimizer='rmsprop',
                 loss='categorical_crossentropy',
-                metrics=['accuracy'])
+                  metrics=metrics)
 
     expe = Experiment("keras", model)
 
-    assert expe.backend is not None
+    expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
+             batch_size=batch_size)
+
+    # Using metrics
+    expe = Experiment("keras", model, metrics=metrics)
 
     expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
-    expe.fit([data], [data_val], model=model,
-             custom_objects=custom_objects, nb_epoch=2,
-             batch_size=batch_size)
-    expe.predict(data)
-    # Case 2 Graph model
+
+
+def test_experiment_legacy():
+    """Test the Experiment class with Model"""
+    import keras.backend as K
+
+    def categorical_crossentropy(y_true, y_pred):
+        '''A test of custom loss function
+        '''
+        return K.categorical_crossentropy(y_pred, y_true)
+
+    (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
+                                                nb_test=test_samples,
+                                                input_shape=(input_dim,),
+                                                classification=True,
+                                                nb_class=nb_class)
+
+    y_tr = np_utils.to_categorical(y_tr)
+    y_te = np_utils.to_categorical(y_te)
 
     data = dict()
     data_val = dict()
