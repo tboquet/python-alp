@@ -125,9 +125,10 @@ def train(model, data, data_val, *args, **kwargs):
     val_loss = []
     # load model
     model = model_from_dict_w_opt(model, custom_objects=custom_objects)
+    mod_name = model.__class__.__name__
 
     # fit the model according to the input/output type
-    if model.__class__.__name__ is "Graph":
+    if mod_name is "Graph":
         for d, dv in zip(data, data_val):
             h = model.fit(data=d,
                           verbose=1,
@@ -139,7 +140,7 @@ def train(model, data, data_val, *args, **kwargs):
                 val_loss += h.history['val_loss']
         max_iter = h.epoch[-1]
 
-    elif model.__class__.__name__ is "Sequential":
+    elif model_name is "Sequential":
         for d, dv in zip(data, data_val):
             X, y = d['X'], d['y']
             X_val, y_val = dv['X'], dv['y']
@@ -153,7 +154,7 @@ def train(model, data, data_val, *args, **kwargs):
             if 'val_loss' in h.history:
                 val_loss += h.history['val_loss']
         max_iter = h.epoch[-1]
-    elif model.__class__.__name__ is "Model":
+    elif model_name is "Model":
         for d, dv in zip(data, data_val):
             X, y = d['X'], d['y']
             X_val, y_val = dv['X'], dv['y']
@@ -168,7 +169,6 @@ def train(model, data, data_val, *args, **kwargs):
                 val_loss += h.history['val_loss']
         max_iter = h.epoch[-1]
     else:
-        mod_name = model.__class__.__name__
         raise NotImplementedError("This type of model"
                                   "is not supported: {}".format(mod_name))
 
