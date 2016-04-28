@@ -277,13 +277,13 @@ def test_experiment_model():
              batch_size=batch_size)
     # Using metrics
     expe = Experiment("keras", model, metrics=metrics)
-    print(model.loss, expe.model_dict['loss'])
     expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
-    print(model.loss, expe.model_dict['loss'])
     expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size, metrics=metrics)
 
+    expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
+             batch_size=batch_size, metrics=metrics)
 
 def test_experiment_legacy():
     """Test the Experiment class with Model"""
