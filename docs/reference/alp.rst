@@ -29,15 +29,13 @@ alp.databasecon module
     :undoc-members:
     :show-inheritance:
 
-
-alp.cellap module
------------------
+alp.cellapp module
+------------------
 
 .. automodule:: alp.cellap
     :members:
     :undoc-members:
     :show-inheritance:
-
 
 alp.config module
 -----------------
