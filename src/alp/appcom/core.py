@@ -51,6 +51,7 @@ class Experiment(object):
 
     def fit(self, data, data_val, model=None, *args, **kwargs):
         """Build and fit a model given data and hyperparameters"""
+        _recompile = False
         if model is not None:
             self.model = model
             _recompile = True
