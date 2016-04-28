@@ -8,13 +8,14 @@ alp
 .. automodule:: alp
     :members:
 
-Subpackages
------------
+..
+   Subpackages
+   -----------
 
-.. toctree::
+   .. toctree::
 
-    alp.appcom
-    alp.backend
+       alp.appcom
+       alp.backend
 
 alp.databasecon module
 -----------------------
