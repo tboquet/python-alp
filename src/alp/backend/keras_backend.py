@@ -199,7 +199,6 @@ def fit(model, data, data_val, *args, **kwargs):
 
     # convert json to string
     print(model)
-    raise Exception("stop")
     model_str = json.dumps(model)
 
     # get the models collection
