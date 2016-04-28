@@ -1,0 +1,8 @@
+wheel
+cython
+pymongo
+scipy
+numpy
+-e git+git://github.com/Theano/Theano.git#egg=package
+keras
+celery
