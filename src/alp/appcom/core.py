@@ -29,6 +29,7 @@ in memory compiled function, this function is used instead.
 ----------------------------------------------------------------------------
 """
 
+import copy
 from .utils import appbackend
 
 COMPILED_MODELS = dict()
