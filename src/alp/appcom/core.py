@@ -50,11 +50,10 @@ class Experiment(object):
 
     def fit(self, data, data_val, model=None, *args, **kwargs):
         """Build and fit a model given data and hyperparameters"""
-        metrics = None
         if "metrics" in kwargs:
             self.metrics = kwargs.pop("metrics")
         if model is not None:
-            self.model_dict = self.backend.to_dict_w_opt(model, metrics)
+            self.model_dict = self.backend.to_dict_w_opt(model, self.metrics)
         if self.model_dict is None:
             raise Exception("You must pass a model to an Experiment")
         self.res = self.backend.fit(self.model_dict, data, data_val,
@@ -69,4 +68,4 @@ class Experiment(object):
             return self.backend.predict(self.model_dict, data)
         else:
             raise Exception("You must have a trained model"
-                            "in order to make prediction")
+                            "in order to make predictions")

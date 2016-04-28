@@ -196,6 +196,7 @@ def fit(model, data, data_val, *args, **kwargs):
 
     if kwargs.get("batch_size") is None:
         kwargs['batch_size'] = 32
+
     # convert string to json
     model_str = json.dumps(model)
 

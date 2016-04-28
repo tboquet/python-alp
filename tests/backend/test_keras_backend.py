@@ -285,6 +285,7 @@ def test_experiment_model():
     expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size, metrics=metrics)
 
+
 def test_experiment_legacy():
     """Test the Experiment class with Model"""
     import keras.backend as K
