@@ -25,15 +25,19 @@ def to_dict_w_opt(model, metrics=None):
     if hasattr(model, 'loss'):
         name_out = [l.name for l in model.output_layers]
         if isinstance(model.loss, dict):
+            print("dict", model.loss)
             config['loss'] = dict([(k, get_function_name(v))
                                    for k, v in model.loss.items()])
         elif isinstance(model.loss, list):
+            print("list", model.loss)
             config['loss'] = dict(zip(name_out, [get_function_name(l)
                                                  for l in model.loss]))
         elif hasattr(model.loss, '__call__'):
+            print("func", model.loss)
             config['loss'] = dict(zip(name_out,
                                       [get_function_name(model.loss)]))
-        elif isinstance(model.loss, str):
+        elif isinstance(model.loss, six.string_types):
+            print("string", model.loss)
             config['loss'] = dict(zip(name_out,
                                       [get_function_name(model.loss)]))
     if metrics is not None:
@@ -201,7 +205,7 @@ def fit(model, data, data_val, *args, **kwargs):
     if kwargs.get("batch_size") is None:
         kwargs['batch_size'] = 32
 
-    # convert json to string
+    # convert dict to json string
     print(model)
     model_str = json.dumps(model)
 

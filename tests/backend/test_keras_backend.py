@@ -269,9 +269,9 @@ def test_experiment_model():
 
     # Using a list
     model.compile(optimizer='rmsprop',
-                loss=['categorical_crossentropy'],
+                  loss=['categorical_crossentropy'],
                   metrics=metrics)
-
+    print(model.loss)
     expe = Experiment("keras", model)
 
     expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
