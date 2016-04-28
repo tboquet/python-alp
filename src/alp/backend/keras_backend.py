@@ -28,7 +28,11 @@ def to_dict_w_opt(model, metrics=None):
             config['loss'] = dict([(k, get_function_name(v))
                                    for k, v in model.loss.items()])
         elif isinstance(model.loss, list):
-            config['loss'] = dict(zip(name_out, [l for l in model.loss]))
+            config['loss'] = dict(zip(name_out, [get_function_name(l)
+                                                 for l in model.loss]))
+        elif hasattr(model.loss, '__call__'):
+            config['loss'] = dict(zip(name_out, [get_function_name(l)
+                                                 for l in model.loss]))
         else:
             config['loss'] = dict(zip(name_out,
                                       [get_function_name(model.loss)]))
