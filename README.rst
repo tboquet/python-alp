@@ -4,7 +4,7 @@ Overview
 
 .. start-badges
 
-|travis| |requires| |coveralls| |codecov| |codacy| |codeclimate|
+|travis| |requires| |coveralls| |codecov| |codacy| |codeclimate| |docs|
 
 .. |travis| image:: https://travis-ci.org/tboquet/python-alp.svg?branch=master
     :alt: Travis-CI Build Status
@@ -30,6 +30,10 @@ Overview
    :target: https://codeclimate.com/github/tboquet/python-alp
    :alt: CodeClimate Quality Status
 
+.. |docs| image:: https://readthedocs.org/projects/python-alp/badge/?style=flat
+    :target: https://readthedocs.org/projects/python-alp
+    :alt: Documentation Status
+
 .. end-badges
 
 
@@ -53,7 +57,7 @@ Installation
 Documentation
 =============
 
-
+https://python-alp.readthedocs.org/
 
 Development
 ===========

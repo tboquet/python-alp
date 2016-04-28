@@ -23,7 +23,7 @@ Compilation & cache
 ~~~~~~~~~~~~~~~~~~~
 
 The models are compiled on the fly after the build. If the model is already
-compiled and in the `COMPILED_MODEL` dictionnary, mapping the models id to the
+compiled and in the `COMPILED_MODEL` dictionnary mapping the models id to the
 in memory compiled function, this function is used instead.
 
 ----------------------------------------------------------------------------
