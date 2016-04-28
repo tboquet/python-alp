@@ -28,7 +28,7 @@ alp.databasecon module
 alp.celapp module
 ------------------
 
-.. automodule:: alp.cellapp
+.. automodule:: alp.celapp
     :members:
     :undoc-members:
     :show-inheritance:
