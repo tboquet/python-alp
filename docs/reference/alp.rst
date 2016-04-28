@@ -4,8 +4,6 @@ alp
 .. testsetup::
 
     from alp import *
-    import alp
-    import alp.appcom
 
 .. automodule:: alp
     :members:
@@ -17,10 +15,6 @@ Subpackages
 
     alp.appcom
     alp.backend
-
-
-Submodules
-----------
 
 alp.databasecon module
 -----------------------
