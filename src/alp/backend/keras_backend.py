@@ -31,9 +31,9 @@ def to_dict_w_opt(model, metrics=None):
             config['loss'] = dict(zip(name_out, [get_function_name(l)
                                                  for l in model.loss]))
         elif hasattr(model.loss, '__call__'):
-            config['loss'] = dict(zip(name_out, [get_function_name(l)
-                                                 for l in model.loss]))
-        else:
+            config['loss'] = dict(zip(name_out,
+                                      [get_function_name(model.loss)]))
+        elif isinstance(model.loss, str):
             config['loss'] = dict(zip(name_out,
                                       [get_function_name(model.loss)]))
     if metrics is not None:
