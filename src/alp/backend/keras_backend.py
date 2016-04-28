@@ -13,6 +13,13 @@ from ..config import PATH_H5
 
 def to_dict_w_opt(model, metrics=None):
     """Serialize a model and add the config of the optimizer and the loss.
+
+    Args:
+        model(keras.Model): the model to serialize
+        metrics(list, optionnal): a list of metrics to monitor
+
+    Returns:
+        a dictionnary of the serialized model
     """
     config = dict()
     config_m = model.get_config()
@@ -47,7 +54,17 @@ def to_dict_w_opt(model, metrics=None):
 
 
 def model_from_dict_w_opt(model_dict, custom_objects=None):
-    """Builds a model from a serialized model using ``to_dict_w_opt`
+    """Builds a model from a serialized model using `to_dict_w_opt`
+
+    Args:
+        model_dict(dict): a serialized Keras model
+        custom_objects(dict, optionnal): a dictionnary mapping custom objects
+            names to custom objects (Layers, functions, etc.)
+
+    Returns:
+        A Keras.Model which is compiled if the information about the optimizer
+        is available.
+
     """
     if custom_objects is None:
         custom_objects = {}
@@ -98,6 +115,12 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
 
 def get_function_name(o):
     """Utility function to return the model's name
+
+    Args:
+        o(object): an object to check
+
+    Returns:
+        The name(str) of the object
     """
     if isinstance(o, six.string_types):
         return o
@@ -114,7 +137,7 @@ def build_predict_func(mod):
     (forward pass) is compiled for prediction purpose.
 
     Args:
-        mod(keras.models): a Graph or Sequential model
+        mod(keras.models): a Model, Sequential, or Graph (deprecated) model
 
     Returns:
         a Keras (Theano or Tensorflow) function
@@ -124,7 +147,18 @@ def build_predict_func(mod):
 
 
 def train(model, data, data_val, *args, **kwargs):
-    """Fit a model given hyperparameters and a serialized model"""
+    """Fit a model given hyperparameters and a serialized model
+
+    Args:
+        model(dict): a serialized keras.Model
+        data(list): a list of dict mapping inputs and outputs to lists or
+            dictionnaries mapping the inputs names to np.arrays
+        data_val(list): same structure than `data` but for validation
+
+    Returns:
+        the loss (list), the validation loss (list), the number of iterations,
+        and the model
+        """
     custom_objects = None
 
     if 'custom_objects' in kwargs:
