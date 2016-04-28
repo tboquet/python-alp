@@ -271,17 +271,16 @@ def test_experiment_model():
     model.compile(optimizer='rmsprop',
                   loss=['categorical_crossentropy'],
                   metrics=metrics)
-    print(model.loss)
     expe = Experiment("keras", model)
 
     expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
     # Using metrics
     expe = Experiment("keras", model, metrics=metrics)
-
+    print(model.loss, expe.model_dict['loss'])
     expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
-
+    print(model.loss, expe.model_dict['loss'])
     expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size, metrics=metrics)
 
