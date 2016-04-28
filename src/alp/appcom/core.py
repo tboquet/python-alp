@@ -45,17 +45,22 @@ class Experiment(object):
     @appbackend
     def __init__(self, backend, model=None, metrics=None):
         self.metrics = metrics
-        self.model_dict = self.backend.to_dict_w_opt(model, self.metrics)
+        self.model = model
+        self.model_dict = self.backend.to_dict_w_opt(self.model, self.metrics)
         self.trained = False
 
     def fit(self, data, data_val, model=None, *args, **kwargs):
         """Build and fit a model given data and hyperparameters"""
+        if model is not None:
+            self.model = model
+            _recompile = True
         if "metrics" in kwargs:
             self.metrics = kwargs.pop("metrics")
-        if model is not None:
-            self.model_dict = self.backend.to_dict_w_opt(model, self.metrics)
-        if self.model_dict is None:
-            raise Exception("You must pass a model to an Experiment")
+            _recompile = True
+
+        if _recompile is True:
+            self.model_dict = self.backend.to_dict_w_opt(self.model,
+                                                         self.metrics)
         self.res = self.backend.fit(self.model_dict, data, data_val,
                                     *args, **kwargs)
         self.trained = True

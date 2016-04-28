@@ -206,7 +206,6 @@ def fit(model, data, data_val, *args, **kwargs):
         kwargs['batch_size'] = 32
 
     # convert dict to json string
-    print(model)
     model_str = json.dumps(model)
 
     # get the models collection
