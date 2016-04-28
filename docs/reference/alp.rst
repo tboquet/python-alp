@@ -16,6 +16,7 @@ Subpackages
 .. toctree::
 
     alp.appcom
+    alp.backend
 
 
 Submodules
@@ -32,7 +33,7 @@ alp.databasecon module
 alp.cellapp module
 ------------------
 
-.. automodule:: alp.cellap
+.. automodule:: alp.cellapp
     :members:
     :undoc-members:
     :show-inheritance:
