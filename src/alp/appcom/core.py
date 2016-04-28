@@ -62,8 +62,8 @@ class Experiment(object):
         if _recompile is True:
             self.model_dict = self.backend.to_dict_w_opt(self.model,
                                                          self.metrics)
-        self.res = self.backend.fit(self.model_dict, data, data_val,
-                                    *args, **kwargs)
+        self.res = self.backend.fit(copy.deepcopy(self.model_dict), data,
+                                    data_val, *args, **kwargs)
         self.trained = True
 
         return self.res

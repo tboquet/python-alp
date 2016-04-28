@@ -1,6 +1,5 @@
 """Adaptor for the Keras backend"""
 
-import copy
 import keras.backend as K
 import six
 from keras import optimizers
@@ -44,7 +43,7 @@ def to_dict_w_opt(model, metrics=None):
     if metrics is not None:
         config['metrics'] = metrics
 
-    return copy.deepcopy(config)
+    return config
 
 
 def model_from_dict_w_opt(model_dict, custom_objects=None):
