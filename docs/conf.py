@@ -86,6 +86,7 @@ napoleon_use_param = False
 
 keep_warnings = True
 
+add_module_names = False
 todo_include_todos = True
 
 mathjax_path = 'https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'

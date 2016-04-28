@@ -1,4 +1,7 @@
-"""Adaptor for the Keras backend"""
+"""
+Adaptor for the Keras backend
+=============================   
+"""
 
 import keras.backend as K
 import six

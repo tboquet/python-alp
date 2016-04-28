@@ -1,7 +1,7 @@
 """
 .. codeauthor:: Thomas Boquet thomas.boquet@r2.ca
 
-A simple module to perform training and prediction of Keras models
+A simple module to perform training and prediction of models
 ------------------------------------------------------------------
 
 Using `celery <http://www.celeryproject.org/>`_, this module helps to schedule
