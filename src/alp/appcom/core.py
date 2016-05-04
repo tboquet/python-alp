@@ -30,9 +30,11 @@ in memory compiled function, this function is used instead.
 """
 
 import copy
-from .utils import appbackend
+import sys
 
-COMPILED_MODELS = dict()
+from ..databasecon import get_models
+from .utils import init_backend
+from .utils import switch_backend
 
 
 class Experiment(object):
@@ -43,15 +45,77 @@ class Experiment(object):
         model_dict(dict, optionnal): the model to experience with"""
     backend = None
 
-    @appbackend
     def __init__(self, backend, model=None, metrics=None):
+        backend, backend_name, backend_version = init_backend(backend)
+        self.backend = backend
+        self.backend_name = backend_name
+        self.backend_version = backend_version
         self.metrics = metrics
         self.model = model
         self.model_dict = self.backend.to_dict_w_opt(self.model, self.metrics)
         self.trained = False
 
+    @property
+    def model_dict(self):
+        return self.__model_dict
+
+    @model_dict.setter
+    def model_dict(self, model_dict):
+        if isinstance(model_dict, dict):
+            self.__model_dict = dict()
+            self.__model_dict['model_arch'] = model_dict
+            self.__model_dict['mod_id'] = None
+            self.__model_dict['params_dump'] = None
+            self.__model_dict['data_id'] = None
+        else:
+            self.model = model_dict
+            self.__model_dict['model_arch'] = self.backend.to_dict_w_opt(
+                self.model, self.metrics)
+            self.__model_dict['mod_id'] = None
+            self.__model_dict['data_id'] = None
+            self.__model_dict['params_dump'] = None
+
+    @property
+    def params_dump(self):
+        return self.__params_dump
+
+    @params_dump.setter
+    def params_dump(self, params_dump):
+        self.__model_dict['params_dump'] = params_dump
+        self.__params_dump = params_dump
+
+    @property
+    def mod_id(self):
+        return self.__mod_id
+
+    @mod_id.setter
+    def mod_id(self, mod_id):
+        self.__model_dict['mod_id'] = mod_id
+        self.__mod_id = mod_id
+
+    @property
+    def data_id(self):
+        return self.__data_id
+
+    @data_id.setter
+    def data_id(self, data_id):
+        self.__model_dict['data_id'] = data_id
+        self.__data_id = data_id
+
     def fit(self, data, data_val, model=None, *args, **kwargs):
-        """Build and fit a model given data and hyperparameters"""
+        """Build and fit a model given data and hyperparameters
+
+        Args:
+            data(list(dict)): a list of dictionnaries mapping inputs and
+                outputs names to numpy arrays for training.
+            data_val(list(dict)): a list of dictionnaries mapping inputs and
+                outputs names to numpy arrays for validation.
+            model(model, optionnal): a model from a supported backend
+
+        Returns:
+            the id of the model in the db, the id of the data in the db and
+            path to the parameters.
+        """
         _recompile = False
         if model is not None:
             self.model = model
@@ -63,11 +127,40 @@ class Experiment(object):
         if _recompile is True:
             self.model_dict = self.backend.to_dict_w_opt(self.model,
                                                          self.metrics)
-        self.res = self.backend.fit(copy.deepcopy(self.model_dict), data,
-                                    data_val, *args, **kwargs)
+
+        res = self.backend.fit(self.backend_name, self.backend_version,
+                               copy.deepcopy(self.model_dict), data,
+                               data_val, *args, **kwargs)
+        self.mod_id = res[0]
+        self.data_id = res[1]
+        self.params_dump = res[2]
+
         self.trained = True
+        self.res = res
 
         return self.res
+
+    def load_model(self, mod_id, data_id):
+        self.mod_id = mod_id
+        self.data_id = data_id
+        models = get_models()
+        model_db = models.find_one({'mod_id': mod_id, 'data_id': data_id})
+        self._switch_backend(model_db)
+        self.model_dict = model_db['model_arch']
+        self.params_dump = model_db['params_dump']
+        self.trained = True
+
+    def _switch_backend(self, model_db):
+        if model_db['backend_name'] != self.backend_name:
+            backend = switch_backend(model_db['backend_name'])
+            self.backend_name = backend.__name__
+            self.backend_version = None
+            if hasattr(backend, '__version__'):
+                check = self.backend_version != backend.__version__
+                self.backend_version = backend.__version__
+            if check:  # pragma: no cover
+                sys.stderr.write('Warning: the backend versions'
+                                 'do not match.\n')  # pragma: no cover
 
     def predict(self, data):
         """Make predictions given data"""

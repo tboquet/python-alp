@@ -1,5 +1,6 @@
 """Tests for the Keras backend"""
 
+import keras
 import numpy as np
 import pytest
 from keras.layers import Dense
@@ -11,6 +12,7 @@ from keras.utils import np_utils
 from keras.utils.test_utils import get_test_data
 
 from alp.appcom.core import Experiment
+from alp.appcom.utils import switch_backend
 from alp.backend import keras_backend as KTB
 from alp.backend.keras_backend import get_function_name
 from alp.backend.keras_backend import to_dict_w_opt
@@ -24,6 +26,8 @@ nb_class = 2
 batch_size = 5
 train_samples = 20
 test_samples = 20
+NAME = keras.__name__
+VERSION = keras.__version__
 
 
 def test_build_predict_func():
@@ -93,12 +97,13 @@ def test_fit():
                   optimizer='rmsprop',
                   metrics=metrics)
 
-    model_json = to_dict_w_opt(model, metrics)
+    model_dict = dict()
+    model_dict['model_arch'] = to_dict_w_opt(model, metrics)
 
-    res = KTB.train(model_json, [data], [data_val])
-    res = KTB.fit(model_json, [data], [data_val])
+    res = KTB.train(model_dict['model_arch'], [data], [data_val])
+    res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val])
 
-    assert len(res) == 2
+    assert len(res) == 3
 
     # Case 2 without custom objects
     model = Sequential()
@@ -108,11 +113,12 @@ def test_fit():
                   optimizer='rmsprop',
                   metrics=['accuracy'])
 
-    model_json = to_dict_w_opt(model, metrics)
+    model_dict = dict()
+    model_dict['model_arch'] = to_dict_w_opt(model, metrics)
 
-    res = KTB.fit(model_json, [data], [data_val])
+    res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val])
 
-    assert len(res) == 2
+    assert len(res) == 3
 
     # Case 3 Graph model
 
@@ -136,20 +142,25 @@ def test_fit():
     model.add_output(name='output', input='last_dense')
     model.compile(optimizer='sgd', loss={'output': categorical_crossentropy})
 
-    model_json = to_dict_w_opt(model, metrics)
-    res = KTB.fit(model_json, [data], [data_val])
+    model_dict = dict()
+    model_dict['model_arch'] = to_dict_w_opt(model, metrics)
 
-    assert len(res) == 2
+    res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val])
 
-    model_json = to_dict_w_opt(model, metrics)
-    res = KTB.fit(model_json, [data], [data_val])
+    assert len(res) == 3
 
-    assert len(res) == 2
+    model_dict = dict()
+    model_dict['model_arch'] = to_dict_w_opt(model, metrics)
+
+    res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val])
+
+    assert len(res) == 3
 
 
 def test_utils():
     assert get_function_name("bob") == "bob"
-
+    test_switch = switch_backend('sklearn')
+    assert test_switch is not None
 
 def test_experiment_sequential():
     """Test the Experiment class with Sequential"""
@@ -193,10 +204,30 @@ def test_experiment_sequential():
     expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
 
+    # check data_id
+    assert expe.data_id is not None
+
+    # check mod_id
+    assert expe.mod_id is not None
+
+    # check params_dump
+    assert expe.params_dump is not None
+
+    # try to reload the same model
+    expe.backend_name = "test"
+    expe.load_model(expe.mod_id, expe.data_id)
+
+    # check the serialization of the model
+    expe.model_dict = model
+
     expe.fit([data], [data_val], model=model,
              custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
-    expe.predict(data)
+    expe.predict(data['X'].astype('float32'))
+
+    # check if the cached model is used
+    expe.predict(data['X'].astype('float32'))
+    expe.predict([data['X'].astype('float32')])
 
 
 def test_experiment_model():
@@ -229,7 +260,7 @@ def test_experiment_model():
 
     metrics = ['accuracy']
 
-    inputs = Input(shape=(input_dim,))
+    inputs = Input(shape=(input_dim,), name='X')
 
     x = Dense(nb_hidden, activation='relu')(inputs)
     x = Dense(nb_hidden, activation='relu')(x)
@@ -255,7 +286,9 @@ def test_experiment_model():
              batch_size=batch_size)
 
     # Predict test
-    expe.predict(data)
+    expe.predict(data['X'].astype('float32'))
+    expe.predict({k: data[k].astype('float32') for k in data})
+    expe.predict([data['X'].astype('float32')])
 
     # Using a predefined loss
     model.compile(optimizer='rmsprop',
@@ -338,8 +371,9 @@ def test_experiment_legacy():
     expe.fit([data], [data_val], model=model,
              custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
-    expe.predict(data)
-
+    expe.predict({k: data[k].astype('float32') for k in data})
+    expe.predict(data['X_vars'].astype('float32'))
+    
 
 if __name__ == "__main__":
     pytest.main([__file__])

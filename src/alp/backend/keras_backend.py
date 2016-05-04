@@ -1,8 +1,9 @@
 """
 Adaptor for the Keras backend
-=============================   
+=============================
 """
 
+import keras as CB
 import keras.backend as K
 import six
 from keras import optimizers
@@ -10,6 +11,15 @@ from keras.utils.layer_utils import layer_from_config
 
 from ..celapp import app
 from ..config import PATH_H5
+
+
+COMPILED_MODELS = dict()
+
+
+# general utilities
+
+def get_backend():
+    return CB
 
 
 # Serialization utilities
@@ -35,19 +45,15 @@ def to_dict_w_opt(model, metrics=None):
     if hasattr(model, 'loss'):
         name_out = [l.name for l in model.output_layers]
         if isinstance(model.loss, dict):
-            print("dict", model.loss)
             config['loss'] = dict([(k, get_function_name(v))
                                    for k, v in model.loss.items()])
         elif isinstance(model.loss, list):
-            print("list", model.loss)
             config['loss'] = dict(zip(name_out, [get_function_name(l)
                                                  for l in model.loss]))
         elif hasattr(model.loss, '__call__'):
-            print("func", model.loss)
             config['loss'] = dict(zip(name_out,
                                       [get_function_name(model.loss)]))
         elif isinstance(model.loss, six.string_types):
-            print("string", model.loss)
             config['loss'] = dict(zip(name_out,
                                       [get_function_name(model.loss)]))
     if metrics is not None:
@@ -221,7 +227,7 @@ def train(model, data, data_val, *args, **kwargs):
 
 
 @app.task(default_retry_delay=60 * 10, max_retries=3, rate_limit='120/m')
-def fit(model, data, data_val, *args, **kwargs):
+def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
     """A function to train models given a datagenerator,a serialized model,
 
     Args:
@@ -267,9 +273,11 @@ def fit(model, data, data_val, *args, **kwargs):
     params_dump = PATH_H5 + hexdi_m + hexdi_d + '.h5'
 
     # update the full json
-    full_json = {'keras_model': model,
+    full_json = {'backend_name': backend_name,
+                 'backend_version': backend_version,
+                 'model_arch': model['model_arch'],
                  'datetime': datetime.now(),
-                 'hashed_mod': hexdi_m,
+                 'mod_id': hexdi_m,
                  'data_id': hexdi_d,
                  'params_dump': params_dump,
                  'batch_size': kwargs['batch_size'],
@@ -280,7 +288,7 @@ def fit(model, data, data_val, *args, **kwargs):
     mod_id = models.insert_one(full_json).inserted_id
 
     try:
-        loss, val_loss, iters, model = train(model, data,
+        loss, val_loss, iters, model = train(model['model_arch'], data,
                                              data_val,
                                              *args, **kwargs)
         models.update({"_id": mod_id}, {'$set': {
@@ -290,7 +298,7 @@ def fit(model, data, data_val, *args, **kwargs):
             'min_vloss': np.min(val_loss),
             'iter_stopped': iters * len(data),
             'trained': 1,
-            'date_finished_trained': datetime.now()
+            'date_finished_training': datetime.now()
         }})
 
         model.save_weights(params_dump, overwrite=True)
@@ -298,10 +306,55 @@ def fit(model, data, data_val, *args, **kwargs):
     except Exception as e:
         models.update({"_id": mod_id}, {'$set': {'error': 1}})
         raise e
-    return hexdi_m, hexdi_d
+    return hexdi_m, hexdi_d, params_dump
 
 
 @app.task
 def predict(model, data, *args, **kwargs):
-    """Dummy predict for now"""
-    return model
+    """Dummy predict for now extended"""
+
+    custom_objects = kwargs.get('custom_objects')
+
+    # check if the predict function is already compiled
+    if model['mod_id'] in COMPILED_MODELS:
+        pred_function = COMPILED_MODELS[model['mod_id']]['pred']
+        model_k = COMPILED_MODELS[model['mod_id']]['model']
+        model_name = model['model_arch']['config'].get('class_name')
+    else:
+        # get the model arch
+        model_dict = model['model_arch']
+
+        model_dict.pop('optimizer')
+
+        # load model
+        model_k = model_from_dict_w_opt(model_dict,
+                                        custom_objects=custom_objects)
+        model_name = model_dict['config'].get('class_name')
+
+        # load the weights
+        model_k.load_weights(model['params_dump'])
+
+        # build the prediction function
+        pred_function = build_predict_func(model_k)
+        COMPILED_MODELS[model['mod_id']] = dict()
+        COMPILED_MODELS[model['mod_id']]['pred'] = pred_function
+        COMPILED_MODELS[model['mod_id']]['model'] = model_k
+
+    # predict according to the input/output type
+    if model_name == 'Graph':
+        if isinstance(data, dict):
+            data = [data[n] for n in model_k.input_names]
+        if not isinstance(data, list):
+            data = [data]
+    elif model_name == 'Sequential':
+        if not isinstance(data, list):
+            data = [data]
+    elif model_name == 'Model':
+        if isinstance(data, dict):
+            data = [data[k] for k in model_k.input_names]
+        elif not isinstance(data, list):
+            data = [data]
+    else:
+        raise NotImplementedError(
+            '{}: This type of model is not supported'.format(model_name))
+    return pred_function(data)
