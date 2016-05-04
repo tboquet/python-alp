@@ -24,7 +24,7 @@ def read(*names, **kwargs):
 
 setup(
     name='alp',
-    version='0.1.0',
+    version='0.2.0',
     license='BSD',
     description='Machine learning for teams',
     long_description='%s\n%s' % (

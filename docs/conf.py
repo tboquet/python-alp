@@ -32,7 +32,7 @@ project = u'ALP'
 year = '2016'
 author = u'Thomas Boquet'
 copyright = '{0}, {1}'.format(year, author)
-version = release = u'0.1.0'
+version = release = u'0.2.0'
 
 pygments_style = 'sphinx'
 templates_path = ['_templates']
