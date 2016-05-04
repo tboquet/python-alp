@@ -204,6 +204,9 @@ def test_experiment_sequential():
     expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
 
+    # async
+    expe.fit_async([data], [data_val], custom_objects=custom_objects,
+                   nb_epoch=2, batch_size=batch_size)
     # check data_id
     assert expe.data_id is not None
 
@@ -285,6 +288,9 @@ def test_experiment_model():
              custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
 
+    # async
+    expe.fit_async([data], [data_val], custom_objects=custom_objects,
+                   nb_epoch=2, batch_size=batch_size)
     # Predict test
     expe.predict(data['X'].astype('float32'))
     expe.predict({k: data[k].astype('float32') for k in data})
@@ -371,6 +377,12 @@ def test_experiment_legacy():
     expe.fit([data], [data_val], model=model,
              custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
+
+    # async
+    expe.fit_async([data], [data_val], custom_objects=custom_objects,
+                   nb_epoch=2, batch_size=batch_size)
+
+    # predict
     expe.predict({k: data[k].astype('float32') for k in data})
     expe.predict(data['X_vars'].astype('float32'))
     

@@ -311,7 +311,16 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
 
 @app.task
 def predict(model, data, *args, **kwargs):
-    """Dummy predict for now extended"""
+    """Make predictions given a model and data
+
+    Args:
+        model(dict): a serialized keras models
+        data(list, dict, np.array): data to be passed as a dictionary mapping
+            inputs names to np.arrays or a list of arrays or an arrays
+
+    Returns:
+        an np.array of predictions
+    """
 
     custom_objects = kwargs.get('custom_objects')
 
