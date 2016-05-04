@@ -23,7 +23,7 @@ def read(*names, **kwargs):
 
 
 setup(
-    name='alp',
+    name='alp-proj',
     version='0.2.0',
     license='BSD',
     description='Machine learning for teams',
