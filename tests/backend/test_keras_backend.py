@@ -385,7 +385,7 @@ def test_experiment_legacy():
     # predict
     expe.predict({k: data[k].astype('float32') for k in data})
     expe.predict(data['X_vars'].astype('float32'))
-    
+
 
 if __name__ == "__main__":
     pytest.main([__file__])
