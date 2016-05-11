@@ -27,7 +27,7 @@ def get_backend():
 
 
 def serialize(custom_object):
-    return marsh.dumps(custom_object.func_code)
+    return marsh.dumps(six.get_function_code(custom_object))
 
 
 def deserialize(k, custom_object_str):

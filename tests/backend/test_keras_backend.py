@@ -188,8 +188,8 @@ def test_experiment_sequential():
     data_val["X"] = X_te
     data_val["y"] = y_te
 
-    custom_objects = {"categorical_crossentropy": categorical_crossentropy}
-
+    custom_objects = dict()
+    custom_objects['categorical_crossentropy'] = categorical_crossentropy
     model = Sequential()
     model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
     model.add(Dense(nb_class, activation='softmax'))
@@ -251,8 +251,8 @@ def test_experiment_model():
     y_tr = np_utils.to_categorical(y_tr)
     y_te = np_utils.to_categorical(y_te)
 
-    custom_objects = {"categorical_crossentropy": categorical_crossentropy}
-
+    custom_objects = dict()
+    custom_objects['categorical_crossentropy'] = categorical_crossentropy
     data, data_val = dict(), dict()
 
     data["X"] = X_tr
@@ -345,8 +345,8 @@ def test_experiment_legacy():
     y_tr = np_utils.to_categorical(y_tr)
     y_te = np_utils.to_categorical(y_te)
 
-    custom_objects = {"categorical_crossentropy": categorical_crossentropy}
-
+    custom_objects = dict()
+    custom_objects['categorical_crossentropy'] = categorical_crossentropy
     data = dict()
     data_val = dict()
 
