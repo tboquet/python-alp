@@ -214,5 +214,6 @@ class Experiment(object):
     def _check_serialize(self, kwargs):
         for k in kwargs:
             if k in self.backend.TO_SERIALIZE:
-                kwargs[k] = self.backend.serialize(kwargs[k])
+                kwargs[k] = {self.backend.serialize(kwargs[k][j])
+                             for k in kwargs[k][j]}
         return kwargs
