@@ -5,7 +5,7 @@ Adaptor for the Keras backend
 
 import keras as CB
 import keras.backend as K
-import marshall as marsh
+import marshal as marsh
 import six
 import types
 from keras import optimizers
@@ -90,7 +90,8 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
     if custom_objects is None:
         custom_objects = {}
 
-    custom_objects = {deserialize(k, custom_object[k]) for k in custom_objects}
+    custom_objects = {deserialize(k, custom_objects[k])
+                      for k in custom_objects}
 
     model = layer_from_config(model_dict['config'],
                               custom_objects=custom_objects)
