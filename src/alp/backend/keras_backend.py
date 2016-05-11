@@ -319,7 +319,7 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
 
         model.save_weights(params_dump, overwrite=True)
 
-    except Exception as e:
+    except Exception:
         models.update({"_id": mod_id}, {'$set': {'error': 1}})
         raise
     return hexdi_m, hexdi_d, params_dump
