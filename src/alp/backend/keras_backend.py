@@ -5,7 +5,9 @@ Adaptor for the Keras backend
 
 import keras as CB
 import keras.backend as K
+import marshall as marsh
 import six
+import types
 from keras import optimizers
 from keras.utils.layer_utils import layer_from_config
 
@@ -14,12 +16,22 @@ from ..config import PATH_H5
 
 
 COMPILED_MODELS = dict()
+TO_SERIALIZE = ['custom_objects']
 
 
 # general utilities
 
 def get_backend():
     return CB
+
+
+def serialize(custom_object):
+    return marsh.dumps(custom_object.func_code)
+
+
+def deserialize(k, custom_object_str):
+    code = marsh.loads(custom_object_str)
+    return types.FunctionType(code, globals(), k)
 
 
 # Serialization utilities
@@ -77,6 +89,8 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
     """
     if custom_objects is None:
         custom_objects = {}
+
+    custom_objects = {deserialize(k, custom_object[k]) for k in custom_objects}
 
     model = layer_from_config(model_dict['config'],
                               custom_objects=custom_objects)

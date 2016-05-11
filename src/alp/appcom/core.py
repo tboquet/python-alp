@@ -167,6 +167,7 @@ class Experiment(object):
             self.model_dict = self.backend.to_dict_w_opt(self.model,
                                                          self.metrics)
 
+        kwargs = self._check_serialize(kwargs)
         res = self.backend.fit.delay(self.backend_name, self.backend_version,
                                      copy.deepcopy(self.model_dict), data,
                                      data_val, *args, **kwargs)
@@ -208,3 +209,9 @@ class Experiment(object):
         else:
             raise Exception("You must have a trained model"
                             "in order to make predictions")
+
+    def _check_serialize(kwargs):
+        for k in kwargs:
+            if k in self.backend.TO_SERIALIZE:
+                kwargs[k] = self.backend.serialize(kwargs[k])
+        return kwargs
