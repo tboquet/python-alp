@@ -89,7 +89,7 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
 
     """
     if custom_objects is None:
-        custom_objects = {}
+        custom_objects = dict()
 
     custom_objects = {deserialize(k, custom_objects[k])
                       for k in custom_objects}
@@ -321,7 +321,7 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
 
     except Exception as e:
         models.update({"_id": mod_id}, {'$set': {'error': 1}})
-        raise e
+        raise
     return hexdi_m, hexdi_d, params_dump
 
 
