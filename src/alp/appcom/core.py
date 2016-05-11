@@ -215,5 +215,5 @@ class Experiment(object):
         for k in kwargs:
             if k in self.backend.TO_SERIALIZE:
                 kwargs[k] = {self.backend.serialize(kwargs[k][j])
-                             for j in kwargs[k][j]}
+                             for j in kwargs[k]}
         return kwargs
