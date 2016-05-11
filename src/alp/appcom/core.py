@@ -128,6 +128,7 @@ class Experiment(object):
             self.model_dict = self.backend.to_dict_w_opt(self.model,
                                                          self.metrics)
 
+        kwargs = self._check_serialize(kwargs)
         res = self.backend.fit(self.backend_name, self.backend_version,
                                copy.deepcopy(self.model_dict), data,
                                data_val, *args, **kwargs)
