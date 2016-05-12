@@ -10,6 +10,7 @@ include .cookiecutterrc
 include .editorconfig
 include .isort.cfg
 include requirements.txt
+include requirements_first.txt
 
 include AUTHORS.rst
 include CHANGELOG.rst
