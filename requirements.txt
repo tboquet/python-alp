@@ -2,7 +2,7 @@ wheel
 cython
 pymongo
 h5py
-numpy
+numpy>=1.11
 scipy
 -e git+git://github.com/Theano/Theano.git#egg=package
 keras
