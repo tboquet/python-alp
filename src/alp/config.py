@@ -22,4 +22,4 @@ if os.getenv("TEST_MODE") == "ON":
     HOST_ADRESS = '127.0.0.1'
     BACKEND = 'mongodb://127.0.0.1:27017'
     PATH_H5 = ''
-    # BROKER = 'amqp://guest:guest@localhost:5672//'
+    BROKER = 'amqp://guest:guest@localhost:5672//'
