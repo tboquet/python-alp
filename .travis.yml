@@ -32,7 +32,7 @@ before_install:
   - uname -a
   - lsb_release -a
 install:
-  - pip install tox numpy
+  - pip install tox
   - virtualenv --version
   - easy_install --version
   - pip --version
