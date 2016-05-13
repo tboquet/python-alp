@@ -3,11 +3,11 @@ Adaptor for the Keras backend
 =============================
 """
 
+import dill
 import types
 
 import keras as CB
 import keras.backend as K
-import marshal as marsh
 import six
 from keras import optimizers
 from keras.utils.layer_utils import layer_from_config
