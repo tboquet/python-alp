@@ -28,7 +28,7 @@ def get_backend():
 
 
 def serialize(custom_object):
-    return dill.dumps(six.get_function_code(custom_object))
+    return dill.pickles(six.get_function_code(custom_object))
 
 
 def deserialize(k, custom_object_str):
