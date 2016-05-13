@@ -172,6 +172,7 @@ class Experiment(object):
         res = self.backend.fit.delay(self.backend_name, self.backend_version,
                                      copy.deepcopy(self.model_dict), data,
                                      data_val, *args, **kwargs)
+        print(res)
         self.mod_id = res[0]
         self.data_id = res[1]
         self.params_dump = res[2]
