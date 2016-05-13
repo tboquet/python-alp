@@ -3,9 +3,9 @@ Adaptor for the Keras backend
 =============================
 """
 
-import dill
 import types
 
+import dill
 import keras as CB
 import keras.backend as K
 import six
@@ -14,7 +14,6 @@ from keras.utils.layer_utils import layer_from_config
 
 from ..celapp import app
 from ..config import PATH_H5
-
 
 COMPILED_MODELS = dict()
 TO_SERIALIZE = ['custom_objects']
@@ -28,7 +27,7 @@ def get_backend():
 
 
 def serialize(custom_object):
-    return dill.pickles(six.get_function_code(custom_object))
+    return dill.dumps(six.get_function_code(custom_object))
 
 
 def deserialize(k, custom_object_str):
