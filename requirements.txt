@@ -1,6 +1,6 @@
 wheel
 cython
-numpy>=1.11
+numpy
 pymongo
 h5py
 scipy
