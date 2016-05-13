@@ -18,6 +18,7 @@ from ..config import PATH_H5
 
 COMPILED_MODELS = dict()
 TO_SERIALIZE = ['custom_objects']
+dill.settings['recurse'] = True
 
 
 # general utilities
@@ -27,11 +28,11 @@ def get_backend():
 
 
 def serialize(custom_object):
-    return marsh.dumps(six.get_function_code(custom_object))
+    return dill.dumps(six.get_function_code(custom_object))
 
 
 def deserialize(k, custom_object_str):
-    code = marsh.loads(custom_object_str)
+    code = dill.loads(custom_object_str)
     return types.FunctionType(code, globals(), k)
 
 
