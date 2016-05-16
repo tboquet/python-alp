@@ -68,6 +68,7 @@ def test_fit():
     def categorical_crossentropy(y_true, y_pred):
         '''A test of custom loss function
         '''
+        import keras.backend as K
         return K.categorical_crossentropy(y_pred, y_true)
 
     (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
@@ -169,6 +170,7 @@ def test_experiment_sequential():
     def categorical_crossentropy(y_true, y_pred):
         '''A test of custom loss function
         '''
+        import keras.backend as K
         return K.categorical_crossentropy(y_pred, y_true)
 
     (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
@@ -240,6 +242,7 @@ def test_experiment_model():
     def categorical_crossentropy(y_true, y_pred):
         '''A test of custom loss function
         '''
+        import keras.backend as K
         return K.categorical_crossentropy(y_pred, y_true)
 
     (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
