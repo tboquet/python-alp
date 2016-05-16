@@ -335,9 +335,9 @@ def test_experiment_legacy():
     import keras.backend as K
 
     def categorical_crossentropy(y_true, y_pred):
-        import keras.backend as K
         '''A test of custom loss function
         '''
+        import keras.backend as K
         return K.categorical_crossentropy(y_pred, y_true)
 
     (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
