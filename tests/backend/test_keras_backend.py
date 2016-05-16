@@ -68,6 +68,7 @@ def test_fit():
     def categorical_crossentropy(y_true, y_pred):
         '''A test of custom loss function
         '''
+        import keras.backend as K
         return K.categorical_crossentropy(y_pred, y_true)
 
     (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
@@ -169,6 +170,7 @@ def test_experiment_sequential():
     def categorical_crossentropy(y_true, y_pred):
         '''A test of custom loss function
         '''
+        import keras.backend as K
         return K.categorical_crossentropy(y_pred, y_true)
 
     (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
@@ -188,8 +190,8 @@ def test_experiment_sequential():
     data_val["X"] = X_te
     data_val["y"] = y_te
 
-    custom_objects = {"categorical_crossentropy": categorical_crossentropy}
-
+    custom_objects = dict()
+    custom_objects['categorical_crossentropy'] = categorical_crossentropy
     model = Sequential()
     model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
     model.add(Dense(nb_class, activation='softmax'))
@@ -204,6 +206,9 @@ def test_experiment_sequential():
     expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
 
+    # async
+    expe.fit_async([data], [data_val], custom_objects=custom_objects,
+                   nb_epoch=2, batch_size=batch_size)
     # check data_id
     assert expe.data_id is not None
 
@@ -237,6 +242,7 @@ def test_experiment_model():
     def categorical_crossentropy(y_true, y_pred):
         '''A test of custom loss function
         '''
+        import keras.backend as K
         return K.categorical_crossentropy(y_pred, y_true)
 
     (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
@@ -248,8 +254,8 @@ def test_experiment_model():
     y_tr = np_utils.to_categorical(y_tr)
     y_te = np_utils.to_categorical(y_te)
 
-    custom_objects = {"categorical_crossentropy": categorical_crossentropy}
-
+    custom_objects = dict()
+    custom_objects['categorical_crossentropy'] = categorical_crossentropy
     data, data_val = dict(), dict()
 
     data["X"] = X_tr
@@ -285,6 +291,9 @@ def test_experiment_model():
              custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
 
+    # async
+    expe.fit_async([data], [data_val], custom_objects=custom_objects,
+                   nb_epoch=2, batch_size=batch_size)
     # Predict test
     expe.predict(data['X'].astype('float32'))
     expe.predict({k: data[k].astype('float32') for k in data})
@@ -328,6 +337,7 @@ def test_experiment_legacy():
     def categorical_crossentropy(y_true, y_pred):
         '''A test of custom loss function
         '''
+        import keras.backend as K
         return K.categorical_crossentropy(y_pred, y_true)
 
     (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
@@ -339,8 +349,8 @@ def test_experiment_legacy():
     y_tr = np_utils.to_categorical(y_tr)
     y_te = np_utils.to_categorical(y_te)
 
-    custom_objects = {"categorical_crossentropy": categorical_crossentropy}
-
+    custom_objects = dict()
+    custom_objects['categorical_crossentropy'] = categorical_crossentropy
     data = dict()
     data_val = dict()
 
@@ -371,9 +381,15 @@ def test_experiment_legacy():
     expe.fit([data], [data_val], model=model,
              custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
+
+    # async
+    expe.fit_async([data], [data_val], custom_objects=custom_objects,
+                   nb_epoch=2, batch_size=batch_size)
+
+    # predict
     expe.predict({k: data[k].astype('float32') for k in data})
     expe.predict(data['X_vars'].astype('float32'))
-    
+
 
 if __name__ == "__main__":
     pytest.main([__file__])

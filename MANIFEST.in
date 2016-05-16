@@ -11,6 +11,7 @@ include .editorconfig
 include .isort.cfg
 include requirements.txt
 include *.sh
+include requirements_first.txt
 
 include AUTHORS.rst
 include CHANGELOG.rst

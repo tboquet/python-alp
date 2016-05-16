@@ -3,6 +3,9 @@ Adaptor for the Keras backend
 =============================
 """
 
+import types
+
+import dill
 import keras as CB
 import keras.backend as K
 import six
@@ -12,14 +15,24 @@ from keras.utils.layer_utils import layer_from_config
 from ..celapp import app
 from ..config import PATH_H5
 
-
 COMPILED_MODELS = dict()
+TO_SERIALIZE = ['custom_objects']
+dill.settings['recurse'] = True
 
 
 # general utilities
 
 def get_backend():
     return CB
+
+
+def serialize(custom_object):
+    return dill.dumps(six.get_function_code(custom_object))
+
+
+def deserialize(k, custom_object_str):
+    code = dill.loads(custom_object_str)
+    return types.FunctionType(code, globals(), k)
 
 
 # Serialization utilities
@@ -76,7 +89,10 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
 
     """
     if custom_objects is None:
-        custom_objects = {}
+        custom_objects = dict()
+
+    custom_objects = {k: deserialize(k, custom_objects[k])
+                      for k in custom_objects}
 
     model = layer_from_config(model_dict['config'],
                               custom_objects=custom_objects)
@@ -303,15 +319,24 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
 
         model.save_weights(params_dump, overwrite=True)
 
-    except Exception as e:
+    except Exception:
         models.update({"_id": mod_id}, {'$set': {'error': 1}})
-        raise e
+        raise
     return hexdi_m, hexdi_d, params_dump
 
 
 @app.task
 def predict(model, data, *args, **kwargs):
-    """Dummy predict for now extended"""
+    """Make predictions given a model and data
+
+    Args:
+        model(dict): a serialized keras models
+        data(list, dict, np.array): data to be passed as a dictionary mapping
+            inputs names to np.arrays or a list of arrays or an arrays
+
+    Returns:
+        an np.array of predictions
+    """
 
     custom_objects = kwargs.get('custom_objects')
 
