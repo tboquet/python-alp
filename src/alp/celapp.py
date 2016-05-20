@@ -1,9 +1,8 @@
 """Simple celery config"""
 
 from celery import Celery
-from .config import BACKEND
-from .config import BROKER
+from . import config
 
 
-app = Celery(broker=BROKER,
-             backend=BACKEND)
+app = Celery(broker=config.BROKER,
+             backend=config.BACKEND)

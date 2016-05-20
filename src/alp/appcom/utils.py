@@ -3,6 +3,9 @@
 ----------------------------------------------------------------------------
 """
 
+import functools
+import threading
+
 
 def sliced(data, nb_train, nb_test, offset):
     """Given a dataset, returns indexes to split the data into
@@ -58,3 +61,16 @@ def switch_backend(backend_name):
     elif backend_name == 'sklearn':
         from ..backend.keras_backend import get_backend
     return get_backend()
+
+
+def background(f):
+    '''
+    a threading decorator
+    use @background above the function you want to run in the background
+    '''
+    @functools.wraps(f)
+    def bg_f(*a, **kw):
+        t = threading.Thread(target=f, args=a, kwargs=kw)
+        t.start()
+        return t
+    return bg_f

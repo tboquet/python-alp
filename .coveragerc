@@ -16,5 +16,6 @@ exclude_lines =
     pragma: no cover
     raise Exception
     except Exception as e:
+    except Exception:
     raise NotImplementedError
     except MemoryError

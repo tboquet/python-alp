@@ -73,6 +73,18 @@ html_show_sourcelink = True
 if not on_rtd:  # only set the theme if we're building docs locally
     html_theme = 'alabaster'
     html_theme_path = [alabaster.get_path()]
+    from mock import Mock as MagicMock
+    import sys
+
+    class Mock(MagicMock):
+        @classmethod
+        def __getattr__(cls, name):
+            return Mock()
+
+    # include the names of your minimal required packages here
+    MOCK_MODULES = ['h5py']
+    sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
 html_use_smartypants = True
 html_last_updated_fmt = '%b %d, %Y'
 html_split_index = False

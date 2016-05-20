@@ -163,6 +163,7 @@ def test_utils():
     test_switch = switch_backend('sklearn')
     assert test_switch is not None
 
+
 def test_experiment_sequential():
     """Test the Experiment class with Sequential"""
     import keras.backend as K
@@ -189,6 +190,8 @@ def test_experiment_sequential():
 
     data_val["X"] = X_te
     data_val["y"] = y_te
+
+    metrics = ['accuracy']
 
     custom_objects = dict()
     custom_objects['categorical_crossentropy'] = categorical_crossentropy
@@ -233,6 +236,16 @@ def test_experiment_sequential():
     # check if the cached model is used
     expe.predict(data['X'].astype('float32'))
     expe.predict([data['X'].astype('float32')])
+
+    expe = Experiment("keras")
+
+    expe.fit([data], [data_val], model=model,
+             custom_objects=custom_objects, nb_epoch=2,
+             batch_size=batch_size)
+
+    expe.fit_async([data], [data_val], model=model, metrics=metrics,
+                   custom_objects=custom_objects,
+                   nb_epoch=2, batch_size=batch_size)
 
 
 def test_experiment_model():
@@ -329,6 +342,16 @@ def test_experiment_model():
     expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
 
+    expe = Experiment("keras")
+
+    expe.fit([data], [data_val], model=model,
+             custom_objects=custom_objects, nb_epoch=2,
+             batch_size=batch_size)
+
+    expe.fit_async([data], [data_val], model=model, metrics=metrics,
+                   custom_objects=custom_objects,
+                   nb_epoch=2, batch_size=batch_size)
+
 
 def test_experiment_legacy():
     """Test the Experiment class with Model"""
@@ -360,6 +383,8 @@ def test_experiment_legacy():
     data_val["X_vars"] = X_te
     data_val["output"] = y_te
 
+    metrics = ['accuracy']
+
     model = Graph()
     model.add_input(name='X_vars', input_shape=(input_dim, ))
 
@@ -389,6 +414,16 @@ def test_experiment_legacy():
     # predict
     expe.predict({k: data[k].astype('float32') for k in data})
     expe.predict(data['X_vars'].astype('float32'))
+
+    expe = Experiment("keras")
+
+    expe.fit([data], [data_val], model=model,
+             custom_objects=custom_objects, nb_epoch=2,
+             batch_size=batch_size)
+
+    expe.fit_async([data], [data_val], model=model, metrics=metrics,
+                   custom_objects=custom_objects,
+                   nb_epoch=2, batch_size=batch_size)
 
 
 if __name__ == "__main__":

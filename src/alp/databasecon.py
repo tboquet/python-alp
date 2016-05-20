@@ -4,10 +4,7 @@
 """
 
 from pymongo import MongoClient
-from .config import COLLECTION_NAME
-from .config import DB_NAME
-from .config import HOST_ADRESS
-from .config import HOST_PORT
+from . import config
 
 
 def get_models():
@@ -15,6 +12,6 @@ def get_models():
 
     Returns:
         the collection of models"""
-    client = MongoClient(HOST_ADRESS, HOST_PORT)
-    modelization = client[DB_NAME]
-    return modelization[COLLECTION_NAME]
+    client = MongoClient(config.HOST_ADRESS, config.HOST_PORT)
+    modelization = client[config.DB_NAME]
+    return modelization[config.COLLECTION_NAME]

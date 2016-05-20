@@ -20,6 +20,9 @@ PATH_H5 = '/parameters_h5/'
 
 if os.getenv("TEST_MODE") == "ON":
     HOST_ADRESS = '127.0.0.1'
-    BACKEND = 'mongodb://127.0.0.1:27017'
+    BACKEND = 'mongodb://127.0.0.1:27018'
     PATH_H5 = ''
     BROKER = 'amqp://guest:guest@localhost:5672//'
+
+elif os.getenv("WORKER") == "TRUE":  # pragma: no cover
+    BACKEND = 'mongodb://mongo_r:27017'  # pragma: no cover

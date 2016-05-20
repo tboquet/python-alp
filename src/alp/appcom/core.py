@@ -32,18 +32,19 @@ in memory compiled function, this function is used instead.
 import copy
 import sys
 
+from ..appcom.utils import background
 from ..databasecon import get_models
 from .utils import init_backend
 from .utils import switch_backend
 
 
 class Experiment(object):
-    """An Experience train, predict, save and log a model
+    """An Experiment trains, predicts, saves and logs a model
 
     Attributes:
         backend(str): the backend to use
-        model_dict(dict, optionnal): the model to experience with"""
-    backend = None
+        model_dict(dict, optionnal): the model to experience with
+    """
 
     def __init__(self, backend, model=None, metrics=None):
         backend, backend_name, backend_version = init_backend(backend)
@@ -52,7 +53,11 @@ class Experiment(object):
         self.backend_version = backend_version
         self.metrics = metrics
         self.model = model
-        self.model_dict = self.backend.to_dict_w_opt(self.model, self.metrics)
+        if self.model:
+            self.model_dict = self.backend.to_dict_w_opt(self.model,
+                                                         self.metrics)
+        else:
+            self.model_dict = None
         self.trained = False
 
     @property
@@ -61,7 +66,7 @@ class Experiment(object):
 
     @model_dict.setter
     def model_dict(self, model_dict):
-        if isinstance(model_dict, dict):
+        if isinstance(model_dict, dict) or model_dict is None:
             self.__model_dict = dict()
             self.__model_dict['model_arch'] = model_dict
             self.__model_dict['mod_id'] = None
@@ -127,7 +132,8 @@ class Experiment(object):
         if _recompile is True:
             self.model_dict = self.backend.to_dict_w_opt(self.model,
                                                          self.metrics)
-
+        if self.model is None:
+            raise Exception('No model provided')
         kwargs = self._check_serialize(kwargs)
         res = self.backend.fit(self.backend_name, self.backend_version,
                                copy.deepcopy(self.model_dict), data,
@@ -172,12 +178,11 @@ class Experiment(object):
         res = self.backend.fit.delay(self.backend_name, self.backend_version,
                                      copy.deepcopy(self.model_dict), data,
                                      data_val, *args, **kwargs)
-        print(res)
 
-        self.trained = True
+        self._get_results(res)
         self.res = res
 
-        return True
+        return self.res
 
     def load_model(self, mod_id, data_id):
         self.mod_id = mod_id
@@ -215,3 +220,8 @@ class Experiment(object):
                 kwargs[k] = {j: self.backend.serialize(kwargs[k][j])
                              for j in kwargs[k]}
         return kwargs
+
+    @background
+    def _get_results(self, res):
+        self.full_res = res.wait()  # pragme: no cover
+        self.trained = True  # pragma: no cover

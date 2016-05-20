@@ -9,9 +9,9 @@ include .coveragerc
 include .cookiecutterrc
 include .editorconfig
 include .isort.cfg
-include requirements.txt
 include *.sh
-include requirements_first.txt
+include req/requirements.txt
+include req/requirements_first.txt
 
 include AUTHORS.rst
 include CHANGELOG.rst

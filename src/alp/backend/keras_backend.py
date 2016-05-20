@@ -6,11 +6,7 @@ Adaptor for the Keras backend
 import types
 
 import dill
-import keras as CB
-import keras.backend as K
 import six
-from keras import optimizers
-from keras.utils.layer_utils import layer_from_config
 
 from ..celapp import app
 from ..config import PATH_H5
@@ -23,6 +19,7 @@ dill.settings['recurse'] = True
 # general utilities
 
 def get_backend():
+    import keras as CB
     return CB
 
 
@@ -88,6 +85,9 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
         is available.
 
     """
+    from keras import optimizers
+    from keras.utils.layer_utils import layer_from_config
+
     if custom_objects is None:
         custom_objects = dict()
 
@@ -167,7 +167,7 @@ def build_predict_func(mod):
     Returns:
         a Keras (Theano or Tensorflow) function
     """
-
+    import keras.backend as K
     return K.function(mod.inputs, mod.outputs, updates=mod.state_updates)
 
 

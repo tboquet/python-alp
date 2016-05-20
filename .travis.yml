@@ -3,7 +3,8 @@ python: '3.5'
 sudo: required
 dist: trusty
 services:
-  - rabbitmq
+  - mongodb
+  - docker
 env:
   global:
     - LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so
@@ -23,8 +24,7 @@ addons:
     packages:
       - libhdf5-dev
 before_install:
-  - sudo apt-get install build-essential gfortran -y
-  - sudo apt-get install -y libopenblas-dev liblapack-dev
+  - sudo rabbitmqctl stop
   - sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
   - echo "deb http://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.2.list
   - sudo apt-get update
@@ -32,6 +32,10 @@ before_install:
   - python --version
   - uname -a
   - lsb_release -a
+  - docker run --name mongo_results -v /opt/data/mongo_data/results:/data/db -p 27018:27017 -d --restart=always mongo
+  - docker run --name mongo_models -v /opt/data/mongo_data/models:/data/db -d --restart=always mongo
+  - docker run -d -v /opt/data/rabbitmq/dev/log:/dev/log -v /opt/data/rabbitmq:/var/lib/rabbitmq  --name=rabbitmq_sched -p 8080:15672 -p 5672:5672 --restart=always rabbitmq:3-management
+  - docker run -d -v /opt/data/parameters_h5:/parameters_h5 -v /opt/data/r2dbh5:/r2dbh5 -e WORKER=TRUE --link=mongo_results:mongo_r --link=mongo_models:mongo_m --link=rabbitmq_sched:rabbitmq --name=the_worker_a --restart=always tboquet/the7hc4workeralp
 install:
   - pip install tox
   - pip install --upgrade pip
