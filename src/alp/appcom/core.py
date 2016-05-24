@@ -223,5 +223,5 @@ class Experiment(object):
 
     @background
     def _get_results(self, res):
-        self.full_res = res.wait()  # pragme: no cover
+        self.full_res = res.wait()  # pragma: no cover
         self.trained = True  # pragma: no cover
