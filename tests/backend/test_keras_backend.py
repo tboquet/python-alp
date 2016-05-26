@@ -198,7 +198,7 @@ def test_experiment_sequential():
     model = Sequential()
     model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
     model.add(Dense(nb_class, activation='softmax'))
-    model.compile(loss='categorical_crossentropy_custom',
+    model.compile(loss=categorical_crossentropy_custom,
                   optimizer='rmsprop',
                   metrics=['accuracy'])
 
@@ -314,7 +314,7 @@ def test_experiment_model():
 
     # Using a predefined loss
     model.compile(optimizer='rmsprop',
-                loss='categorical_crossentropy_custom',
+                loss=categorical_crossentropy,
                   metrics=metrics)
 
     expe = Experiment("keras", model)
@@ -324,7 +324,7 @@ def test_experiment_model():
 
     # Using a list
     model.compile(optimizer='rmsprop',
-                  loss=['categorical_crossentropy_custom'],
+                  loss=[categorical_crossentropy_custom],
                   metrics=metrics)
     expe = Experiment("keras", model)
 
