@@ -88,6 +88,7 @@ def test_fit():
     data_val["X"] = X_te
     data_val["y"] = y_te
 
+    custom_objects = dict()
     custom_objects['categorical_crossentropy_custom'] = categorical_crossentropy_custom
 
     # Case 1 sequential model
