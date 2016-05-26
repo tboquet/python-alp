@@ -88,6 +88,8 @@ def test_fit():
     data_val["X"] = X_te
     data_val["y"] = y_te
 
+    custom_objects['categorical_crossentropy_custom'] = categorical_crossentropy_custom
+
     # Case 1 sequential model
     metrics = ['accuracy']
 
@@ -101,8 +103,8 @@ def test_fit():
     model_dict = dict()
     model_dict['model_arch'] = to_dict_w_opt(model, metrics)
 
-    res = KTB.train(model_dict['model_arch'], [data], [data_val])
-    res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val])
+    res = KTB.train(model_dict['model_arch'], [data], [data_val], custom_objects=custom_objects)
+    res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val], custom_objects=custom_objects)
 
     assert len(res) == 3
 
@@ -117,7 +119,7 @@ def test_fit():
     model_dict = dict()
     model_dict['model_arch'] = to_dict_w_opt(model, metrics)
 
-    res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val])
+    res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val], custom_objects=custom_objects)
 
     assert len(res) == 3
 
@@ -146,14 +148,14 @@ def test_fit():
     model_dict = dict()
     model_dict['model_arch'] = to_dict_w_opt(model, metrics)
 
-    res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val])
+    res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val], custom_objects=custom_objects)
 
     assert len(res) == 3
 
     model_dict = dict()
     model_dict['model_arch'] = to_dict_w_opt(model, metrics)
 
-    res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val])
+    res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val], custom_objects=custom_objects)
 
     assert len(res) == 3
 
