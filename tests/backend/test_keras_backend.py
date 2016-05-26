@@ -64,12 +64,6 @@ def test_build_predict_func():
 
 def test_fit():
     "Test the training of a serialized model"
-    import keras.backend as K
-    def categorical_crossentropy_custom(y_true, y_pred):
-        '''A test of custom loss function
-        '''
-        import keras.backend as K
-        return K.categorical_crossentropy(y_pred, y_true)
 
     (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
                                                 nb_test=test_samples,
@@ -88,9 +82,6 @@ def test_fit():
     data_val["X"] = X_te
     data_val["y"] = y_te
 
-    custom_objects = dict()
-    custom_objects['categorical_crossentropy_custom'] = categorical_crossentropy_custom
-
     # Case 1 sequential model
     metrics = ['accuracy']
 
@@ -104,8 +95,8 @@ def test_fit():
     model_dict = dict()
     model_dict['model_arch'] = to_dict_w_opt(model, metrics)
 
-    res = KTB.train(model_dict['model_arch'], [data], [data_val], custom_objects=custom_objects)
-    res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val], custom_objects=custom_objects)
+    res = KTB.train(model_dict['model_arch'], [data], [data_val])
+    res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val])
 
     assert len(res) == 3
 
@@ -120,7 +111,7 @@ def test_fit():
     model_dict = dict()
     model_dict['model_arch'] = to_dict_w_opt(model, metrics)
 
-    res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val], custom_objects=custom_objects)
+    res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val])
 
     assert len(res) == 3
 
@@ -144,19 +135,19 @@ def test_fit():
                    input='Dense1')
 
     model.add_output(name='output', input='last_dense')
-    model.compile(optimizer='sgd', loss={'output': categorical_crossentropy_custom})
+    model.compile(optimizer='sgd', loss={'output': 'categorical_crossentropy'})
 
     model_dict = dict()
     model_dict['model_arch'] = to_dict_w_opt(model, metrics)
 
-    res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val], custom_objects=custom_objects)
+    res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val])
 
     assert len(res) == 3
 
     model_dict = dict()
     model_dict['model_arch'] = to_dict_w_opt(model, metrics)
 
-    res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val], custom_objects=custom_objects)
+    res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val])
 
     assert len(res) == 3
 
