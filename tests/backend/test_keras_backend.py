@@ -314,7 +314,7 @@ def test_experiment_model():
 
     # Using a predefined loss
     model.compile(optimizer='rmsprop',
-                loss=categorical_crossentropy,
+                loss='categorical_crossentropy',
                   metrics=metrics)
 
     expe = Experiment("keras", model)
