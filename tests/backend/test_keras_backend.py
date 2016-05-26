@@ -172,7 +172,7 @@ def test_experiment_sequential():
         '''A test of custom loss function
         '''
         import keras.backend as K
-        return K.categorical_crossentropy_custom(y_pred, y_true)
+        return K.categorical_crossentropy(y_pred, y_true)
 
     (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
                                                 nb_test=test_samples,
@@ -256,7 +256,7 @@ def test_experiment_model():
         '''A test of custom loss function
         '''
         import keras.backend as K
-        return K.categorical_crossentropy_custom(y_pred, y_true)
+        return K.categorical_crossentropy(y_pred, y_true)
 
     (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
                                                 nb_test=test_samples,
@@ -361,7 +361,7 @@ def test_experiment_legacy():
         '''A test of custom loss function
         '''
         import keras.backend as K
-        return K.categorical_crossentropy_custom(y_pred, y_true)
+        return K.categorical_crossentropy(y_pred, y_true)
 
     (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
                                                 nb_test=test_samples,
