@@ -88,7 +88,7 @@ def test_fit():
     model = Sequential()
     model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
     model.add(Dense(nb_class, activation='softmax'))
-    model.compile(loss=categorical_crossentropy_custom,
+    model.compile(loss='categorical_crossentropy',
                   optimizer='rmsprop',
                   metrics=metrics)
 
