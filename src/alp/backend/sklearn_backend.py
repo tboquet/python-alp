@@ -4,9 +4,12 @@ Adaptor for the sklearn backend
 """
 
 import types
+import copy
 
 import dill
 import six
+
+import numpy as np
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import LinearRegression
@@ -23,6 +26,7 @@ from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 
 from sklearn.kernel_ridge import KernelRidge
 
+import h5py
 
 from ..celapp import app
 from ..config import PATH_H5
@@ -59,8 +63,8 @@ def deserialize(k, custom_object_str):
 
 
 def save_params(model, filepath):
-
     attr = model.__dict__
+    dict_params = dict()
     for k, v in attr.items():
         if k[-1:] == '_':
             dict_params[k] = typeconversion(v)
@@ -117,11 +121,8 @@ def to_dict_w_opt(model, metrics=None):
     # fit seulement
 
     modeltobedump = dict()
-    # dict_params = dict()
 
     typestring = str(type(model))[8:][:-2]
-    if verbose:
-        print(typestring)
     modeltobedump['type'] = typestring
 
     attr = model.__dict__
@@ -192,17 +193,15 @@ def train(model, data, data_val, *args, **kwargs):
     val_loss = []
     # load model
     model = model_from_dict_w_opt(model, custom_objects=custom_objects)
-    mod_name = model['type']
+    # mod_name = model['type']
 
     # fit the model according to the input/output type
     # TODO : add check de bonne forme des data
-    ldm = []
     predondata = []
     predonval = []
 
     for d, dv in zip(data, data_val):
         model.fit(d['X'], d['y'], *args, **kwargs)
-        X_val, y_val = dv['X'], dv['y']
         predondata.append(model.predict(data[0]))
         predonval.append(model.predict(dv[0]))
 
@@ -300,7 +299,7 @@ def predict(model, data, *args, **kwargs):
     # check if the predict function is already compiled
     if model['mod_id'] in COMPILED_MODELS:
         model_sk = COMPILED_MODELS[model['mod_id']]['model']
-        model_name = model['type']
+        # model_name = model['type']
 
     else:
         # get the model type
@@ -313,7 +312,7 @@ def predict(model, data, *args, **kwargs):
                                           custom_objects=custom_objects)
 
         # load the weights
-        model_sk = load_params(model_k, model['params_dump'])
+        model_sk = load_params(model_skk, model['params_dump'])
 
         # write in the compiled list
         COMPILED_MODELS[model['mod_id']] = dict()
