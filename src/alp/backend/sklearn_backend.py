@@ -18,8 +18,8 @@ from sklearn.linear_model import BayesianRidge
 from sklearn.linear_model import Lars
 from sklearn.linear_model import Lasso
 from sklearn.linear_model import LassoLars
-from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import OrthogonalMatchingPursuit
 from sklearn.linear_model import Ridge
 
