@@ -37,7 +37,7 @@ Overview
 .. end-badges
 
 
-ALP (Asynchronous Learning Platform) helps you experiment with a lot of machine learning models quickly. It provide you with a simple way of scheduling and recording experiments.
+ALP (Asynchronous Learning Platform) helps you experiment with a lot of machine learning models quickly. It provides you with a simple way of scheduling and recording experiments.
 
 You can easily define how many workers and how many clients are available in a configuration file.
 
