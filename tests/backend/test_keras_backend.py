@@ -64,12 +64,6 @@ def test_build_predict_func():
 
 def test_fit():
     "Test the training of a serialized model"
-    import keras.backend as K
-    def categorical_crossentropy(y_true, y_pred):
-        '''A test of custom loss function
-        '''
-        import keras.backend as K
-        return K.categorical_crossentropy(y_pred, y_true)
 
     (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
                                                 nb_test=test_samples,
@@ -94,7 +88,7 @@ def test_fit():
     model = Sequential()
     model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
     model.add(Dense(nb_class, activation='softmax'))
-    model.compile(loss=categorical_crossentropy,
+    model.compile(loss='categorical_crossentropy',
                   optimizer='rmsprop',
                   metrics=metrics)
 
@@ -141,7 +135,7 @@ def test_fit():
                    input='Dense1')
 
     model.add_output(name='output', input='last_dense')
-    model.compile(optimizer='sgd', loss={'output': categorical_crossentropy})
+    model.compile(optimizer='sgd', loss={'output': 'categorical_crossentropy'})
 
     model_dict = dict()
     model_dict['model_arch'] = to_dict_w_opt(model, metrics)
@@ -168,7 +162,7 @@ def test_experiment_sequential():
     """Test the Experiment class with Sequential"""
     import keras.backend as K
 
-    def categorical_crossentropy(y_true, y_pred):
+    def categorical_crossentropy_custom(y_true, y_pred):
         '''A test of custom loss function
         '''
         import keras.backend as K
@@ -194,11 +188,11 @@ def test_experiment_sequential():
     metrics = ['accuracy']
 
     custom_objects = dict()
-    custom_objects['categorical_crossentropy'] = categorical_crossentropy
+    custom_objects['categorical_crossentropy_custom'] = categorical_crossentropy_custom
     model = Sequential()
     model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
     model.add(Dense(nb_class, activation='softmax'))
-    model.compile(loss='categorical_crossentropy',
+    model.compile(loss=categorical_crossentropy_custom,
                   optimizer='rmsprop',
                   metrics=['accuracy'])
 
@@ -252,7 +246,7 @@ def test_experiment_model():
     """Test the Experiment class with Model"""
     import keras.backend as K
 
-    def categorical_crossentropy(y_true, y_pred):
+    def categorical_crossentropy_custom(y_true, y_pred):
         '''A test of custom loss function
         '''
         import keras.backend as K
@@ -268,7 +262,7 @@ def test_experiment_model():
     y_te = np_utils.to_categorical(y_te)
 
     custom_objects = dict()
-    custom_objects['categorical_crossentropy'] = categorical_crossentropy
+    custom_objects['categorical_crossentropy_custom'] = categorical_crossentropy_custom
     data, data_val = dict(), dict()
 
     data["X"] = X_tr
@@ -287,7 +281,7 @@ def test_experiment_model():
 
     model = Model(input=inputs, output=predictions)
     model.compile(optimizer='rmsprop',
-                  loss=categorical_crossentropy,
+                  loss=categorical_crossentropy_custom,
                   metrics=metrics)
 
     expe = Experiment("keras", model)
@@ -324,7 +318,7 @@ def test_experiment_model():
 
     # Using a list
     model.compile(optimizer='rmsprop',
-                  loss=['categorical_crossentropy'],
+                  loss=[categorical_crossentropy_custom],
                   metrics=metrics)
     expe = Experiment("keras", model)
 
@@ -357,7 +351,7 @@ def test_experiment_legacy():
     """Test the Experiment class with Model"""
     import keras.backend as K
 
-    def categorical_crossentropy(y_true, y_pred):
+    def categorical_crossentropy_custom(y_true, y_pred):
         '''A test of custom loss function
         '''
         import keras.backend as K
@@ -373,7 +367,7 @@ def test_experiment_legacy():
     y_te = np_utils.to_categorical(y_te)
 
     custom_objects = dict()
-    custom_objects['categorical_crossentropy'] = categorical_crossentropy
+    custom_objects['categorical_crossentropy_custom'] = categorical_crossentropy_custom
     data = dict()
     data_val = dict()
 
@@ -395,7 +389,7 @@ def test_experiment_legacy():
                    input='Dense1')
 
     model.add_output(name='output', input='last_dense')
-    model.compile(optimizer='sgd', loss={'output': categorical_crossentropy})
+    model.compile(optimizer='sgd', loss={'output': categorical_crossentropy_custom})
 
     expe = Experiment("keras", model)
 
