@@ -13,15 +13,15 @@ import six
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.kernel_ridge import KernelRidge
+from sklearn.linear_model import ARDRegression
+from sklearn.linear_model import BayesianRidge
+from sklearn.linear_model import Lars
+from sklearn.linear_model import Lasso
+from sklearn.linear_model import LassoLars
 from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import LinearRegression
-from sklearn.linear_model import Ridge
-from sklearn.linear_model import Lasso
-from sklearn.linear_model import Lars
-from sklearn.linear_model import LassoLars
 from sklearn.linear_model import OrthogonalMatchingPursuit
-from sklearn.linear_model import BayesianRidge
-from sklearn.linear_model import ARDRegression
+from sklearn.linear_model import Ridge
 
 from ..celapp import app
 from ..config import PATH_H5
