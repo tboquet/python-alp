@@ -3,14 +3,16 @@ Adaptor for the sklearn backend
 =============================
 """
 
-import types
 import copy
+import types
 
 import dill
-import six
-
+import h5py
 import numpy as np
-
+import six
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import Ridge
@@ -20,13 +22,6 @@ from sklearn.linear_model import LassoLars
 from sklearn.linear_model import OrthogonalMatchingPursuit
 from sklearn.linear_model import BayesianRidge
 from sklearn.linear_model import ARDRegression
-
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
-
-from sklearn.kernel_ridge import KernelRidge
-
-import h5py
 
 from ..celapp import app
 from ..config import PATH_H5
@@ -63,6 +58,14 @@ def deserialize(k, custom_object_str):
 
 
 def save_params(model, filepath):
+    """ Dumps the attributes of the (generally fitted) model
+        in a h5 ile.
+
+    Args:
+        model(sklearn.BaseEstimator): a sklearn model (in SUPPORTED).
+        filepath(string): the file name where the attributes should be written.
+    """
+
     attr = model.__dict__
     dict_params = dict()
     for k, v in attr.items():
@@ -82,6 +85,15 @@ def save_params(model, filepath):
 
 
 def load_params(model, filepath):
+    """ Load the attributes that have been dumped in a h5 file in a model.
+
+    Args:
+        model(sklearn.BaseEstimator): a sklearn model (in SUPPORTED).
+        filepath(string): the file name where the attributes should be read.
+    Returns:
+        the model with updated parameters.
+    """
+
     f = h5py.File(filepath, 'r')
     for k, v in f.items():
         with v.astype(v.dtype):
@@ -94,6 +106,17 @@ def load_params(model, filepath):
 
 
 def typeconversion(v):
+    """Utility function to ease serialization of custom types
+        (namely np.types)
+
+    Args:
+        v(np.ndarray, list, other) : the object to return as a jsonable object.
+        If the type of v is not a np.ndarray or a list, the type of the
+         returned object is unchanged.
+
+    Returns:
+        a jsonable object, which type depends on the type of v
+    """
 
     if isinstance(v, np.ndarray):
         return v.tolist()
@@ -115,97 +138,116 @@ def typeconversion(v):
 
 
 def to_dict_w_opt(model, metrics=None):
-    # ??? metrics ??
+    """Serializes a sklearn model. Saves the parameters,
+        not the attributes.
 
-    # que faire du dict params ? solution proposée : on save weight après le
-    # fit seulement
+    Args:
+        model(sklearn.BaseEstimator): the model to serialize,
+            must be in SUPPORTED
+        metrics(list, optionnal): a list of metrics to monitor
 
-    modeltobedump = dict()
+    Returns:
+        a dictionnary of the serialized model
+    """
 
+    config = dict()
     typestring = str(type(model))[8:][:-2]
-    modeltobedump['type'] = typestring
+    config['type'] = typestring
 
     attr = model.__dict__
 
     for k, v in attr.items():
+        # check if parameter or attribute
         if k[-1:] == '_':
+            # do not store attributes
             pass
-            # dict_params[k] = typeconversion(v)
         else:
-            modeltobedump[k] = typeconversion(v)
+            config[k] = typeconversion(v)
 
-    # Dumping and writing
-
-    # smodel = json.dumps(modeltobedump)
-    # return smodel, dict_params
-    return modeltobedump
-
-    # from keras: return config
+    return config
 
 
 def model_from_dict_w_opt(model_dict, custom_objects=None):
+    """Builds a sklearn model from a serialized model using `to_dict_w_opt`
 
+    Args:
+        model_dict(dict): a serialized sklearn model
+        custom_objects(dict, optionnal): a dictionnary mapping custom objects
+            names to custom objects (callables, etc.)
+
+    Returns:
+        A new sklearn.BaseEstimator (in SUPPORTED) instance. The attributes
+        are not loaded.
+
+    """
     if custom_objects is None:
         custom_objects = dict()
 
     custom_objects = {k: deserialize(k, custom_objects[k])
                       for k in custom_objects}
 
-    # TODO : layer from config like
-    # si le nom de custom_object est dans une clé de modellod.item on le met.
+    # safety check
+    if model_dict['type'] not in keyval:
+        raise NotImplementedError("sklearn model not supported.")
 
-    modelload = model_dict
-    if modelload['type'] not in keyval:
-        raise NotImplementedError("Scikit model not supported.")
+    # create a new instance of the appropriate model type
+    model = copy.deepcopy(keyval[model_dict['type']])
 
-    model = copy.deepcopy(keyval[modelload['type']])
-
-    for k, v in modelload.items():
+    # load the parameters
+    for k, v in model_dict.items():
         if isinstance(v, list):
             setattr(model, k, np.array(v))
         else:
             setattr(model, k, v)
 
     return model
-    # model est une nouvelle instance d'un modèle sklearn supporté
-
-
-# core utilities
-
-# def build_predict_func(mod):
-# ??? pas besoin
-# return K.function(mod.inputs, mod.outputs, updates=mod.state_updates)
 
 
 def train(model, data, data_val, *args, **kwargs):
+    """Fit a model given parameters and a serialized model
 
+    Args:
+        model(dict): a serialized sklearn model
+        data(list): a list of dict mapping inputs and outputs to lists or
+            dictionnaries mapping the inputs names to np.arrays
+        data_val(list): same structure than `data` but for validation
+
+    Returns:
+        the loss (list), the validation loss (list), the number of iterations,
+        and the model
+        """
+
+    # TODO : métrique
+    # TODO : add check de bonne forme des data
+    # TODO : max_iter
+
+    # Local variables
     custom_objects = None
     metrics = []
+    loss = []
+    val_loss = []
+    predondata = []
+    predonval = []
 
+    # Load custom_objects and metrics
     if 'custom_objects' in kwargs:
         custom_objects = kwargs.pop('custom_objects')
 
     if 'metrics' in kwargs:
-        print(" metrics not supported.")
-        # metrics = kwargs.pop('metrics') #
+        print("metrics not supported in sklearn_backend.")
+        # metrics = kwargs.pop('metrics')
 
-    loss = []
-    val_loss = []
-    # load model
+    # Load model
     model = model_from_dict_w_opt(model, custom_objects=custom_objects)
-    # mod_name = model['type']
 
-    # fit the model according to the input/output type
-    # TODO : add check de bonne forme des data
-    predondata = []
-    predonval = []
-
+    # Fit the model
     for d, dv in zip(data, data_val):
         model.fit(d['X'], d['y'], *args, **kwargs)
         predondata.append(model.predict(data[0]))
         predonval.append(model.predict(dv[0]))
 
-    # TODO : métrique de validation !!!!
+    # Validates the model
+    # So far, only the mae is supported.
     from sklearn.metrics import mean_absolute_error
     metrics.append(mean_absolute_error)
     for metric in metrics:
@@ -213,7 +255,6 @@ def train(model, data, data_val, *args, **kwargs):
             loss.append(mean_absolute_error(d['X'], pda))
             val_loss.append(mean_absolute_error(dv['X'], pva))
 
-    # ??? max iter ??
     max_iter = np.nan
 
     return loss, val_loss, max_iter, model
@@ -221,12 +262,27 @@ def train(model, data, data_val, *args, **kwargs):
 
 @app.task(default_retry_delay=60 * 10, max_retries=3, rate_limit='120/m')
 def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
+    """A function that takes a model and data (with validation),
+        then applies the 'train' method if possible.
+        The parameters are updated in case of success.
+
+    Args:
+        backend_name :
+        backend_version :
+        model (sklearn.BaseEstimator) : the sklearn model to be trained.
+        data(list): a list of dict mapping inputs and outputs to lists or
+            dictionnaries mapping the inputs names to np.arrays
+        data_val(list): same structure than `data` but for validation
+
+    Returns:
+        hexdi_m : the hex hash of the model
+        hexdi_d : the hex hash of the data
+        params_dump : the name of the file where the attributes are dumped"""
 
     from ..databasecon import get_models
     from datetime import datetime
     import hashlib
     import json
-    import numpy as np
 
     # convert dict to json string
     model_str = json.dumps(model)
@@ -283,7 +339,6 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
         }})
 
         save_params(model, filepath=params_dump)
-        # keras : model.save_weights(params_dump, overwrite=True)
 
     except Exception:
         models.update({"_id": mod_id}, {'$set': {'error': 1}})
@@ -293,29 +348,38 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
 
 @app.task
 def predict(model, data, *args, **kwargs):
+    """Make predictions given a model and data
 
+    Args:
+        model (dict) : a serialied sklearn model.
+        data(list, dict, np.array): data to be passed as a dictionary mapping
+            inputs names to np.arrays or a list of arrays or an arrays
+
+    Returns:
+        an np.array of predictions
+    """
     custom_objects = kwargs.get('custom_objects')
 
     # check if the predict function is already compiled
     if model['mod_id'] in COMPILED_MODELS:
-        model_sk = COMPILED_MODELS[model['mod_id']]['model']
+        model_instance = COMPILED_MODELS[model['mod_id']]['model']
         # model_name = model['type']
 
     else:
         # get the model type
         model_dict = model['type']
 
-        # model_dict.pop('optimizer')
-
         # load model
-        model_skk = model_from_dict_w_opt(model_dict,
-                                          custom_objects=custom_objects)
+        model_instance = model_from_dict_w_opt(model_dict,
+                                               custom_objects=custom_objects)
 
-        # load the weights
-        model_sk = load_params(model_skk, model['params_dump'])
+        # load the attributes
+        model_instance = load_params(model_instance, model['params_dump'])
 
         # write in the compiled list
         COMPILED_MODELS[model['mod_id']] = dict()
-        COMPILED_MODELS[model['mod_id']]['model'] = model_sk
+        COMPILED_MODELS[model['mod_id']]['model'] = model_instance
+        # compiled models ?
+        # comment il va écrire dedans un objet de type BE?
 
-    return model_sk.predict(data)
+    return model_instance.predict(data)
