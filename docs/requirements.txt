@@ -1,5 +1,6 @@
 keras
 pymongo
+dill
 sphinx>=1.3
 sphinx-py3doc-enhanced-theme
 sphinxcontrib-httpdomain==1.4.0
