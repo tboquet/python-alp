@@ -36,7 +36,7 @@ before_install:
   - docker run --name mongo_results -v /opt/data/mongo_data/results:/data/db -p 27018:27017 -d --restart=always mongo
   - docker run --name mongo_models -v /opt/data/mongo_data/models:/data/db -d --restart=always mongo
   - docker run -d -v /opt/data/rabbitmq/dev/log:/dev/log -v /opt/data/rabbitmq:/var/lib/rabbitmq  --name=rabbitmq_sched -p 8080:15672 -p 5672:5672 --restart=always rabbitmq:3-management
-  - docker run -d -v /opt/data/parameters_h5:/parameters_h5 -v /opt/data/r2dbh5:/r2dbh5 -e WORKER=TRUE --link=mongo_results:mongo_r --link=mongo_models:mongo_m --link=rabbitmq_sched:rabbitmq --name=the_worker_a --restart=always tboquet/the7hc4workeralp
+  - docker run -d -v /opt/data/parameters_h5:/parameters_h5 -v /opt/data/r2dbh5:/r2dbh5 -e WORKER=TRUE --link=mongo_results:mongo_r --link=mongo_models:mongo_m --link=rabbitmq_sched:rabbitmq --name=the_worker_a --restart=always tboquet/travis_worker
 install:
   - pip install tox
   - pip install --upgrade pip
