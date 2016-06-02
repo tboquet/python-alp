@@ -24,6 +24,12 @@ apt:
   packages:
     - libhdf5-dev
 before_install:
+  - sudo apt-get install libsystemd-journal0
+  - pushd /tmp
+  - curl -OL https://apt.dockerproject.org/repo/pool/main/d/docker-engine/docker-engine_1.10.2-0~trusty_amd64.deb
+  - sudo dpkg --force-all -i docker-engine*.deb
+  - docker -v
+  - popd
   - sudo rabbitmqctl stop
   - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1397BC53640DB551
   - sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
