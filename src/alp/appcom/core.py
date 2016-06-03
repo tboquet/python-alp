@@ -185,13 +185,13 @@ class Experiment(object):
         return self.res
 
     def load_model(self, mod_id, data_id):
-        self.mod_id = mod_id
-        self.data_id = data_id
         models = get_models()
         model_db = models.find_one({'mod_id': mod_id, 'data_id': data_id})
         self._switch_backend(model_db)
         self.model_dict = model_db['model_arch']
         self.params_dump = model_db['params_dump']
+        self.mod_id = model_db['mod_id']
+        self.data_id = model_db['data_id']
         self.trained = True
 
     def _switch_backend(self, model_db):
