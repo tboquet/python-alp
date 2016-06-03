@@ -4,12 +4,10 @@ Adaptor for the sklearn backend
 """
 
 import copy
-import types
 
 import dill
 import h5py
 import numpy as np
-import six
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.kernel_ridge import KernelRidge
@@ -46,6 +44,7 @@ dill.settings['recurse'] = True
 def get_backend():
     import sklearn as SK
     return SK
+
 
 def save_params(model, filepath):
     """ Dumps the attributes of the (generally fitted) model
