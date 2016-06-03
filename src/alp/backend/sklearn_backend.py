@@ -59,7 +59,7 @@ def deserialize(k, custom_object_str):
 
 def save_params(model, filepath):
     """ Dumps the attributes of the (generally fitted) model
-        in a h5 ile.
+        in a h5 file.
 
     Args:
         model(sklearn.BaseEstimator): a sklearn model (in SUPPORTED).
@@ -100,8 +100,11 @@ def load_params(model, filepath):
             if v.shape is not ():
                 out = v[:]
             else:
-                out = v
+                out = v[()]
             setattr(model, k, out)
+
+    f.flush()
+    f.close()
     return model
 
 
@@ -152,7 +155,7 @@ def to_dict_w_opt(model, metrics=None):
 
     config = dict()
     typestring = str(type(model))[8:][:-2]
-    config['type'] = typestring
+    config['config'] = typestring
 
     attr = model.__dict__
 
@@ -183,15 +186,15 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
     if custom_objects is None:
         custom_objects = dict()
 
-    custom_objects = {k: deserialize(k, custom_objects[k])
-                      for k in custom_objects}
+    # custom_objects = {k: deserialize(k, custom_objects[k])
+    #                   for k in custom_objects}
 
     # safety check
-    if model_dict['type'] not in keyval:
+    if model_dict['config'] not in keyval:
         raise NotImplementedError("sklearn model not supported.")
 
     # create a new instance of the appropriate model type
-    model = copy.deepcopy(keyval[model_dict['type']])
+    model = copy.deepcopy(keyval[model_dict['config']])
 
     # load the parameters
     for k, v in model_dict.items():
@@ -243,8 +246,8 @@ def train(model, data, data_val, *args, **kwargs):
     # Fit the model
     for d, dv in zip(data, data_val):
         model.fit(d['X'], d['y'], *args, **kwargs)
-        predondata.append(model.predict(data[0]))
-        predonval.append(model.predict(dv[0]))
+        predondata.append(model.predict(d['X']))
+        predonval.append(model.predict(dv['X']))
 
     # Validates the model
     # So far, only the mae is supported.
@@ -252,8 +255,8 @@ def train(model, data, data_val, *args, **kwargs):
     metrics.append(mean_absolute_error)
     for metric in metrics:
         for d, dv, pda, pva in zip(data, data_val, predondata, predonval):
-            loss.append(mean_absolute_error(d['X'], pda))
-            val_loss.append(mean_absolute_error(dv['X'], pva))
+            loss.append(mean_absolute_error(d['y'], pda))
+            val_loss.append(mean_absolute_error(dv['y'], pva))
 
     max_iter = np.nan
 
@@ -311,7 +314,7 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
     # update the full json
     full_json = {'backend_name': backend_name,
                  'backend_version': backend_version,
-                 'model_type': model['type'],  # changement par rapport à keras
+                 'model_arch': model['model_arch'],
                  'datetime': datetime.now(),
                  'mod_id': hexdi_m,
                  'data_id': hexdi_d,
@@ -324,7 +327,7 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
     mod_id = models.insert_one(full_json).inserted_id
 
     try:
-        loss, val_loss, iters, model = train(model, data,
+        loss, val_loss, iters, model = train(model['model_arch'], data,
                                              data_val,
                                              *args, **kwargs)
 
@@ -363,11 +366,12 @@ def predict(model, data, *args, **kwargs):
     # check if the predict function is already compiled
     if model['mod_id'] in COMPILED_MODELS:
         model_instance = COMPILED_MODELS[model['mod_id']]['model']
-        # model_name = model['type']
+        # load the attributes
+        model_instance = load_params(model_instance, model['params_dump'])
 
     else:
         # get the model type
-        model_dict = model['type']
+        model_dict = model['model_arch']
 
         # load model
         model_instance = model_from_dict_w_opt(model_dict,
@@ -379,7 +383,8 @@ def predict(model, data, *args, **kwargs):
         # write in the compiled list
         COMPILED_MODELS[model['mod_id']] = dict()
         COMPILED_MODELS[model['mod_id']]['model'] = model_instance
-        # compiled models ?
-        # comment il va écrire dedans un objet de type BE?
+
+    # to be discussed
+    # data = data[0]['X']
 
     return model_instance.predict(data)

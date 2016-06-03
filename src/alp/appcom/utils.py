@@ -52,6 +52,14 @@ def init_backend(backend):
         backend_name = backend_m.__name__
         if hasattr(backend_m, '__version__'):
             backend_version = backend_m.__version__
+    elif backend == 'sklearn':
+        from ..backend import sklearn_backend as ABE
+        backend = ABE
+        backend_version = None
+        backend_m = ABE.get_backend()
+        backend_name = backend_m.__name__
+        if hasattr(backend_m, '__version__'):
+            backend_version = backend_m.__version__
     return backend, backend_name, backend_version
 
 
