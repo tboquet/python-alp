@@ -7,6 +7,7 @@ Welcome on ALP's documentation!
 
    readme
    installation
+   tutorial
    usage
    reference/index
    contributing
