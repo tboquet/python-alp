@@ -1,7 +1,7 @@
 Getting started with ALP!
 =========================
 
-Please go through the environment setup before going further. You should have you docker containers ready to accept jobs.
+Please go through the environment setup before going further. You should have your docker containers ready to accept jobs.
 Verify that you have the five core containers working using:
 
 .. code-block:: bash
@@ -117,7 +117,7 @@ Once the experiment has been fitted, you can access the id of the model in the d
     expe.load_model(expe.mod_id, expe.data_id)
 
 
-It's then possible make prediction using the loaded model.
+It's then possible to make predictions using the loaded model.
 
 .. code-block:: python
 
