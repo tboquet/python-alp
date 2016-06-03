@@ -5,12 +5,14 @@ Please go through the environment setup before going further. You should have yo
 Verify that you have the five core containers working using:
 
 .. code-block:: bash
+
    docker ps
 
 
 You should see something like this:
 
 .. code-block:: bash
+
     ece5ccb62f13        f84651421baf             "/usr/bin/tini -- cel"   8 days ago          Up 8 days           8888/tcp                                                                                    the_worker_a
     b4dcced0fc42        ca27cf26699a             "/usr/bin/tini -- ipy"   8 days ago          Up 8 days           0.0.0.0:444->8888/tcp                                                                       ipy_controler_th
     e3d6e4767d1d        rabbitmq:3-management    "/docker-entrypoint.s"   8 days ago          Up 8 days           4369/tcp, 5671/tcp, 15671/tcp, 25672/tcp, 0.0.0.0:5672->5672/tcp, 0.0.0.0:8080->15672/tcp   rabbitmq_sched
@@ -27,7 +29,6 @@ Keras example
 We will begin by declaring a simple artificial neural network with Keras:
 
 .. code-block:: python
-    :linenos:
 
     input_dim = 2
     nb_hidden = 4
@@ -76,7 +77,6 @@ Note that we compile the model so that we also have information about the optimi
 We then instanciate an `Experiment`:
 
 .. code-block:: python
-    :linenos:
 
     from alp.appcom.core import Experiment
 
@@ -88,7 +88,6 @@ Then, you have access to two methods to fit the model.
 The `fit` method allows you to fit the model in the same process.
 
 .. code-block:: python
-    :linenos:
 
     expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
@@ -100,7 +99,6 @@ Here, you will see the regular print output of Keras. The model is being trained
 The `fit_async` method send the model to the broker container that will manage the training using the workers you defined in the setup phase.
 
 .. code-block:: python
-    :linenos:
 
     expe.fit_async([data], [data_val], custom_objects=custom_objects,
                    nb_epoch=2, batch_size=batch_size)
@@ -110,6 +108,20 @@ For now, we don't directly redirect the training information from the worker to 
 Like for the fit method, the architecture of the model is saved in the db along with the performance and the parameters are dumped in an HDF5 file.
 
 Once the experiment has been fitted, you can access the id of the model in the db and load it to make prediction or access the parameters in the current process.
+
+.. code-block:: python
+
+    print(expe.model_id)
+    print(expe.data_id)
+
+    expe.load_model(expe.mod_id, expe.data_id)
+
+
+It's then possible make prediction using the loaded model.
+
+.. code-block:: python
+
+    expe.predict(data['X'].astype('float32'))
 
 
 
