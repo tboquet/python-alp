@@ -47,16 +47,6 @@ def get_backend():
     import sklearn as SK
     return SK
 
-
-def serialize(custom_object):
-    return dill.dumps(six.get_function_code(custom_object))
-
-
-def deserialize(k, custom_object_str):
-    code = dill.loads(custom_object_str)
-    return types.FunctionType(code, globals(), k)
-
-
 def save_params(model, filepath):
     """ Dumps the attributes of the (generally fitted) model
         in a h5 file.
@@ -76,9 +66,7 @@ def save_params(model, filepath):
     for k, v in dict_params.items():
         if v is not None:
             f[k] = v
-        else:
-            # so far seen only in Ridge when solver is not sag or lsqr.
-            pass
+        # so far seen only in Ridge when solver is not sag or lsqr.
 
     f.flush()
     f.close()
@@ -130,11 +118,11 @@ def typeconversion(v):
         else:
             if isinstance(v[0], np.integer):
                 return [int(vv) for vv in v]
-            elif isinstance(v[0], np.float):
+            elif isinstance(v[0], np.float):  # pragma: no cover
                 return [float(vv) for vv in v]
             elif isinstance(v[0], np.ndarray):
                 return [vv.tolist() for vv in v]
-            else:
+            else:  # pragma: no cover
                 return v
     else:
         return v
@@ -198,7 +186,7 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
 
     # load the parameters
     for k, v in model_dict.items():
-        if isinstance(v, list):
+        if isinstance(v, list):  # pragma: no cover
             setattr(model, k, np.array(v))
         else:
             setattr(model, k, v)
@@ -233,10 +221,10 @@ def train(model, data, data_val, *args, **kwargs):
     predonval = []
 
     # Load custom_objects and metrics
-    if 'custom_objects' in kwargs:
+    if 'custom_objects' in kwargs:  # pragma: no cover
         custom_objects = kwargs.pop('custom_objects')
 
-    if 'metrics' in kwargs:
+    if 'metrics' in kwargs:  # pragma: no cover
         print("metrics not supported in sklearn_backend.")
         # metrics = kwargs.pop('metrics')
 
