@@ -30,19 +30,18 @@ We will begin by declaring a simple artificial neural network with Keras:
 
 .. code-block:: python
 
-    input_dim = 2
-    nb_hidden = 4
-    nb_class = 2
-    batch_size = 5
-    train_samples = 20
-    test_samples = 20
-
     from keras.layers import Dense
     from keras.layers import Input
     from keras.models import Sequential
     from keras.utils import np_utils
     from keras.utils.test_utils import get_test_data
 
+    input_dim = 2
+    nb_hidden = 4
+    nb_class = 2
+    batch_size = 5
+    train_samples = 20
+    test_samples = 20
 
     (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
                                                 nb_test=test_samples,

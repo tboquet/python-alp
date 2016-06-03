@@ -11,4 +11,4 @@ Using Docker_ and `nvidia-docker`_ is recommanded because we don't cover the set
 .. _Docker: https://www.docker.com/
 .. _`nvidia-docker`: https://github.com/NVIDIA/nvidia-docker
 .. _`install Docker`: https://docs.docker.com/engine/installation/linux/ubuntulinux/
-.. _`install nvidia-docker`: https://github.com/NVIDIA/nvidia-docker#quick-start
+.. _`install nvidia-docker`: https://github.com/NVIDIA/nvidia-docker/wiki/Installation
