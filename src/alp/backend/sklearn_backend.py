@@ -207,10 +207,6 @@ def train(model, data, data_val, *args, **kwargs):
         and the model
         """
 
-    # TODO : métrique
-    # TODO : add check de bonne forme des data
-    # TODO : max_iter
-
     # Local variables
     custom_objects = None
     metrics = []
