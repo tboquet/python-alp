@@ -35,24 +35,43 @@ def sliced(data, nb_train, nb_test, offset):
     return beg, endt, endv
 
 
+def _get_backend_attributes(ABE):
+    """Gets the backend attributes.
+
+    Args:
+        ABE(module): the module to get attributes from.
+
+    Returns:
+        the backend, the backend name and the backend version
+
+    """
+    backend_version = None
+    backend_m = ABE.get_backend()
+    backend_name = backend_m.__name__
+    if hasattr(backend_m, '__version__'):
+        backend_version = backend_m.__version__
+
+    return ABE, backend_name, backend_version
+
+
 def init_backend(backend):
     """Initialization of the backend
 
     Args:
-        backend(str): only 'keras' at the moment
+        backend(str): only 'keras' or 'sklearn' at the moment
 
     Returns:
         the backend, the backend name and the backend version
     """
     if backend == 'keras':
         from ..backend import keras_backend as ABE
-        backend = ABE
-        backend_version = None
-        backend_m = ABE.get_backend()
-        backend_name = backend_m.__name__
-        if hasattr(backend_m, '__version__'):
-            backend_version = backend_m.__version__
-    return backend, backend_name, backend_version
+    elif backend == 'sklearn':
+        from ..backend import sklearn_backend as ABE
+    else:
+        raise NotImplementedError(
+            "this backend is not supported")  # pragma: no cover
+
+    return _get_backend_attributes(ABE)
 
 
 def switch_backend(backend_name):

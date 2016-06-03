@@ -1,5 +1,6 @@
 keras
 pymongo
+scikit-learn
 dill
 celery
 sphinx>=1.3
