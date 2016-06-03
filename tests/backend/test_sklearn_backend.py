@@ -40,7 +40,7 @@ data_val["X"] = X_test
 data_val["y"] = y_test
 
 
-def test_fit_predict_model(imodel):
+def _test_fit_predict_model(imodel):
 
     model_dict = dict()
     model_dict['model_arch'] = SKB.to_dict_w_opt(imodel)
@@ -80,7 +80,7 @@ def test_fit_predict_LinearRegression_normalizeF():
     """
 
     lr = LinearRegression(normalize=False)
-    test_fit_predict_model(lr)
+    _test_fit_predict_model(lr)
 
 
 def test_fit_predict_LinearRegression_normalizeT():
@@ -97,7 +97,7 @@ def test_fit_predict_LinearRegression_normalizeT():
         a categorical variable with a linear regressor.
     """
     lr = LinearRegression(normalize=True)
-    test_fit_predict_model(lr)
+    _test_fit_predict_model(lr)
 
 
 def test_fit_LogisticRegression():
@@ -117,7 +117,7 @@ def test_fit_LogisticRegression():
     """
 
     lr = LogisticRegression()
-    test_fit_predict_model(lr)
+    _test_fit_predict_model(lr)
 
 
 def test_fit_OrthogonalMatchingPursuit():
@@ -133,7 +133,7 @@ def test_fit_OrthogonalMatchingPursuit():
     """
 
     omp = OrthogonalMatchingPursuit()
-    test_fit_predict_model(omp)
+    _test_fit_predict_model(omp)
 
 
 def test_fit_Ridge():
@@ -149,7 +149,7 @@ def test_fit_Ridge():
     """
 
     ridge = Ridge()
-    test_fit_predict_model(ridge)
+    _test_fit_predict_model(ridge)
 
 
 def test_fit_KernelRidge():
@@ -165,7 +165,7 @@ def test_fit_KernelRidge():
     """
 
     kridge = KernelRidge()
-    test_fit_predict_model(kridge)
+    _test_fit_predict_model(kridge)
 
 
 def test_fit_BayesianRidge():
@@ -181,7 +181,7 @@ def test_fit_BayesianRidge():
     """
 
     bridge = BayesianRidge()
-    test_fit_predict_model(bridge)
+    _test_fit_predict_model(bridge)
 
 
 def test_fit_LassoLars():
@@ -197,7 +197,7 @@ def test_fit_LassoLars():
     """
 
     ll = LassoLars()
-    test_fit_predict_model(ll)
+    _test_fit_predict_model(ll)
 
 
 def test_fit_Lars():
@@ -213,7 +213,7 @@ def test_fit_Lars():
     """
 
     l = Lars()
-    test_fit_predict_model(l)
+    _test_fit_predict_model(l)
 
 
 def test_fit_Lasso():
@@ -229,7 +229,7 @@ def test_fit_Lasso():
     """
 
     l = Lasso()
-    test_fit_predict_model(l)
+    _test_fit_predict_model(l)
 
 
 def test_fit_ARDRegression():
@@ -245,7 +245,7 @@ def test_fit_ARDRegression():
     """
 
     ardr = ARDRegression()
-    test_fit_predict_model(ardr)
+    _test_fit_predict_model(ardr)
 
 
 def test_fit_QuadraticDiscriminantAnalysis():
@@ -261,7 +261,7 @@ def test_fit_QuadraticDiscriminantAnalysis():
     """
 
     qda = QuadraticDiscriminantAnalysis()
-    test_fit_predict_model(qda)
+    _test_fit_predict_model(qda)
 
 
 def test_fit_LinearDiscriminantAnalysis():
@@ -277,7 +277,7 @@ def test_fit_LinearDiscriminantAnalysis():
     """
 
     lda = LinearDiscriminantAnalysis()
-    test_fit_predict_model(lda)
+    _test_fit_predict_model(lda)
 
 
 if __name__ == "__main__":
