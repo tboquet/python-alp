@@ -74,6 +74,10 @@ We will begin by declaring a simple artificial neural network with Keras:
 
 Note that we compile the model so that we also have information about the optimizer.
 
+
+Fitting the model using ALP
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 We then instanciate an `Experiment`:
 
 .. code-block:: python
@@ -82,7 +86,6 @@ We then instanciate an `Experiment`:
 
     expe = Experiment("keras", model)
     
-
 
 Then, you have access to two methods to fit the model.
 The `fit` method allows you to fit the model in the same process.
@@ -106,6 +109,10 @@ The `fit_async` method send the model to the broker container that will manage t
 
 For now, we don't directly redirect the training information from the worker to a web application or a log so you can have it in real time. This feature is on the todo list and will be implemented in the following weeks.
 Like for the fit method, the architecture of the model is saved in the db along with the performance and the parameters are dumped in an HDF5 file.
+
+
+Predictions using the model saved in the database
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Once the experiment has been fitted, you can access the id of the model in the db and load it to make prediction or access the parameters in the current process.
 
