@@ -11,4 +11,5 @@ At the command line::
     python setup.py install
 
 Or::
+
     pip install --upgrade git+git://github.com/tboquet/python-alp.git
