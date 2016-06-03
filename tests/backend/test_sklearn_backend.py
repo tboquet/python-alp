@@ -20,7 +20,6 @@ from sklearn.linear_model import OrthogonalMatchingPursuit
 from sklearn.linear_model import Ridge
 
 from alp.appcom.core import Experiment
-from alp.appcom.utils import switch_backend
 from alp.backend import sklearn_backend as SKB
 
 np.random.seed(1336)
@@ -59,6 +58,7 @@ def test_fit_predict_LinearRegression_normalizeF():
     model_dict = dict()
     model_dict['model_arch'] = SKB.to_dict_w_opt(lr)
     model_deserialized = SKB.model_from_dict_w_opt(model_dict['model_arch'])
+    assert model_deserialized is not None
 
     res = SKB.fit(NAME, VERSION, model_dict, [data], [data_val])
     assert len(res) == 3
@@ -105,6 +105,7 @@ def test_fit_predict_LinearRegression_normalizeT():
     model_dict = dict()
     model_dict['model_arch'] = SKB.to_dict_w_opt(lr)
     model_deserialized = SKB.model_from_dict_w_opt(model_dict['model_arch'])
+    assert model_deserialized is not None
 
     res = SKB.fit(NAME, VERSION, model_dict, [data], [data_val])
     assert len(res) == 3
@@ -152,6 +153,7 @@ def test_fit_LogisticRegression():
     model_dict = dict()
     model_dict['model_arch'] = SKB.to_dict_w_opt(lr)
     model_deserialized = SKB.model_from_dict_w_opt(model_dict['model_arch'])
+    assert model_deserialized is not None
 
     res = SKB.fit(NAME, VERSION, model_dict, [data], [data_val])
     assert len(res) == 3
@@ -195,6 +197,7 @@ def test_fit_OrthogonalMatchingPursuit():
     model_dict = dict()
     model_dict['model_arch'] = SKB.to_dict_w_opt(omp)
     model_deserialized = SKB.model_from_dict_w_opt(model_dict['model_arch'])
+    assert model_deserialized is not None
 
     res = SKB.fit(NAME, VERSION, model_dict, [data], [data_val])
     assert len(res) == 3
@@ -238,6 +241,7 @@ def test_fit_Ridge():
     model_dict = dict()
     model_dict['model_arch'] = SKB.to_dict_w_opt(ridge)
     model_deserialized = SKB.model_from_dict_w_opt(model_dict['model_arch'])
+    assert model_deserialized is not None
 
     res = SKB.fit(NAME, VERSION, model_dict, [data], [data_val])
     assert len(res) == 3
@@ -281,6 +285,7 @@ def test_fit_KernelRidge():
     model_dict = dict()
     model_dict['model_arch'] = SKB.to_dict_w_opt(kridge)
     model_deserialized = SKB.model_from_dict_w_opt(model_dict['model_arch'])
+    assert model_deserialized is not None
 
     res = SKB.fit(NAME, VERSION, model_dict, [data], [data_val])
     assert len(res) == 3
@@ -324,6 +329,7 @@ def test_fit_BayesianRidge():
     model_dict = dict()
     model_dict['model_arch'] = SKB.to_dict_w_opt(bridge)
     model_deserialized = SKB.model_from_dict_w_opt(model_dict['model_arch'])
+    assert model_deserialized is not None
 
     res = SKB.fit(NAME, VERSION, model_dict, [data], [data_val])
     assert len(res) == 3
@@ -367,6 +373,7 @@ def test_fit_LassoLars():
     model_dict = dict()
     model_dict['model_arch'] = SKB.to_dict_w_opt(ll)
     model_deserialized = SKB.model_from_dict_w_opt(model_dict['model_arch'])
+    assert model_deserialized is not None
 
     res = SKB.fit(NAME, VERSION, model_dict, [data], [data_val])
     assert len(res) == 3
@@ -410,6 +417,7 @@ def test_fit_Lars():
     model_dict = dict()
     model_dict['model_arch'] = SKB.to_dict_w_opt(l)
     model_deserialized = SKB.model_from_dict_w_opt(model_dict['model_arch'])
+    assert model_deserialized is not None
 
     res = SKB.fit(NAME, VERSION, model_dict, [data], [data_val])
     assert len(res) == 3
@@ -453,6 +461,7 @@ def test_fit_Lasso():
     model_dict = dict()
     model_dict['model_arch'] = SKB.to_dict_w_opt(lasso)
     model_deserialized = SKB.model_from_dict_w_opt(model_dict['model_arch'])
+    assert model_deserialized is not None
 
     res = SKB.fit(NAME, VERSION, model_dict, [data], [data_val])
     assert len(res) == 3
@@ -496,6 +505,7 @@ def test_fit_ARDRegression():
     model_dict = dict()
     model_dict['model_arch'] = SKB.to_dict_w_opt(ardr)
     model_deserialized = SKB.model_from_dict_w_opt(model_dict['model_arch'])
+    assert model_deserialized is not None
 
     res = SKB.fit(NAME, VERSION, model_dict, [data], [data_val])
     assert len(res) == 3
@@ -539,6 +549,7 @@ def test_fit_QuadraticDiscriminantAnalysis():
     model_dict = dict()
     model_dict['model_arch'] = SKB.to_dict_w_opt(qda)
     model_deserialized = SKB.model_from_dict_w_opt(model_dict['model_arch'])
+    assert model_deserialized is not None
 
     res = SKB.fit(NAME, VERSION, model_dict, [data], [data_val])
     assert len(res) == 3
@@ -583,6 +594,7 @@ def test_fit_LinearDiscriminantAnalysis():
     model_dict = dict()
     model_dict['model_arch'] = SKB.to_dict_w_opt(lda)
     model_deserialized = SKB.model_from_dict_w_opt(model_dict['model_arch'])
+    assert model_deserialized is not None
 
     res = SKB.fit(NAME, VERSION, model_dict, [data], [data_val])
     assert len(res) == 3
@@ -600,3 +612,7 @@ def test_fit_LinearDiscriminantAnalysis():
     assert np.allclose(predexp, lda.predict(X_train))
     predexp = expe.predict(data["X"])
     assert np.allclose(predexp, lda.predict(X_train))
+
+
+if __name__ == "__main__":
+    pytest.main([__file__])

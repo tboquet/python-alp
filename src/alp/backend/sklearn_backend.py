@@ -255,8 +255,8 @@ def train(model, data, data_val, *args, **kwargs):
     metrics.append(mean_absolute_error)
     for metric in metrics:
         for d, dv, pda, pva in zip(data, data_val, predondata, predonval):
-            loss.append(mean_absolute_error(d['y'], pda))
-            val_loss.append(mean_absolute_error(dv['y'], pva))
+            loss.append(metric(d['y'], pda))
+            val_loss.append(metric(dv['y'], pva))
 
     max_iter = np.nan
 
