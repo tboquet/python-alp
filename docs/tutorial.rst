@@ -1,7 +1,8 @@
+=========================
 Getting started with ALP!
 =========================
 
-Please go through the environment setup before going further. You should have your docker containers ready to accept jobs.
+Please go through the environment setup (see :ref:`Requirements`, and :ref:`Set up of your containers`) before going further. You should have your docker containers ready to accept jobs.
 Verify that you have the five core containers working using:
 
 .. code-block:: bash
@@ -31,11 +32,11 @@ You can also launch monitoring containers:
     docker run -d --link mongo_results:mongo -p 8081:8081 --name=mongo_r_monitor --restart=always knickers/mongo-express
     docker run -d --link mongo_models:mongo -p 8082:8081 --name=mongo_m_monitor --restart=always knickers/mongo-express
 
-The first container runs celery flower, a simple application to monitor the broker, the last two containers serve web applications for each of the mongodb containers we launched earlier.
+The first container runs flower_, a simple application to monitor the broker, the last two containers serve web applications for each of the mongodb containers we launched earlier.
 
 After this initial setup, we are all set to start experimenting with Keras!
 
-For now ALP fully supports Keras and partially supports scikit-learn (linear models).
+For now ALP fully supports Keras_ and partially supports `scikit-learn`_ (linear models).
 
 Keras example
 -------------
@@ -144,6 +145,7 @@ It's then possible to make predictions using the loaded model.
     expe.predict(data['X'].astype('float32'))
 
 
-
-
+.. _flower: http://flower.readthedocs.io/en/latest/
+.. _Keras: http://keras.io/
+.. _`scikit-learn`: http://scikit-learn.org/stable/
 
