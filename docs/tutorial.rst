@@ -102,7 +102,7 @@ We then instanciate an :class:`alp.appcom.core.Experiment`:
     
 
 Then, you have access to two methods to fit the model.
-The :meth:`alp.appccom.core.Experiment.fit` method allows you to fit the model in the same process.
+The :meth:`alp.appcom.core.Experiment.fit` method allows you to fit the model in the same process.
 
 .. code-block:: python
 
@@ -113,7 +113,7 @@ The :meth:`alp.appccom.core.Experiment.fit` method allows you to fit the model i
 Here, you will see the regular print output of Keras. The model is being trained and automatically saved in the database. 
 
 
-The `fit_async` method send the model to the broker container that will manage the training using the workers you defined in the setup phase.
+The :meth:`alp.appcom.core.Experiment.fit_async` method send the model to the broker container that will manage the training using the workers you defined in the setup phase.
 
 .. code-block:: python
 
