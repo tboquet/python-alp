@@ -114,7 +114,6 @@ It's then possible to make predictions using the loaded model.
     expe.predict(data['X'].astype('float32'))
 
 
-.. _flower: http://flower.readthedocs.io/en/latest/
 .. _Keras: http://keras.io/
 .. _`scikit-learn`: http://scikit-learn.org/stable/
 
