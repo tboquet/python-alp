@@ -102,7 +102,7 @@ We then instanciate an :py:class:`Experiment`:
     
 
 Then, you have access to two methods to fit the model.
-The `fit` method allows you to fit the model in the same process.
+The :class:`alp.appcom.core.fit` method allows you to fit the model in the same process.
 
 .. code-block:: python
 
