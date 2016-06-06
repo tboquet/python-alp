@@ -92,7 +92,7 @@ Note that we compile the model so that we also have information about the optimi
 Fitting the model using ALP
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We then instanciate an :py:class:`Experiment`:
+We then instanciate an :class:`alp.appcom.core.Experiment`:
 
 .. code-block:: python
 
@@ -102,7 +102,7 @@ We then instanciate an :py:class:`Experiment`:
     
 
 Then, you have access to two methods to fit the model.
-The :class:`alp.appcom.core.fit` method allows you to fit the model in the same process.
+The :meth:`alp.appccom.core.Experiment.fit` method allows you to fit the model in the same process.
 
 .. code-block:: python
 
