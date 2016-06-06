@@ -41,7 +41,7 @@ For now ALP fully supports Keras_ and partially supports `scikit-learn`_ (linear
 Keras example
 -------------
 
-We will begin by declaring a simple artificial neural network with Keras:
+We will begin by declaring a simple artificial neural network with Keras_:
 
 .. code-block:: python
 
@@ -92,7 +92,7 @@ Note that we compile the model so that we also have information about the optimi
 Fitting the model using ALP
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We then instanciate an `Experiment`:
+We then instanciate an :py:class:`Experiment`:
 
 .. code-block:: python
 
