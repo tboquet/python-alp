@@ -21,6 +21,20 @@ You should see something like this:
 
 The first container is a worker, the second container is a controler, the third container is the broker and the two last containers are the databases.
 
+You can also launch monitoring containers:
+
+.. code-block:: bash
+
+    docker run -d -p 5555:5555 -v /etc/localtime:/etc/localtime:ro -v ~/scheduler/proj:/sched \
+          --link rabbitmq_sched:rabbitmq --name=flower_monitor --restart=always tboquet/anaceflo
+
+    docker run -d --link mongo_results:mongo -p 8081:8081 --name=mongo_r_monitor --restart=always knickers/mongo-express
+    docker run -d --link mongo_models:mongo -p 8082:8081 --name=mongo_m_monitor --restart=always knickers/mongo-express
+
+The first container runs celery flower, a simple application to monitor the broker, the last two containers serve web applications for each of the mongodb containers we launched earlier.
+
+After this initial setup, we are all set to start experimenting with Keras!
+
 For now ALP fully supports Keras and partially supports scikit-learn (linear models).
 
 Keras example
