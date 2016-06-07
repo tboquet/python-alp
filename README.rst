@@ -98,5 +98,5 @@ Note, to combine the coverage data from all the tox environments run:
 
 * Free software: BSD license
 
-.. _`docker setup`: http://python-alp.readthedocs.io/en/tuto/dockersetup.html
+.. _`docker setup`: http://python-alp.readthedocs.io/en/master/dockersetup.html
 
