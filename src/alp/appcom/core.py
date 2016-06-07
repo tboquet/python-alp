@@ -32,7 +32,7 @@ in memory compiled function, this function is used instead.
 import copy
 import sys
 
-from ..appcom import get_models
+from ..dbbackend import get_models
 from ..appcom.utils import background
 from .utils import init_backend
 from .utils import switch_backend
