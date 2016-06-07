@@ -2,6 +2,7 @@ keras
 pymongo
 scikit-learn
 dill
+mock
 celery
 sphinx>=1.3
 sphinx-py3doc-enhanced-theme

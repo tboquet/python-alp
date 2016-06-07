@@ -44,14 +44,21 @@ You can easily define how many workers and how many clients are available in a c
 
 This library has been developped to work well with Keras but can suit a lot of other frameworks. 
 
-Installation
-============
+Installation to develop your own service
+========================================
 
 ::
 
     git clone https://github.com/tboquet/python-alp.git
     cd python-alp
     python setup.py install
+
+
+Launching the services
+======================
+
+Please see the `docker setup`_ part of the documentation.
+
 
 
 Documentation
@@ -65,6 +72,12 @@ Development
 To run the all tests run::
 
     tox
+
+If you don't have the necessary requirements installed when you run `tox` but you have `Docker` running, you can `launch all the required services` and use::
+
+    docker run -it --rm --privileged=true --volume=/path/to/the/library/python-alp:/app --volume=~/temp/data/parameters_h5:/parameters_h5 --link=mongo_models:mongo_m --link=mongo_results:mongo_r --link rabbitmq_sched:rabbitmq --name=testenvt tboquet/pythondev
+
+This docker container will launch sequentially `tox` and `detox`, test the library against all the supported python version and build the documentation.
 
 Note, to combine the coverage data from all the tox environments run:
 
@@ -84,3 +97,6 @@ Note, to combine the coverage data from all the tox environments run:
             PYTEST_ADDOPTS=--cov-append tox
 
 * Free software: BSD license
+
+.. _`docker setup`: http://python-alp.readthedocs.io/en/tuto/dockersetup.html
+
