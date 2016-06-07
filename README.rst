@@ -44,14 +44,21 @@ You can easily define how many workers and how many clients are available in a c
 
 This library has been developped to work well with Keras but can suit a lot of other frameworks. 
 
-Installation
-============
+Installation to develop your own service
+========================================
 
 ::
 
     git clone https://github.com/tboquet/python-alp.git
     cd python-alp
     python setup.py install
+
+
+Launching the services
+======================
+
+Please see the `docker setup`_ part of the documentation.
+
 
 
 Documentation
@@ -91,4 +98,5 @@ Note, to combine the coverage data from all the tox environments run:
 
 * Free software: BSD license
 
-.. _``: http://python-alp.readthedocs.io/en/latest/dockersetup.html
+.. _`docker setup`: http://python-alp.readthedocs.io/en/latest/dockersetup.html
+
