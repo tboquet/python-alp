@@ -22,7 +22,7 @@ from sklearn.linear_model import OrthogonalMatchingPursuit
 from sklearn.linear_model import Ridge
 
 from ..celapp import app
-from ..config import PATH_H5
+from ..appcom import _path_h5
 
 SUPPORTED = [LogisticRegression, LinearRegression, Ridge, Lasso,
              Lars, LassoLars, OrthogonalMatchingPursuit, BayesianRidge,
@@ -292,7 +292,7 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
     dh.update(str_concat_d.encode('utf-8'))
     hexdi_d = dh.hexdigest()
 
-    params_dump = PATH_H5 + hexdi_m + hexdi_d + '.h5'
+    params_dump = _path_h5 + hexdi_m + hexdi_d + '.h5'
 
     # update the full json
     full_json = {'backend_name': backend_name,
