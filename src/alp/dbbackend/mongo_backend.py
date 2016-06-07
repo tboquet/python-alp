@@ -21,6 +21,7 @@ def insert(full_json):
     models = get_models()
     return models.insert_one(full_json).inserted_id
 
+
 def update(inserted_id, json_changes):
     models = get_models()
     dict_id = dict()

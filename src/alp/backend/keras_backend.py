@@ -253,9 +253,6 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
     # convert dict to json string
     model_str = json.dumps(model)
 
-    # get the models collection
-    models = get_models()
-
     first = list(data[0].keys())[0]
     un_data_m = data[0][first].mean()
     un_data_f = data[0][first][0]

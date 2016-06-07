@@ -5,7 +5,6 @@ from .core import *
 
 import os
 import json
-import sys
 
 
 _alp_base_dir = os.path.expanduser('~')
