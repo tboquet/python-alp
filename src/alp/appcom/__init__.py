@@ -1,10 +1,10 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-from .core import *
-
 import os
 import json
+
+from .core import *
 
 
 _alp_base_dir = os.path.expanduser('~')

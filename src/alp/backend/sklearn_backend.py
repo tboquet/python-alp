@@ -21,8 +21,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import OrthogonalMatchingPursuit
 from sklearn.linear_model import Ridge
 
-from ..celapp import app
 from ..appcom import _path_h5
+from ..celapp import app
 
 SUPPORTED = [LogisticRegression, LinearRegression, Ridge, Lasso,
              Lars, LassoLars, OrthogonalMatchingPursuit, BayesianRidge,
