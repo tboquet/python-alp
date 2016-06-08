@@ -7,12 +7,12 @@ import os
 from .core import *
 
 _alp_base_dir = os.path.expanduser('~')
-if not os.access(_alp_base_dir, os.W_OK):
+if not os.access(_alp_base_dir, os.W_OK):  # pragma: no cover
     _alp_base_dir = '/tmp'
 
 
 _alp_dir = os.path.join(_alp_base_dir, '.alp')
-if not os.path.exists(_alp_dir):
+if not os.path.exists(_alp_dir):  # pragma: no cover
     os.makedirs(_alp_dir)
 
 # Defaults
@@ -25,7 +25,7 @@ _backend = 'mongodb://mongo_r:27017'
 _path_h5 = '/parameters_h5/'
 
 _config_path = os.path.expanduser(os.path.join(_alp_dir, 'alpapp.json'))
-if os.path.exists(_config_path):
+if os.path.exists(_config_path):  # pragma: no cover
     _config = json.load(open(_config_path))
     _broker = _config.get('broker', 'amqp://guest:guest@rabbitmq:5672//')
     _backend = config.get('backend', 'mongodb://mongo_r:27017')

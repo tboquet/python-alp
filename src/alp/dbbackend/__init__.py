@@ -6,7 +6,7 @@ import os
 
 
 _alp_base_dir = os.path.expanduser('~')
-if not os.access(_alp_base_dir, os.W_OK):
+if not os.access(_alp_base_dir, os.W_OK):  # pragma: no cover
     _alp_base_dir = '/tmp'
 
 
@@ -26,7 +26,7 @@ if os.getenv("TEST_MODE") == "ON":
 # note: we have to be able to accept other structures
 
 _config_path = os.path.expanduser(os.path.join(_alp_dir, 'alpdb.json'))
-if os.path.exists(_config_path):
+if os.path.exists(_config_path):  # pragma: no cover
     _config = json.load(open(_config_path))
     _db_engine = _config.get('db_engine', 'mongodb')
     assert _db_engine in {'mongodb'}
