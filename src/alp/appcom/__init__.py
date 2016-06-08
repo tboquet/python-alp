@@ -1,11 +1,10 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import os
 import json
+import os
 
 from .core import *
-
 
 _alp_base_dir = os.path.expanduser('~')
 if not os.access(_alp_base_dir, os.W_OK):
