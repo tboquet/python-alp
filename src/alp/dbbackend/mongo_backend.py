@@ -4,10 +4,10 @@
 """
 
 from pymongo import MongoClient
-from ..appcom import _collection_name
-from ..appcom import _db_name
-from ..appcom import _host_adress
-from ..appcom import _host_port
+from ..dbbackend import _collection_name
+from ..dbbackend import _db_name
+from ..dbbackend import _host_adress
+from ..dbbackend import _host_port
 
 
 def get_models():
