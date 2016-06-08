@@ -33,7 +33,7 @@ import copy
 import sys
 
 from ..appcom.utils import background
-from ..databasecon import get_models
+from ..dbbackend import get_models
 from .utils import init_backend
 from .utils import switch_backend
 

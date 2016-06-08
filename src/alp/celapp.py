@@ -1,8 +1,8 @@
 """Simple celery config"""
 
 from celery import Celery
-from . import config
+from . import appcom as apc
 
 
-app = Celery(broker=config.BROKER,
-             backend=config.BACKEND)
+app = Celery(broker=apc._broker,
+             backend=apc._backend)
