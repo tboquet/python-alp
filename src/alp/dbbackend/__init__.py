@@ -20,6 +20,9 @@ _host_port = 27017
 _db_name = 'modelization'
 _collection_name = 'models'
 
+if os.getenv("TEST_MODE") == "ON":
+    _host_adress = '127.0.0.1'
+
 # note: we have to be able to accept other structures
 
 _config_path = os.path.expanduser(os.path.join(_alp_dir, 'alpdb.json'))
@@ -48,6 +51,3 @@ if _db_engine == 'mongodb':
     from ..dbbackend.mongo_backend import *
 else:
     raise Exception('Unknown backend: ' + str(_db_engine))
-
-if os.getenv("TEST_MODE") == "ON":
-    _host_adress = '127.0.0.1'
