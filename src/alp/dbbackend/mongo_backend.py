@@ -4,7 +4,10 @@
 """
 
 from pymongo import MongoClient
-from alp import appcom as apc
+from ..appcom import _collection_name
+from ..appcom import _db_name
+from ..appcom import _host_adress
+from ..appcom import _host_port
 
 
 def get_models():
@@ -12,9 +15,9 @@ def get_models():
 
     Returns:
         the collection of models"""
-    client = MongoClient(apc._host_adress, apc._host_port)
-    modelization = client[apc._db_NAME]
-    return modelization[apc._collection_name]
+    client = MongoClient(_host_adress, _host_port)
+    modelization = client[_db_name]
+    return modelization[_collection_name]
 
 
 def insert(full_json):
