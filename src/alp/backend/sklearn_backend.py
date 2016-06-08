@@ -265,16 +265,13 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
         hexdi_d : the hex hash of the data
         params_dump : the name of the file where the attributes are dumped"""
 
-    from ..databasecon import get_models
+    from alp import dbbackend as db
     from datetime import datetime
     import hashlib
     import json
 
     # convert dict to json string
     model_str = json.dumps(model)
-
-    # get the models collection
-    models = get_models()  # ????
 
     first = list(data[0].keys())[0]
     un_data_m = data[0][first].mean()
@@ -307,14 +304,14 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
                  'data_path': "sent",
                  'root': "sent",
                  'data_s': "sent"}
-    mod_id = models.insert_one(full_json).inserted_id
+    mod_id = db.insert(full_json)
 
     try:
         loss, val_loss, iters, model = train(model['model_arch'], data,
                                              data_val,
                                              *args, **kwargs)
 
-        models.update({"_id": mod_id}, {'$set': {
+        db.update({"_id": mod_id}, {'$set': {
             'train_loss': loss,
             'min_tloss': np.min(loss),
             'valid_loss': val_loss,
@@ -327,7 +324,7 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
         save_params(model, filepath=params_dump)
 
     except Exception:
-        models.update({"_id": mod_id}, {'$set': {'error': 1}})
+        db.update({"_id": mod_id}, {'$set': {'error': 1}})
         raise
     return hexdi_m, hexdi_d, params_dump
 
