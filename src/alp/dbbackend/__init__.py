@@ -16,7 +16,7 @@ if not os.path.exists(_alp_dir):
 
 _db_engine = 'mongodb'
 _host_adress = 'mongo_m'
-_host_port = '27017'
+_host_port = 27017
 _db_name = 'modelization'
 _collection_name = 'models'
 
