@@ -44,7 +44,7 @@ with open(_config_path, 'w') as f:
 
 
 # import backend
-if _db_engine == 'mongo_db':
+if _db_engine == 'mongodb':
     from ..dbbackend.mongo_backend import *
 else:
     raise Exception('Unknown backend: ' + str(_db_engine))
