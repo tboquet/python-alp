@@ -32,8 +32,8 @@ if os.path.exists(_config_path):
     _path_h5 = config.get('path_h5', '/parameters_h5/')
 
 # save config file
-_config = {'_broker': broker,
-           '_backend': backend,
+_config = {'_broker': _broker,
+           '_backend': _backend,
            '_path_h5': _path_h5}
 
 with open(_config_path, 'w') as f:
