@@ -4,7 +4,7 @@
 """
 
 from pymongo import MongoClient
-from . import appcom as apc
+from alp import appcom as apc
 
 
 def get_models():
