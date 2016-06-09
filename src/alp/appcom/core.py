@@ -23,22 +23,19 @@ class Experiment(object):
     """An Experiment trains, predicts, saves and logs a model
 
     Attributes:
-        backend(str): the backend to use
-        model_dict(dict, optionnal): the model to experience with
+        model(model): the model used in the experiment
+        metrics(list): a list of callables
     """
 
-    def __init__(self, backend, model=None, metrics=None):
-        backend, backend_name, backend_version = init_backend(backend)
+    def __init__(self, model, metrics=None):
+        backend, backend_name, backend_version = init_backend(model)
         self.backend = backend
         self.backend_name = backend_name
         self.backend_version = backend_version
         self.metrics = metrics
         self.model = model
-        if self.model:
-            self.model_dict = self.backend.to_dict_w_opt(self.model,
-                                                         self.metrics)
-        else:
-            self.model_dict = None
+        self.model_dict = self.backend.to_dict_w_opt(self.model,
+                                                     self.metrics)
         self.trained = False
 
     @property
