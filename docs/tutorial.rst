@@ -3,7 +3,7 @@ Getting started with ALP!
 =========================
 
 Please go through the environment setup (see :ref:`Requirements`, and :ref:`Set up of your containers`) before going further. You should have your docker containers ready to accept jobs.
-After this initial setup, we are all set to start experimenting with Keras!
+After this initial setup, we are all set to start experimenting with Keras (and some models of scikit-learn)!
 
 For now ALP fully supports Keras_ and partially supports `scikit-learn`_ (linear models).
 
@@ -114,6 +114,90 @@ It's then possible to make predictions using the loaded model.
     expe.predict(data['X'].astype('float32'))
 
 
+
+Sklearn example
+--------------
+
+As previously said, another partially supported backend is `scikit-learn`_. Let's do some logistic regression.
+
+First we need to get some data. The iris dataset is what we want.
+
+.. code-block:: python
+
+    from sklearn import cross_validation
+    from sklearn import datasets
+    from sklearn.linear_model import LogisticRegression
+    
+    iris = datasets.load_iris()
+    X_train, X_test, y_train, y_test = cross_validation.train_test_split(
+                    iris.data, iris.target, test_size=0.2, random_state=0)
+
+
+Definining a model in scikit-learn is super-duper simple. Please note that by default, the 'multi-class' parameter is set to OvR, that is to say one classifier per class. On the iris dataset, it means 3 classifiers.
+
+.. code-block:: python
+
+    lr = LogisticRegression()
+
+Unlike in Keras, the model is not compiled.
+A word on performance : so far, the measure of performance is the mean absolute error, but we will soon have several metrics working.
+
+Fitting the model using ALP
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+We then instanciate an :class:`alp.appcom.core.Experiment`:
+
+.. code-block:: python
+
+    from alp.appcom.core import Experiment
+
+    expe = Experiment("sklearn", lr)
+ 
+The two methods (direct and asynchronous) are available, since we just switched backend.
+The :meth:`alp.appcom.core.Experiment.fit` method allows you to fit the model in the same process.
+
+.. code-block:: python
+
+    expe.fit([data], [data_val])
+
+The model is being trained and automatically saved in the database. 
+
+The :meth:`alp.appcom.core.Experiment.fit_async` method send the model to the broker container that will manage the training using the workers you defined in the setup phase.
+
+.. code-block:: python
+
+    expe.fit_async([data], [data_val])
+
+Like for the fit method, the model is saved in the db along with the performance and the parameters are dumped in an HDF5 file.  
+
+
+
+Predictions using the model saved in the database
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+As for Keras, you can access the id of the model to load it. 
+Note that the app will change backend to the one used to define the model you're loading.
+
+.. code-block:: python
+
+    print(expe.model_id)
+    print(expe.data_id)
+
+    expe.load_model(expe.mod_id, expe.data_id)
+
+
+You can now predict with your model.
+
+.. code-block:: python
+
+    expe.predict(data['X'])
+
+
+
+
+
 .. _Keras: http://keras.io/
 .. _`scikit-learn`: http://scikit-learn.org/stable/
+
 
