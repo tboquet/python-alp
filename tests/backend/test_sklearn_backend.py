@@ -50,8 +50,6 @@ def _test_fit_predict_model(imodel):
     res = SKB.fit(NAME, VERSION, model_dict, [data], [data_val])
     assert len(res) == 3
 
-    print('Inside')
-    print(repr(imodel))
     expe = Experiment(model=imodel)
     assert expe.backend is not None
 
@@ -63,8 +61,7 @@ def _test_fit_predict_model(imodel):
     predexp = expe.predict(data["X"])
     imodel.fit(X_train, y_train)
     assert np.allclose(predexp, imodel.predict(X_train))
-    predexp = expe.predict(data["X"])
-    assert np.allclose(predexp, imodel.predict(X_train))
+
 
 
 def test_fit_predict_LinearRegression_normalizeF():
@@ -82,8 +79,6 @@ def test_fit_predict_LinearRegression_normalizeF():
     """
 
     lr = LinearRegression(normalize=False)
-    print('Outside')
-    print(repr(lr))
     _test_fit_predict_model(lr)
 
 
@@ -121,8 +116,6 @@ def test_fit_LogisticRegression():
     """
 
     lr = LogisticRegression()
-    print('Outside')
-    print(repr(lr))
     _test_fit_predict_model(lr)
 
 
@@ -139,8 +132,6 @@ def test_fit_OrthogonalMatchingPursuit():
     """
 
     omp = OrthogonalMatchingPursuit()
-    print('Outside')
-    print(repr(omp))
     _test_fit_predict_model(omp)
 
 

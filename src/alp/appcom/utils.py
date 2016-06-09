@@ -65,7 +65,7 @@ def init_backend(model):
     """
     if 'keras' in repr(model):
         from ..backend import keras_backend as ABE
-    elif 'sklearn' in repr(model):
+    elif 'sklearn' in repr(type(model)):
         from ..backend import sklearn_backend as ABE
     else:
         raise NotImplementedError(
