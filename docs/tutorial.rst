@@ -169,7 +169,7 @@ The :meth:`alp.appcom.core.Experiment.fit_async` method send the model to the br
 
     expe.fit_async([data], [data_val])
 
-Like for the fit method, the architecture of the model is saved in the db along with the performance and the parameters are dumped in an HDF5 file.  
+Like for the fit method, the model is saved in the db along with the performance and the parameters are dumped in an HDF5 file.  
 
 
 
