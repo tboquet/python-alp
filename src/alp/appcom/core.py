@@ -8,25 +8,6 @@ Using `celery <http://www.celeryproject.org/>`_, this module helps to schedule
 the training of models if the users send enough models in a short
 period of time.
 
-Serialization
-~~~~~~~~~~~~~
-
-The models are serialized in a json format in the database and loaded by a
-worker when they are sent. The data is loaded via a request mapped in a
-dictionnary.
-
-.. note:
-
-    The syntax will evolve a lot and changes have to be expected.
-
-Compilation & cache
-~~~~~~~~~~~~~~~~~~~
-
-The models are compiled on the fly after the build. If the model is already
-compiled and in the `COMPILED_MODEL` dictionnary mapping the models id to the
-in memory compiled function, this function is used instead.
-
-----------------------------------------------------------------------------
 """
 
 import copy
