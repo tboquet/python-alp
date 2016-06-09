@@ -61,8 +61,7 @@ def _test_fit_predict_model(imodel):
     predexp = expe.predict(data["X"])
     imodel.fit(X_train, y_train)
     assert np.allclose(predexp, imodel.predict(X_train))
-    predexp = expe.predict(data["X"])
-    assert np.allclose(predexp, imodel.predict(X_train))
+
 
 
 def test_fit_predict_LinearRegression_normalizeF():
