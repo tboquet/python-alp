@@ -266,30 +266,14 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
         params_dump : the name of the file where the attributes are dumped"""
 
     from alp import dbbackend as db
+    import alp.backend.common as cm
     from datetime import datetime
     import hashlib
     import json
 
-    # convert dict to json string
-    model_str = json.dumps(model)
-
-    first = list(data[0].keys())[0]
-    un_data_m = data[0][first].mean()
-    un_data_f = data[0][first][0]
-
-    # create the model hash from the stringified json
-    mh = hashlib.md5()
-    str_concat_m = str(model_str)  # + str(kwargs['batch_size'])
-    mh.update(str_concat_m.encode('utf-8'))
-    hexdi_m = mh.hexdigest()
-
-    # create the data hash
-    dh = hashlib.md5()
-    str_concat_d = str(un_data_m) + str(un_data_f)
-    dh.update(str_concat_d.encode('utf-8'))
-    hexdi_d = dh.hexdigest()
-
-    params_dump = _path_h5 + hexdi_m + hexdi_d + '.h5'
+    hexdi_m = cm.create_model_hash(model, 0)
+    hexdi_d = cm.create_data_hash(data)
+    params_dump = cm.create_param_dump(_path_h5, hexdi_m, hexdi_d)
 
     # update the full json
     full_json = {'backend_name': backend_name,
@@ -299,7 +283,6 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
                  'mod_id': hexdi_m,
                  'data_id': hexdi_d,
                  'params_dump': params_dump,
-                 # kerazs : 'batch_size': kwargs['batch_size'],
                  'trained': 0,
                  'data_path': "sent",
                  'root': "sent",

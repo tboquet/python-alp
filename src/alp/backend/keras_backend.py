@@ -233,7 +233,7 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
     """A function to train models given a datagenerator,a serialized model,
 
     Args:
-        model_str(str): the model dumped with the `to_json` method
+        backend_name(str): the model dumped with the `to_json` method
         data_gen(generator): a generator yielding (mini) batches of train and
             validation data
         offset(int): how many datapoints to burn
@@ -243,6 +243,7 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
 
     from alp import dbbackend as db
     from datetime import datetime
+    import alp.backend.common as cm
     import hashlib
     import json
     import numpy as np
@@ -250,26 +251,11 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
     if kwargs.get("batch_size") is None:
         kwargs['batch_size'] = 32
 
-    # convert dict to json string
-    model_str = json.dumps(model)
+    batch_size = kwargs['batch_size']
 
-    first = list(data[0].keys())[0]
-    un_data_m = data[0][first].mean()
-    un_data_f = data[0][first][0]
-
-    # create the model hash from the stringified json
-    mh = hashlib.md5()
-    str_concat_m = str(model_str) + str(kwargs['batch_size'])
-    mh.update(str_concat_m.encode('utf-8'))
-    hexdi_m = mh.hexdigest()
-
-    # create the data hash
-    dh = hashlib.md5()
-    str_concat_d = str(un_data_m) + str(un_data_f)
-    dh.update(str_concat_d.encode('utf-8'))
-    hexdi_d = dh.hexdigest()
-
-    params_dump = _path_h5 + hexdi_m + hexdi_d + '.h5'
+    hexdi_m = cm.create_model_hash(model, batch_size)
+    hexdi_d = cm.create_data_hash(data)
+    params_dump = cm.create_param_dump(_path_h5, hexdi_m, hexdi_d)
 
     # update the full json
     full_json = {'backend_name': backend_name,
