@@ -28,8 +28,8 @@ _config_path = os.path.expanduser(os.path.join(_alp_dir, 'alpapp.json'))
 if os.path.exists(_config_path):  # pragma: no cover
     _config = json.load(open(_config_path))
     _broker = _config.get('broker', 'amqp://guest:guest@rabbitmq:5672//')
-    _backend = config.get('backend', 'mongodb://mongo_r:27017')
-    _path_h5 = config.get('path_h5', '/parameters_h5/')
+    _backend = _config.get('backend', 'mongodb://mongo_r:27017')
+    _path_h5 = _config.get('path_h5', '/parameters_h5/')
 
 # save config file
 _config = {'_broker': _broker,
