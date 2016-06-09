@@ -268,8 +268,6 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
     from alp import dbbackend as db
     import alp.backend.common as cm
     from datetime import datetime
-    import hashlib
-    import json
 
     hexdi_m = cm.create_model_hash(model, 0)
     hexdi_d = cm.create_data_hash(data)

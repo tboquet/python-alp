@@ -244,8 +244,6 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
     from alp import dbbackend as db
     from datetime import datetime
     import alp.backend.common as cm
-    import hashlib
-    import json
     import numpy as np
 
     if kwargs.get("batch_size") is None:

@@ -14,6 +14,8 @@ def create_model_hash(model, batch_size):
 
 
 def create_data_hash(data):
+    un_data_m = 0
+    un_data_f = 0
     for i in range(len(data)):
         for key in data[i]:
             un_data_m += data[i][key].mean()
@@ -27,5 +29,3 @@ def create_data_hash(data):
 
 def create_param_dump(_path_h5, hexdi_m, hexdi_d):
     return _path_h5 + hexdi_m + hexdi_d + '.h5'
-
-
