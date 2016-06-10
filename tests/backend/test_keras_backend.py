@@ -196,7 +196,7 @@ def test_experiment_sequential():
                   optimizer='rmsprop',
                   metrics=['accuracy'])
 
-    expe = Experiment("keras", model)
+    expe = Experiment(model)
 
     assert expe.backend is not None
 
@@ -231,7 +231,7 @@ def test_experiment_sequential():
     expe.predict(data['X'].astype('float32'))
     expe.predict([data['X'].astype('float32')])
 
-    expe = Experiment("keras")
+    expe = Experiment(model)
 
     expe.fit([data], [data_val], model=model,
              custom_objects=custom_objects, nb_epoch=2,
@@ -284,7 +284,7 @@ def test_experiment_model():
                   loss=categorical_crossentropy_custom,
                   metrics=metrics)
 
-    expe = Experiment("keras", model)
+    expe = Experiment(model)
 
     # Backend test
     assert expe.backend is not None
@@ -311,7 +311,7 @@ def test_experiment_model():
                 loss='categorical_crossentropy',
                   metrics=metrics)
 
-    expe = Experiment("keras", model)
+    expe = Experiment(model)
 
     expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
@@ -320,12 +320,12 @@ def test_experiment_model():
     model.compile(optimizer='rmsprop',
                   loss=[categorical_crossentropy_custom],
                   metrics=metrics)
-    expe = Experiment("keras", model)
+    expe = Experiment(model)
 
     expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
     # Using metrics
-    expe = Experiment("keras", model, metrics=metrics)
+    expe = Experiment(model, metrics=metrics)
 
     expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
@@ -336,7 +336,7 @@ def test_experiment_model():
     expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
              batch_size=batch_size)
 
-    expe = Experiment("keras")
+    expe = Experiment(model)
 
     expe.fit([data], [data_val], model=model,
              custom_objects=custom_objects, nb_epoch=2,
@@ -391,7 +391,7 @@ def test_experiment_legacy():
     model.add_output(name='output', input='last_dense')
     model.compile(optimizer='sgd', loss={'output': categorical_crossentropy_custom})
 
-    expe = Experiment("keras", model)
+    expe = Experiment(model)
 
     assert expe.backend is not None
 
@@ -409,7 +409,7 @@ def test_experiment_legacy():
     expe.predict({k: data[k].astype('float32') for k in data})
     expe.predict(data['X_vars'].astype('float32'))
 
-    expe = Experiment("keras")
+    expe = Experiment(model)
 
     expe.fit([data], [data_val], model=model,
              custom_objects=custom_objects, nb_epoch=2,

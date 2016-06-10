@@ -54,7 +54,7 @@ def _get_backend_attributes(ABE):
     return ABE, backend_name, backend_version
 
 
-def init_backend(backend):
+def init_backend(model):
     """Initialization of the backend
 
     Args:
@@ -63,9 +63,9 @@ def init_backend(backend):
     Returns:
         the backend, the backend name and the backend version
     """
-    if backend == 'keras':
+    if 'keras' in repr(model):
         from ..backend import keras_backend as ABE
-    elif backend == 'sklearn':
+    elif 'sklearn' in repr(type(model)):
         from ..backend import sklearn_backend as ABE
     else:
         raise NotImplementedError(

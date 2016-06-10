@@ -50,7 +50,7 @@ def _test_fit_predict_model(imodel):
     res = SKB.fit(NAME, VERSION, model_dict, [data], [data_val])
     assert len(res) == 3
 
-    expe = Experiment("sklearn", model=imodel)
+    expe = Experiment(model=imodel)
     assert expe.backend is not None
 
     expe.fit([data], [data_val])
