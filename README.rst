@@ -37,12 +37,9 @@ Overview
 .. end-badges
 
 
-ALP (Asynchronous Learning Platform) helps you experiment with a lot of machine learning models quickly. It provides you with a simple way of scheduling and recording experiments.
+ALP helps you experiment with a lot of machine learning models quickly. It provides you with a simple way of scheduling and recording experiments.
 
-You can easily define how many workers and how many clients are available in a configuration file.
-
-
-This library has been developped to work well with Keras but can suit a lot of other frameworks. 
+This library has been developped to work well with Keras and Scikit-learn but can suit a lot of other frameworks. 
 
 Installation to develop your own service
 ========================================
@@ -58,7 +55,6 @@ Launching the services
 ======================
 
 Please see the `docker setup`_ part of the documentation.
-
 
 
 Documentation
