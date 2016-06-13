@@ -241,7 +241,7 @@ def train(model, data, data_val, *args, **kwargs):
             results['loss'] += h.history['loss']
             if 'val_loss' in h.history:
                 results['val_loss'] += h.history['val_loss']
-        results['max_iter'] = h.epoch[-1] * len(data)
+        results['iter'] = h.epoch[-1] * len(data)
     else:
         raise NotImplementedError("This type of model"
                                   "is not supported: {}".format(mod_name))
