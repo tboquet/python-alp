@@ -207,6 +207,7 @@ def train(model, data, data_val, *args, **kwargs):
     results = dict()
     results['metrics'] = dict()
     custom_objects = None
+    suf = 'val_'
 
     if 'custom_objects' in kwargs:
         custom_objects = kwargs.pop('custom_objects')
@@ -241,7 +242,7 @@ def train(model, data, data_val, *args, **kwargs):
                           **kwargs)
             for metric in metrics_names:
                 results['metrics'][metric] += h.history[metric]
-                results['metrics']['val_' + metric] += h.history[metric]
+                results['metrics'][suf + metric] += h.history[suf + metric]
         results['metrics']['iter'] = h.epoch[-1] * len(data)
     else:
         raise NotImplementedError("This type of model"
