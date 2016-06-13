@@ -298,11 +298,11 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
                                data_val,
                                *args, **kwargs)
         db.update({"_id": mod_id}, {'$set': {
-            'train_loss': results['loss'],
-            'min_tloss': np.min(results['loss']),
-            'valid_loss': results['val_loss'],
-            'min_vloss': np.min(results['val_loss']),
-            'iter_stopped': results['iter'],
+            'train_loss': results['metrics']['loss'],
+            'min_tloss': np.min(results['metrics']['loss']),
+            'valid_loss': results['metrics']['val_loss'],
+            'min_vloss': np.min(results['metrics']['val_loss']),
+            'iter_stopped': results['metrics']['iter'],
             'trained': 1,
             'date_finished_training': datetime.now()
         }})
