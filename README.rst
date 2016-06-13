@@ -92,7 +92,7 @@ Note, to combine the coverage data from all the tox environments run:
 
             PYTEST_ADDOPTS=--cov-append tox
 
-* Free software: BSD license
+* Free software: Apache license
 
 .. _`docker setup`: http://python-alp.readthedocs.io/en/latest/dockersetup.html
 

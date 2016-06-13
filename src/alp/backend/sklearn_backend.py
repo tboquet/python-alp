@@ -208,13 +208,19 @@ def train(model, data, data_val, *args, **kwargs):
         """
 
     # Local variables
-    custom_objects = None
+    from sklearn.metrics import mean_absolute_error
+
     metrics = []
-    loss = []
-    val_loss = []
+    results = dict()
+    results['metrics'] = dict()
+    custom_objects = None
     predondata = []
     predonval = []
 
+    metrics.append(mean_absolute_error)
+    for metric in metrics:
+        results['metrics'][metric.__name__] = []
+        results['metrics']['val_' + metric.__name__] = []
     # Load custom_objects and metrics
     if 'custom_objects' in kwargs:  # pragma: no cover
         custom_objects = kwargs.pop('custom_objects')
@@ -234,16 +240,15 @@ def train(model, data, data_val, *args, **kwargs):
 
     # Validates the model
     # So far, only the mae is supported.
-    from sklearn.metrics import mean_absolute_error
-    metrics.append(mean_absolute_error)
     for metric in metrics:
         for d, dv, pda, pva in zip(data, data_val, predondata, predonval):
-            loss.append(metric(d['y'], pda))
-            val_loss.append(metric(dv['y'], pva))
+            results['metrics'][metric.__name__].append(metric(d['y'], pda))
+            results['metrics']['val_' + metric.__name__].append(metric(dv['y'],
+                                                                       pva))
 
-    max_iter = np.nan
+    results['metrics']['iter'] = np.nan
 
-    return loss, val_loss, max_iter, model
+    return results, model
 
 
 @app.task(default_retry_delay=60 * 10, max_retries=3, rate_limit='120/m')
@@ -288,26 +293,26 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
     mod_id = db.insert(full_json)
 
     try:
-        loss, val_loss, iters, model = train(model['model_arch'], data,
-                                             data_val,
-                                             *args, **kwargs)
-
-        db.update({"_id": mod_id}, {'$set': {
-            'train_loss': loss,
-            'min_tloss': np.min(loss),
-            'valid_loss': val_loss,
-            'min_vloss': np.min(val_loss),
-            'iter_stopped': iters * len(data),
+        results, model = train(model['model_arch'], data,
+                               data_val,
+                               *args, **kwargs)
+        res_dict = {
+            'iter_stopped': results['metrics']['iter'],
             'trained': 1,
-            'date_finished_training': datetime.now()
-        }})
+            'date_finished_training': datetime.now()}
+        for metric in results['metrics']:
+            res_dict[metric] = results['metrics'][metric]
+        db.update({"_id": mod_id}, {'$set': res_dict})
 
         save_params(model, filepath=params_dump)
+        results['model_id'] = hexdi_m
+        results['data_id'] = hexdi_d
+        results['params_dump'] = params_dump
 
     except Exception:
         db.update({"_id": mod_id}, {'$set': {'error': 1}})
         raise
-    return hexdi_m, hexdi_d, params_dump
+    return results
 
 
 @app.task

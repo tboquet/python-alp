@@ -116,14 +116,14 @@ class Experiment(object):
         res = self.backend.fit(self.backend_name, self.backend_version,
                                copy.deepcopy(self.model_dict), data,
                                data_val, *args, **kwargs)
-        self.mod_id = res[0]
-        self.data_id = res[1]
-        self.params_dump = res[2]
+        self.mod_id = res['model_id']
+        self.data_id = res['data_id']
+        self.params_dump = res['params_dump']
 
         self.trained = True
-        self.res = res
+        self.full_res = res
 
-        return self.res
+        return self.full_res
 
     def fit_async(self, data, data_val, model=None, async=False,
                   *args, **kwargs):
@@ -157,10 +157,7 @@ class Experiment(object):
                                      copy.deepcopy(self.model_dict), data,
                                      data_val, *args, **kwargs)
 
-        self._get_results(res)
-        self.res = res
-
-        return self.res
+        return self._get_results(res)
 
     def load_model(self, mod_id, data_id):
         models = get_models()
@@ -201,5 +198,10 @@ class Experiment(object):
 
     @background
     def _get_results(self, res):
+        self.async_res = res
         self.full_res = res.wait()  # pragma: no cover
         self.trained = True  # pragma: no cover
+        self.mod_id = self.full_res['model_id']  # pragma: no cover
+        self.data_id = self.full_res['data_id']  # pragma: no cover
+        self.params_dump = self.full_res['params_dump']  # pragma: no cover
+        return self.full_res  # pragma: no cover
