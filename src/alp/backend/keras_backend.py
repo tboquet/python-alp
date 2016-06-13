@@ -226,7 +226,7 @@ def train(model, data, data_val, *args, **kwargs):
             results['loss'] += h.history['loss']
             if 'val_loss' in h.history:
                 results['val_loss'] += h.history['val_loss']
-        results['max_iter'] = h.epoch[-1] * len(data)
+        results['iters'] = h.epoch[-1] * len(data)
 
     elif mod_name is "Sequential" or mod_name is "Model":
         for d, dv in zip(data, data_val):

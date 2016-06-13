@@ -244,7 +244,7 @@ def train(model, data, data_val, *args, **kwargs):
             results['loss'].append(metric(d['y'], pda))
             results['val_loss'].append(metric(dv['y'], pva))
 
-    results['max_iter'] = np.nan
+    results['iters'] = np.nan
 
     return results, model
 
