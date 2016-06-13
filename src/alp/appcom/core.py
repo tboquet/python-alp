@@ -156,8 +156,7 @@ class Experiment(object):
         res = self.backend.fit.delay(self.backend_name, self.backend_version,
                                      copy.deepcopy(self.model_dict), data,
                                      data_val, *args, **kwargs)
-
-        return self._get_results(res)
+        return res
 
     def load_model(self, mod_id, data_id):
         models = get_models()
@@ -204,4 +203,4 @@ class Experiment(object):
         self.mod_id = self.full_res['model_id']  # pragma: no cover
         self.data_id = self.full_res['data_id']  # pragma: no cover
         self.params_dump = self.full_res['params_dump']  # pragma: no cover
-        return self.full_res  # pragma: no cover
+        print("Result {} ready".format(self.mod_id))  # pragma: no cover
