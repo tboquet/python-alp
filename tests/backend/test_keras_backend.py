@@ -98,7 +98,7 @@ def test_fit():
     res = KTB.train(model_dict['model_arch'], [data], [data_val])
     res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val])
 
-    assert len(res) == 3
+    assert len(res) == 8
 
     # Case 2 without custom objects
     model = Sequential()
