@@ -209,12 +209,12 @@ def train(model, data, data_val, *args, **kwargs):
 
     if 'custom_objects' in kwargs:
         custom_objects = kwargs.pop('custom_objects')
+    # load model
+    model = model_from_dict_w_opt(model, custom_objects=custom_objects)
     metrics_names = model.metrics_names
     for metric in metrics_names:
         results[metric] = []
         results['val_' + metric] = []
-    # load model
-    model = model_from_dict_w_opt(model, custom_objects=custom_objects)
     mod_name = model.__class__.__name__
 
     # fit the model according to the input/output type
