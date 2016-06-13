@@ -209,8 +209,10 @@ def train(model, data, data_val, *args, **kwargs):
 
     if 'custom_objects' in kwargs:
         custom_objects = kwargs.pop('custom_objects')
-    results['loss'] = []
-    results['val_loss'] = []
+    metrics_names = model.metrics_names
+    for metric in metrics_names:
+        results[metric] = []
+        results['val_' + metric] = []
     # load model
     model = model_from_dict_w_opt(model, custom_objects=custom_objects)
     mod_name = model.__class__.__name__
@@ -223,10 +225,10 @@ def train(model, data, data_val, *args, **kwargs):
                           validation_data=dv,
                           *args,
                           **kwargs)
-            results['loss'] += h.history['loss']
-            if 'val_loss' in h.history:
-                results['val_loss'] += h.history['val_loss']
-        results['iters'] = h.epoch[-1] * len(data)
+            for metric in metrics_names:
+                results[metric] += h.history[metric]
+                results['val_' + metric] += h.history[metric]
+        results['iter'] = h.epoch[-1] * len(data)
 
     elif mod_name is "Sequential" or mod_name is "Model":
         for d, dv in zip(data, data_val):
@@ -238,9 +240,9 @@ def train(model, data, data_val, *args, **kwargs):
                           validation_data=(X_val, y_val),
                           *args,
                           **kwargs)
-            results['loss'] += h.history['loss']
-            if 'val_loss' in h.history:
-                results['val_loss'] += h.history['val_loss']
+            for metric in metrics_names:
+                results[metric] += h.history[metric]
+                results['val_' + metric] += h.history[metric]
         results['iter'] = h.epoch[-1] * len(data)
     else:
         raise NotImplementedError("This type of model"
@@ -292,14 +294,14 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
 
     try:
         results, model = train(model['model_arch'], data,
-                                             data_val,
-                                             *args, **kwargs)
+                               data_val,
+                               *args, **kwargs)
         db.update({"_id": mod_id}, {'$set': {
             'train_loss': results['loss'],
             'min_tloss': np.min(results['loss']),
             'valid_loss': results['val_loss'],
             'min_vloss': np.min(results['val_loss']),
-            'iter_stopped': results['iters'],
+            'iter_stopped': results['iter'],
             'trained': 1,
             'date_finished_training': datetime.now()
         }})

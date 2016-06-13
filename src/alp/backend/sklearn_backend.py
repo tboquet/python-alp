@@ -213,8 +213,6 @@ def train(model, data, data_val, *args, **kwargs):
     results['val_loss'] = []
     custom_objects = None
     metrics = []
-    loss = []
-    val_loss = []
     predondata = []
     predonval = []
 
@@ -292,8 +290,8 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
 
     try:
         results, model = train(model['model_arch'], data,
-                                             data_val,
-                                             *args, **kwargs)
+                               data_val,
+                               *args, **kwargs)
         db.update({"_id": mod_id}, {'$set': {
             'train_loss': results['loss'],
             'min_tloss': np.min(results['loss']),
