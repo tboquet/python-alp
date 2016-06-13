@@ -302,8 +302,6 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
             'date_finished_training': datetime.now()}
         for metric in results['metrics']:
             res_dict[metric] = results['metrics'][metric]
-            if metric in ['loss', 'val_loss']:
-                res_dict[metric] = np.min(results['metrics'][metric])
         db.update({"_id": mod_id}, {'$set': res_dict})
 
         save_params(model, filepath=params_dump)
