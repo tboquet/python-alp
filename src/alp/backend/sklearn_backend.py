@@ -242,8 +242,9 @@ def train(model, data, data_val, *args, **kwargs):
     # So far, only the mae is supported.
     for metric in metrics:
         for d, dv, pda, pva in zip(data, data_val, predondata, predonval):
-            results['metrics']['loss'].append(metric(d['y'], pda))
-            results['metrics']['val_loss'].append(metric(dv['y'], pva))
+            results['metrics'][metric.__name__].append(metric(d['y'], pda))
+            results['metrics']['val_' + metric.__name__].append(metric(dv['y'],
+                                                                       pva))
 
     results['metrics']['iters'] = np.nan
 
@@ -299,9 +300,9 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
             'iter_stopped': results['metrics']['iter'],
             'trained': 1,
             'date_finished_training': datetime.now()}
-        for metric in metrics_names:
+        for metric in results['metrics']:
             res_dict[metric] = results['metrics'][metric]
-            if metrics in ['loss', 'val_loss']:
+            if metric in ['loss', 'val_loss']:
                 res_dict[metric] = np.min(results['metrics'][metric])
         db.update({"_id": mod_id}, {'$set': res_dict})
 
