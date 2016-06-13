@@ -113,7 +113,7 @@ def test_fit():
 
     res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val])
 
-    assert len(res) == 3
+    assert len(res) == 8
 
     # Case 3 Graph model
 
@@ -142,14 +142,14 @@ def test_fit():
 
     res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val])
 
-    assert len(res) == 3
+    assert len(res) == 8
 
     model_dict = dict()
     model_dict['model_arch'] = to_dict_w_opt(model, metrics)
 
     res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val])
 
-    assert len(res) == 3
+    assert len(res) == 8
 
 
 def test_utils():

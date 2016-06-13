@@ -203,6 +203,6 @@ class Experiment(object):
     def _get_results(self, res):
         self.full_res = res.wait()  # pragma: no cover
         self.trained = True  # pragma: no cover
-        self.mod_id = res['model_id']
-        self.data_id = res['data_id']
-        self.params_dump = res['params_dump']
+        self.mod_id = self.full_res['model_id']
+        self.data_id = self.full_res['data_id']
+        self.params_dump = self.full_res['params_dump']
