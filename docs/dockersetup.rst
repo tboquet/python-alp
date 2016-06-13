@@ -10,8 +10,7 @@ To launch all the required containers so that the base config file works launch:
 
     docker run --name mongo_results -v /opt/data/mongo_data/results:/data/db -d --restart=always mongo
 
-    docker run -d -v /etc/localtime:/etc/localtime:ro \
-        -v /opt/data/rabbitmq/dev/log:/dev/log -v /opt/data/rabbitmq:/var/lib/rabbitmq \
+    docker run -d -v /opt/data/rabbitmq/dev/log:/dev/log -v /opt/data/rabbitmq:/var/lib/rabbitmq \
         --name=rabbitmq_sched -p 8080:15672 -p 5672:5672\
         --restart=always rabbitmq:3-management
 
