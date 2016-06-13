@@ -208,6 +208,9 @@ def train(model, data, data_val, *args, **kwargs):
         """
 
     # Local variables
+    results = dict()
+    results['loss'] = []
+    results['val_loss'] = []
     custom_objects = None
     metrics = []
     loss = []
@@ -238,12 +241,12 @@ def train(model, data, data_val, *args, **kwargs):
     metrics.append(mean_absolute_error)
     for metric in metrics:
         for d, dv, pda, pva in zip(data, data_val, predondata, predonval):
-            loss.append(metric(d['y'], pda))
-            val_loss.append(metric(dv['y'], pva))
+            results['loss'].append(metric(d['y'], pda))
+            results['val_loss'].append(metric(dv['y'], pva))
 
-    max_iter = np.nan
+    results['max_iter'] = np.nan
 
-    return loss, val_loss, max_iter, model
+    return results, model
 
 
 @app.task(default_retry_delay=60 * 10, max_retries=3, rate_limit='120/m')
@@ -303,11 +306,14 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
         }})
 
         save_params(model, filepath=params_dump)
+        results['model_id'] = hexdi_m
+        results['data_id'] = hexdi_d
+        results['params_dump'] = params_dump
 
     except Exception:
         db.update({"_id": mod_id}, {'$set': {'error': 1}})
         raise
-    return hexdi_m, hexdi_d, params_dump
+    return results
 
 
 @app.task

@@ -204,12 +204,13 @@ def train(model, data, data_val, *args, **kwargs):
         the loss (list), the validation loss (list), the number of iterations,
         and the model
         """
+    results = dict()
     custom_objects = None
 
     if 'custom_objects' in kwargs:
         custom_objects = kwargs.pop('custom_objects')
-    loss = []
-    val_loss = []
+    results['loss'] = []
+    results['val_loss'] = []
     # load model
     model = model_from_dict_w_opt(model, custom_objects=custom_objects)
     mod_name = model.__class__.__name__
@@ -237,15 +238,14 @@ def train(model, data, data_val, *args, **kwargs):
                           validation_data=(X_val, y_val),
                           *args,
                           **kwargs)
-            loss += h.history['loss']
+            results['loss'] += h.history['loss']
             if 'val_loss' in h.history:
-                val_loss += h.history['val_loss']
-        max_iter = h.epoch[-1]
+                results['val_loss'] += h.history['val_loss']
+        results['max_iter'] = h.epoch[-1] * len(data)
     else:
         raise NotImplementedError("This type of model"
                                   "is not supported: {}".format(mod_name))
-
-    return loss, val_loss, max_iter, model
+    return results, model
 
 
 @app.task(default_retry_delay=60 * 10, max_retries=3, rate_limit='120/m')
@@ -291,25 +291,28 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
     mod_id = db.insert(full_json)
 
     try:
-        loss, val_loss, iters, model = train(model['model_arch'], data,
+        results, model = train(model['model_arch'], data,
                                              data_val,
                                              *args, **kwargs)
         db.update({"_id": mod_id}, {'$set': {
-            'train_loss': loss,
-            'min_tloss': np.min(loss),
-            'valid_loss': val_loss,
-            'min_vloss': np.min(val_loss),
-            'iter_stopped': iters * len(data),
+            'train_loss': results['loss'],
+            'min_tloss': np.min(results['loss']),
+            'valid_loss': results['val_loss'],
+            'min_vloss': np.min(results['val_loss']),
+            'iter_stopped': results['iters'],
             'trained': 1,
             'date_finished_training': datetime.now()
         }})
 
         model.save_weights(params_dump, overwrite=True)
+        results['model_id'] = hexdi_m
+        results['data_id'] = hexdi_d
+        results['params_dump'] = params_dump
 
     except Exception:
         db.update({"_id": mod_id}, {'$set': {'error': 1}})
         raise
-    return hexdi_m, hexdi_d, params_dump
+    return results
 
 
 @app.task

@@ -18,7 +18,7 @@ To launch all the required containers so that the base config file works launch:
         -v /home/tboquet/notebooks:/notebooks -v /.theano:/root/.theano \
         -v /opt/data/parameters_h5:/parameters_h5 --link mongo_models:mongo_m \
         --link mongo_results:mongo_r -v /home/tboquet/scheduler/proj:/sched --link rabbitmq_sched:rabbitmq \
-        --name ipy_controler_th -p 444:8888 -w "/sched" --restart always tboquet/the7hc5controleralp
+        --name ipy_controler_th -p 444:8888 --restart always tboquet/the7hc5controleralp
 
     docker run -d `curl -s http://localhost:3476/v1.0/docker/cli?dev=0\&vol=nvidia_driver` \
         -v /opt/data/parameters_h5:/parameters_h5 -v /.theano:/root/.theano \
