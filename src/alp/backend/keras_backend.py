@@ -222,7 +222,6 @@ def train(model, data, data_val, *args, **kwargs):
     if mod_name is "Graph":
         for d, dv in zip(data, data_val):
             h = model.fit(data=d,
-                          verbose=1,
                           validation_data=dv,
                           *args,
                           **kwargs)
@@ -237,7 +236,6 @@ def train(model, data, data_val, *args, **kwargs):
             X_val, y_val = dv['X'], dv['y']
             h = model.fit(x=X,
                           y=y,
-                          verbose=1,
                           validation_data=(X_val, y_val),
                           *args,
                           **kwargs)
