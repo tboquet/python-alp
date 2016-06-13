@@ -156,6 +156,7 @@ class Experiment(object):
         res = self.backend.fit.delay(self.backend_name, self.backend_version,
                                      copy.deepcopy(self.model_dict), data,
                                      data_val, *args, **kwargs)
+        self._get_results(res)
         return res
 
     def load_model(self, mod_id, data_id):
