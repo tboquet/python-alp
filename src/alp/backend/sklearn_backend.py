@@ -291,16 +291,15 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
     mod_id = db.insert(full_json)
 
     try:
-        loss, val_loss, iters, model = train(model['model_arch'], data,
+        results, model = train(model['model_arch'], data,
                                              data_val,
                                              *args, **kwargs)
-
         db.update({"_id": mod_id}, {'$set': {
-            'train_loss': loss,
-            'min_tloss': np.min(loss),
-            'valid_loss': val_loss,
-            'min_vloss': np.min(val_loss),
-            'iter_stopped': iters * len(data),
+            'train_loss': results['loss'],
+            'min_tloss': np.min(results['loss']),
+            'valid_loss': results['val_loss'],
+            'min_vloss': np.min(results['val_loss']),
+            'iter_stopped': results['iters'],
             'trained': 1,
             'date_finished_training': datetime.now()
         }})
