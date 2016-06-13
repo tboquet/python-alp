@@ -297,15 +297,15 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
         results, model = train(model['model_arch'], data,
                                data_val,
                                *args, **kwargs)
-        db.update({"_id": mod_id}, {'$set': {
-            'train_loss': results['metrics']['loss'],
-            'min_tloss': np.min(results['metrics']['loss']),
-            'valid_loss': results['metrics']['val_loss'],
-            'min_vloss': np.min(results['metrics']['val_loss']),
+        res_dict = {
             'iter_stopped': results['metrics']['iter'],
             'trained': 1,
-            'date_finished_training': datetime.now()
-        }})
+            'date_finished_training': datetime.now()}
+        for metric in metrics_names:
+            res_dict[metric] = results['metrics'][metric]
+            if metrics in ['loss', 'val_loss']:
+                res_dict[metric] = np.min(results['metrics'][metric])
+        db.update({"_id": mod_id}, {'$set': res_dict})
 
         model.save_weights(params_dump, overwrite=True)
         results['model_id'] = hexdi_m
