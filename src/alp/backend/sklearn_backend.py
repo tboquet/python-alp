@@ -246,7 +246,7 @@ def train(model, data, data_val, *args, **kwargs):
             results['metrics']['val_' + metric.__name__].append(metric(dv['y'],
                                                                        pva))
 
-    results['metrics']['iters'] = np.nan
+    results['metrics']['iter'] = np.nan
 
     return results, model
 
