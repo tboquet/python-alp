@@ -98,8 +98,7 @@ def test_fit():
     res = KTB.train(model_dict['model_arch'], [data], [data_val])
     res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val])
 
-    assert len(res) == 8
-
+    assert len(res) == 4
     # Case 2 without custom objects
     model = Sequential()
     model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
@@ -113,8 +112,7 @@ def test_fit():
 
     res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val])
 
-    assert len(res) == 8
-
+    assert len(res) == 4
     # Case 3 Graph model
 
     data, data_val = dict(), dict()
@@ -142,15 +140,13 @@ def test_fit():
 
     res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val])
 
-    assert len(res) == 8
-
+    assert len(res) == 4
     model_dict = dict()
     model_dict['model_arch'] = to_dict_w_opt(model, metrics)
 
     res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val])
 
-    assert len(res) == 8
-
+    assert len(res) == 4
 
 def test_utils():
     assert get_function_name("bob") == "bob"

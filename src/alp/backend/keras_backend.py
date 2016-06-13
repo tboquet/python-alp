@@ -205,6 +205,7 @@ def train(model, data, data_val, *args, **kwargs):
         and the model
         """
     results = dict()
+    results['metrics'] = dict()
     custom_objects = None
 
     if 'custom_objects' in kwargs:
@@ -213,8 +214,8 @@ def train(model, data, data_val, *args, **kwargs):
     model = model_from_dict_w_opt(model, custom_objects=custom_objects)
     metrics_names = model.metrics_names
     for metric in metrics_names:
-        results[metric] = []
-        results['val_' + metric] = []
+        results['metrics'][metric] = []
+        results['metrics']['val_' + metric] = []
     mod_name = model.__class__.__name__
 
     # fit the model according to the input/output type
@@ -226,9 +227,9 @@ def train(model, data, data_val, *args, **kwargs):
                           *args,
                           **kwargs)
             for metric in metrics_names:
-                results[metric] += h.history[metric]
-                results['val_' + metric] += h.history[metric]
-        results['iter'] = h.epoch[-1] * len(data)
+                results['metrics'][metric] += h.history[metric]
+                results['metrics']['val_' + metric] += h.history[metric]
+        results['metrics']['iter'] = h.epoch[-1] * len(data)
 
     elif mod_name is "Sequential" or mod_name is "Model":
         for d, dv in zip(data, data_val):
@@ -241,9 +242,9 @@ def train(model, data, data_val, *args, **kwargs):
                           *args,
                           **kwargs)
             for metric in metrics_names:
-                results[metric] += h.history[metric]
-                results['val_' + metric] += h.history[metric]
-        results['iter'] = h.epoch[-1] * len(data)
+                results['metrics'][metric] += h.history[metric]
+                results['metrics']['val_' + metric] += h.history[metric]
+        results['metrics']['iter'] = h.epoch[-1] * len(data)
     else:
         raise NotImplementedError("This type of model"
                                   "is not supported: {}".format(mod_name))

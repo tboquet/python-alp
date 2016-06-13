@@ -208,14 +208,19 @@ def train(model, data, data_val, *args, **kwargs):
         """
 
     # Local variables
-    results = dict()
-    results['loss'] = []
-    results['val_loss'] = []
-    custom_objects = None
+    from sklearn.metrics import mean_absolute_error
+
     metrics = []
+    results = dict()
+    results['metrics'] = dict()
+    custom_objects = None
     predondata = []
     predonval = []
 
+    metrics.append(mean_absolute_error)
+    for metric in metrics:
+        results['metrics'][metric.__name__] = []
+        results['metrics']['val_' + metric.__name__] = []
     # Load custom_objects and metrics
     if 'custom_objects' in kwargs:  # pragma: no cover
         custom_objects = kwargs.pop('custom_objects')
@@ -235,14 +240,12 @@ def train(model, data, data_val, *args, **kwargs):
 
     # Validates the model
     # So far, only the mae is supported.
-    from sklearn.metrics import mean_absolute_error
-    metrics.append(mean_absolute_error)
     for metric in metrics:
         for d, dv, pda, pva in zip(data, data_val, predondata, predonval):
-            results['loss'].append(metric(d['y'], pda))
-            results['val_loss'].append(metric(dv['y'], pva))
+            results['metrics']['loss'].append(metric(d['y'], pda))
+            results['metrics']['val_loss'].append(metric(dv['y'], pva))
 
-    results['iters'] = np.nan
+    results['metrics']['iters'] = np.nan
 
     return results, model
 
