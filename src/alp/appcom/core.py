@@ -201,7 +201,7 @@ class Experiment(object):
         self.async_res = res
         self.full_res = res.wait()  # pragma: no cover
         self.trained = True  # pragma: no cover
-        self.mod_id = self.full_res['model_id']
-        self.data_id = self.full_res['data_id']
-        self.params_dump = self.full_res['params_dump']
-        return self.full_res
+        self.mod_id = self.full_res['model_id']  # pragma: no cover
+        self.data_id = self.full_res['data_id']  # pragma: no cover
+        self.params_dump = self.full_res['params_dump']  # pragma: no cover
+        return self.full_res  # pragma: no cover
