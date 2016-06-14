@@ -279,14 +279,15 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
 
     batch_size = kwargs['batch_size']
 
-    hexdi_m = cm.create_model_hash(model, batch_size)
+    model_c = cm.clean_model(model)
+    hexdi_m = cm.create_model_hash(model_c, batch_size)
     hexdi_d = cm.create_data_hash(data)
     params_dump = cm.create_param_dump(_path_h5, hexdi_m, hexdi_d)
 
     # update the full json
     full_json = {'backend_name': backend_name,
                  'backend_version': backend_version,
-                 'model_arch': model['model_arch'],
+                 'model_arch': model_c['model_arch'],
                  'datetime': datetime.now(),
                  'mod_id': hexdi_m,
                  'data_id': hexdi_d,
