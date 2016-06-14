@@ -1,5 +1,5 @@
 import hashlib
-import json
+import marshal
 
 
 def create_model_hash(model, batch_size):
@@ -8,7 +8,7 @@ def create_model_hash(model, batch_size):
         model.pop('ser_metrics')
     if 'metrics' in model:
         model.pop('metrics')
-    model_str = json.dumps(model)
+    model_str = marshal.dumps(model)
 
     # create the model hash from the stringified json
     mh = hashlib.md5()

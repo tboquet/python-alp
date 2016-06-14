@@ -5,7 +5,6 @@ Adaptor for the sklearn backend
 
 import copy
 
-import dill
 import h5py
 import numpy as np
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
@@ -36,7 +35,6 @@ for m in SUPPORTED:
 
 COMPILED_MODELS = dict()
 TO_SERIALIZE = ['custom_objects']
-dill.settings['recurse'] = True
 
 
 # general utilities
