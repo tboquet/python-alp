@@ -1,14 +1,16 @@
+import copy
 import hashlib
 import json
 
 
 def create_model_hash(model, batch_size):
     # convert dict to json string
+    model_c = copy.deepcopy(model)
     if 'ser_metrics' in model['model_arch']:
-        model['model_arch'].pop('ser_metrics')
+        model_c['model_arch'].pop('ser_metrics')
     if 'metrics' in model['model_arch']:
-        model['model_arch'].pop('metrics')
-    model_str = json.dumps(model)
+        model_c['model_arch'].pop('metrics')
+    model_str = json.dumps(model_c)
 
     # create the model hash from the stringified json
     mh = hashlib.md5()
