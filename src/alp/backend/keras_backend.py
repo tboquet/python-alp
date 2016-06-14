@@ -123,7 +123,7 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
 
     if 'optimizer' in model_dict:
         metrics = model_dict.get("metrics", [])
-        ser_metrics = model_dict.get("ser_metrics", [])
+        ser_metrics = model_dict.get("ser_metrics", dict())
         metrics += [deserialize(m, k) for k, m in ser_metrics.items()]
         model_name = model_dict['config'].get('class_name')
         # if it has an optimizer, the model is assumed to be compiled
