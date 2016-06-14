@@ -11,6 +11,7 @@ def clean_model(model):
         model_c['model_arch'].pop('metrics')
     return model_c
 
+
 def create_model_hash(model, batch_size):
     # convert dict to json string
     model_str = json.dumps(model)
