@@ -87,8 +87,11 @@ def to_dict_w_opt(model, metrics=None):
             config['loss'] = dict(zip(name_out,
                                       [get_function_name(model.loss)]))
     if metrics is not None:
-        config['metrics'] = metrics
-
+        for m in metrics:
+            if isinstance(m, six.string_types):
+                config['metrics'].append(m)
+            else:
+                config['ser_metrics'].append(serialize(m))
     return config
 
 
@@ -119,6 +122,8 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
 
     if 'optimizer' in model_dict:
         metrics = model_dict.get("metrics")
+        ser_metrics = model_dict.get("ser_metrics")
+        metrics += [deserialize(m) for m in ser_metrics]
         model_name = model_dict['config'].get('class_name')
         # if it has an optimizer, the model is assumed to be compiled
         loss = model_dict.get('loss')
