@@ -1,14 +1,16 @@
 import hashlib
-import marshal
+import json
 
 
 def create_model_hash(model, batch_size):
     # convert dict to json string
+    print(model)
     if 'ser_metrics' in model:
         model.pop('ser_metrics')
     if 'metrics' in model:
         model.pop('metrics')
-    model_str = marshal.dumps(model)
+    print(model)
+    model_str = json.dumps(model)
 
     # create the model hash from the stringified json
     mh = hashlib.md5()
