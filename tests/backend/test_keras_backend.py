@@ -248,6 +248,11 @@ def test_experiment_model():
         import keras.backend as K
         return K.categorical_crossentropy(y_pred, y_true)
 
+    def cosine_proximity(y_true, y_pred):
+        y_true = K.l2_normalize(y_true, axis=-1)
+        y_pred = K.l2_normalize(y_pred, axis=-1)
+        return -K.mean(y_true * y_pred)
+
     (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
                                                 nb_test=test_samples,
                                                 input_shape=(input_dim,),
@@ -267,7 +272,7 @@ def test_experiment_model():
     data_val["X"] = X_te
     data_val["y"] = y_te
 
-    metrics = ['accuracy']
+    metrics = ['accuracy', cosine_proximity]
 
     inputs = Input(shape=(input_dim,), name='X')
 

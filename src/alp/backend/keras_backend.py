@@ -72,6 +72,8 @@ def to_dict_w_opt(model, metrics=None):
     }
     if hasattr(model, 'optimizer'):
         config['optimizer'] = model.optimizer.get_config()
+        config['metrics'] = []
+        config['ser_metrics'] = []
     if hasattr(model, 'loss'):
         name_out = [l.name for l in model.output_layers]
         if isinstance(model.loss, dict):
