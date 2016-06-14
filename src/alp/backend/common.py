@@ -4,8 +4,10 @@ import json
 
 def create_model_hash(model, batch_size):
     # convert dict to json string
-    model.pop('ser_metrics')
-    model.pop('metrics')
+    if 'ser_metrics' in model:
+        model.pop('ser_metrics')
+    if 'metrics' in model:
+        model.pop('metrics')
     model_str = json.dumps(model)
 
     # create the model hash from the stringified json
