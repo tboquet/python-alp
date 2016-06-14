@@ -25,7 +25,7 @@ in memory compiled function, this function is used instead.
 
 import types
 
-import dill
+import marshal
 import six
 
 from ..appcom import _path_h5
@@ -33,7 +33,6 @@ from ..celapp import app
 
 COMPILED_MODELS = dict()
 TO_SERIALIZE = ['custom_objects']
-dill.settings['recurse'] = True
 
 
 # general utilities
@@ -44,11 +43,11 @@ def get_backend():
 
 
 def serialize(custom_object):
-    return dill.dumps(six.get_function_code(custom_object))
+    return marshal.dumps(six.get_function_code(custom_object))
 
 
 def deserialize(k, custom_object_str):
-    code = dill.loads(custom_object_str)
+    code = marshal.loads(custom_object_str)
     return types.FunctionType(code, globals(), k)
 
 
