@@ -5,9 +5,9 @@ import json
 
 def clean_model(model):
     model_c = copy.deepcopy(model)
-    if 'ser_metrics' in model['model_arch']:
+    if 'ser_metrics' in model_c['model_arch']:
         model_c['model_arch'].pop('ser_metrics')
-    if 'metrics' in model['model_arch']:
+    if 'metrics' in model_c['model_arch']:
         model_c['model_arch'].pop('metrics')
     return model_c
 

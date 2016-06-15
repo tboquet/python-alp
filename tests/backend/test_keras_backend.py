@@ -249,6 +249,7 @@ def test_experiment_model():
         return K.categorical_crossentropy(y_pred, y_true)
 
     def cosine_proximity(y_true, y_pred):
+        import keras.backend as K
         y_true = K.l2_normalize(y_true, axis=-1)
         y_pred = K.l2_normalize(y_pred, axis=-1)
         return -K.mean(y_true * y_pred)
