@@ -26,7 +26,6 @@ in memory compiled function, this function is used instead.
 import types
 
 import marshal
-import pickle
 import six
 
 from ..appcom import _path_h5
@@ -45,16 +44,18 @@ def get_backend():
 
 def serialize(cust_obj):
     ser_func = dict()
-    ser_func['func_code_d'] = marshal.dumps(six.get_function_code(cust_obj))
+    func_code = six.get_function_code(cust_obj)
+    func_code_d = marshal.dumps(func_code).decode('raw_unicode_escape')
+    ser_func['func_code_d'] = func_code_d
     ser_func['name_d'] = marshal.dumps(cust_obj.__name__)
     ser_func['args_d'] = marshal.dumps(six.get_function_defaults(cust_obj))
-    ser_func['clos_d'] = pickle.dumps(six.get_function_closure(cust_obj))
+    ser_func['clos_d'] = marshal.dumps(six.get_function_closure(cust_obj))
     return ser_func
 
 
 def deserialize(name_d, func_code_d, args_d, clos_d):
     name = marshal.loads(name_d)
-    code = marshal.loads(func_code_d)
+    code = marshal.loads(func_code_d.encode('raw_unicode_escape'))
     args = marshal.loads(args_d)
     clos = marshal.loads(clos_d)
     return types.FunctionType(code, globals(), name, args, clos)
