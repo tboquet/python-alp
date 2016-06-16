@@ -44,6 +44,13 @@ def get_backend():
 
 
 def serialize(cust_obj):
+    """A function to serialize custom objects passed to a model
+
+    Args:
+        cust_obj(callable): a custom layer or function to serialize
+
+    Returns:
+        a dict of the serialized components of the object"""
     ser_func = dict()
     func_code = six.get_function_code(cust_obj)
     func_code_d = marshal.dumps(func_code).decode('raw_unicode_escape')
@@ -55,6 +62,17 @@ def serialize(cust_obj):
 
 
 def deserialize(name_d, func_code_d, args_d, clos_d):
+    """A function to deserialize an object serialized with the serialize
+    function.
+
+    Args:
+        name_d(unicode): the dumped name of the object
+        func_code_d(unicode): the dumped byte code of the function
+        args_d(unicode): the dumped information about the arguments
+        clos_d(unicode): the dumped information about the function closure
+
+    Returns:
+        a deserialized object"""
     name = marshal.loads(name_d)
     code = marshal.loads(func_code_d.encode('raw_unicode_escape'))
     args = marshal.loads(args_d)

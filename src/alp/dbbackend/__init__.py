@@ -45,9 +45,8 @@ _config = {'_db_engine': _db_engine,
 with open(_config_path, 'w') as f:
     f.write(json.dumps(_config, indent=4))
 
-
 # import backend
 if _db_engine == 'mongodb':
-    from ..dbbackend.mongo_backend import *
+    from ..dbbackend.mongo_backend import *  # NOQA
 else:
     raise Exception('Unknown backend: ' + str(_db_engine))
