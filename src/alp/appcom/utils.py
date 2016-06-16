@@ -82,6 +82,10 @@ def switch_backend(backend_name):
     return get_backend()
 
 
+def list_to_dict(list_to_transform):
+    return {el.__name__: el for el in list_to_transform}
+
+
 def background(f):
     '''
     a threading decorator
@@ -93,3 +97,29 @@ def background(f):
         t.start()
         return t
     return bg_f
+
+
+def imports(packages=None):
+    """A decorator to import packages only once when a function is serialized
+
+    Args:
+        packages(list or dict): a list or dict of packages to import. If the
+            object is a dict, the name of the import is the key and the value
+            is the module. If the object is a list, it's transformed to a dict
+            mapping the name of the module to the imported module.
+    """
+    if packages is None:
+        packages = dict()
+
+    def dec(wrapped):
+        @functools.wraps(wrapped)
+        def inner(*args, **kwargs):
+            packs = packages
+            if isinstance(packages, list):
+                packs = list_to_dict(packages)
+            for name, pack in packs.items():
+                if name not in wrapped.__globals__:
+                    wrapped.__globals__[name] = pack
+            return wrapped(*args, **kwargs)
+        return inner
+    return dec

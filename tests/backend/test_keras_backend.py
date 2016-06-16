@@ -156,13 +156,21 @@ def test_utils():
 
 def test_experiment_sequential():
     """Test the Experiment class with Sequential"""
+
+    from alp.appcom.utils import imports
     import keras.backend as K
 
+    @imports({"K": K})
     def categorical_crossentropy_custom(y_true, y_pred):
         '''A test of custom loss function
         '''
-        import keras.backend as K
         return K.categorical_crossentropy(y_pred, y_true)
+
+    @imports({"K": K})
+    def cosine_proximity(y_true, y_pred):
+        y_true = K.l2_normalize(y_true, axis=-1)
+        y_pred = K.l2_normalize(y_pred, axis=-1)
+        return -K.mean(y_true * y_pred)
 
     (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
                                                 nb_test=test_samples,
@@ -241,15 +249,16 @@ def test_experiment_sequential():
 def test_experiment_model():
     """Test the Experiment class with Model"""
     import keras.backend as K
+    from alp.appcom.utils import imports
 
+    @imports({"K": K})
     def categorical_crossentropy_custom(y_true, y_pred):
         '''A test of custom loss function
         '''
-        import keras.backend as K
         return K.categorical_crossentropy(y_pred, y_true)
 
+    @imports({"K": K})
     def cosine_proximity(y_true, y_pred):
-        import keras.backend as K
         y_true = K.l2_normalize(y_true, axis=-1)
         y_pred = K.l2_normalize(y_pred, axis=-1)
         return -K.mean(y_true * y_pred)
@@ -352,12 +361,20 @@ def test_experiment_model():
 def test_experiment_legacy():
     """Test the Experiment class with Model"""
     import keras.backend as K
+    from alp.appcom.utils import imports
 
+    @imports({"K": K})
     def categorical_crossentropy_custom(y_true, y_pred):
         '''A test of custom loss function
         '''
         import keras.backend as K
         return K.categorical_crossentropy(y_pred, y_true)
+
+    @imports({"K": K})
+    def cosine_proximity(y_true, y_pred):
+        y_true = K.l2_normalize(y_true, axis=-1)
+        y_pred = K.l2_normalize(y_pred, axis=-1)
+        return -K.mean(y_true * y_pred)
 
     (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
                                                 nb_test=test_samples,

@@ -25,6 +25,7 @@ in memory compiled function, this function is used instead.
 
 import types
 
+import dill
 import marshal
 import six
 
@@ -49,7 +50,7 @@ def serialize(cust_obj):
     ser_func['func_code_d'] = func_code_d
     ser_func['name_d'] = marshal.dumps(cust_obj.__name__)
     ser_func['args_d'] = marshal.dumps(six.get_function_defaults(cust_obj))
-    ser_func['clos_d'] = marshal.dumps(six.get_function_closure(cust_obj))
+    ser_func['clos_d'] = dill.dumps(six.get_function_closure(cust_obj))
     return ser_func
 
 
@@ -57,7 +58,7 @@ def deserialize(name_d, func_code_d, args_d, clos_d):
     name = marshal.loads(name_d)
     code = marshal.loads(func_code_d.encode('raw_unicode_escape'))
     args = marshal.loads(args_d)
-    clos = marshal.loads(clos_d)
+    clos = dill.loads(clos_d)
     return types.FunctionType(code, globals(), name, args, clos)
 
 
