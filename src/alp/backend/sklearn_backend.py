@@ -328,8 +328,9 @@ def predict(model, data, *args, **kwargs):
     custom_objects = kwargs.get('custom_objects')
 
     # check if the predict function is already compiled
-    if model['mod_id'] in COMPILED_MODELS:
-        model_instance = COMPILED_MODELS[model['mod_id']]['model']
+    m_id = model['mod_id']
+    if m_id in COMPILED_MODELS:
+        model_instance = COMPILED_MODELS[m_id]['model']  # pragma: no cover
         # load the attributes
         model_instance = load_params(model_instance, model['params_dump'])
 
@@ -345,8 +346,8 @@ def predict(model, data, *args, **kwargs):
         model_instance = load_params(model_instance, model['params_dump'])
 
         # write in the compiled list
-        COMPILED_MODELS[model['mod_id']] = dict()
-        COMPILED_MODELS[model['mod_id']]['model'] = model_instance
+        COMPILED_MODELS[m_id] = dict()
+        COMPILED_MODELS[m_id]['model'] = model_instance
 
     # to be discussed
     # data = data[0]['X']

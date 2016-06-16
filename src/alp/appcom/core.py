@@ -160,6 +160,11 @@ class Experiment(object):
         return res
 
     def load_model(self, mod_id, data_id):
+        """Load a model from the database form it's mod_id and data_id
+
+        Args:
+            mod_id(str): the id of the model in the database
+            data_id(str): the id of the data in the database"""
         models = get_models()
         model_db = models.find_one({'mod_id': mod_id, 'data_id': data_id})
         self._switch_backend(model_db)
@@ -170,6 +175,10 @@ class Experiment(object):
         self.trained = True
 
     def _switch_backend(self, model_db):
+        """A utility function to switch backend when loading a model
+
+        Args:
+            model_db(dict): """
         if model_db['backend_name'] != self.backend_name:
             backend = switch_backend(model_db['backend_name'])
             self.backend_name = backend.__name__
