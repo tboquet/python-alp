@@ -75,6 +75,13 @@ def init_backend(model):
 
 
 def switch_backend(backend_name):
+    """Switch the backend based on it's name
+
+    Args:
+        backend_name(str): the name of the backend to import
+
+    Return:
+        the backend asked"""
     if backend_name == 'keras':
         from ..backend.keras_backend import get_backend
     elif backend_name == 'sklearn':
@@ -83,6 +90,13 @@ def switch_backend(backend_name):
 
 
 def list_to_dict(list_to_transform):
+    """Transform a list of object to a dict
+
+    Args:
+        list_to_transform(list): the list to transform
+
+    Returns:
+        a dictionnary mapping names of the objects to objects"""
     return {el.__name__: el for el in list_to_transform}
 
 
