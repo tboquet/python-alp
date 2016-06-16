@@ -329,8 +329,8 @@ def predict(model, data, *args, **kwargs):
 
     # check if the predict function is already compiled
     m_id = model['mod_id']
-    if m_id in COMPILED_MODELS:
-        model_instance = COMPILED_MODELS[m_id]['model']  # pragma: no cover
+    if m_id in COMPILED_MODELS:  # pragma: no cover
+        model_instance = COMPILED_MODELS[m_id]['model']
         # load the attributes
         model_instance = load_params(model_instance, model['params_dump'])
 
