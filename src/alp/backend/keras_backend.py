@@ -291,12 +291,13 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
 
     Args:
         backend_name(str): the model dumped with the `to_json` method
-        data_gen(generator): a generator yielding (mini) batches of train and
-            validation data
-        offset(int): how many datapoints to burn
+        backend_version(str): the backend version
+        model(keras.model): a Keras model
+        data(list): a list of np.arrays for training
+        data_val(list): a list of np.arrays for validation
 
     Returns:
-        the unique id of the model"""
+        results similar to what the fit method of Keras would return"""
 
     from alp import dbbackend as db
     from datetime import datetime
