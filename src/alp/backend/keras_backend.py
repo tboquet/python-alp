@@ -369,11 +369,11 @@ def predict(model, data, *args, **kwargs):
 
     custom_objects = kwargs.get('custom_objects')
 
+    model_name = model['model_arch']['config'].get('class_name')
     # check if the predict function is already compiled
     if model['mod_id'] in COMPILED_MODELS:
         pred_function = COMPILED_MODELS[model['mod_id']]['pred']
         model_k = COMPILED_MODELS[model['mod_id']]['model']
-        model_name = model['model_arch']['config'].get('class_name')
     else:
         # get the model arch
         model_dict = model['model_arch']
@@ -383,7 +383,6 @@ def predict(model, data, *args, **kwargs):
         # load model
         model_k = model_from_dict_w_opt(model_dict,
                                         custom_objects=custom_objects)
-        model_name = model_dict['config'].get('class_name')
 
         # load the weights
         model_k.load_weights(model['params_dump'])
