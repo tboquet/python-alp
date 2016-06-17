@@ -108,6 +108,9 @@ def _test_experiment(model):
     expe.predict(data['X'].astype('float32'))
     expe.predict([data['X'].astype('float32')])
 
+    model.compile(loss=[categorical_crossentropy_custom],
+                  optimizer='rmsprop',
+                  metrics=['accuracy'])
     expe = Experiment(model)
 
     expe.fit([data], [data_val], model=model,
