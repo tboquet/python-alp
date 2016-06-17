@@ -77,7 +77,7 @@ def _test_experiment(model):
     assert expe.backend is not None
 
     expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
-             batch_size=batch_size)
+             batch_size=batch_size, metrics=metrics)
 
     # check data_id
     assert expe.data_id is not None
