@@ -107,7 +107,7 @@ def _test_experiment(model):
     # check if the cached model is used
     expe.predict(data['X'].astype('float32'))
     expe.predict([data['X'].astype('float32')])
-    if model.__class__.__name__ == 'Graph':
+    if model.__class__.__name__ != 'Sequential':
         expe.predict({k: data[k].astype('float32') for k in data})
 
     model.compile(loss=[categorical_crossentropy_custom],
