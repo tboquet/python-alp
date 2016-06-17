@@ -264,7 +264,7 @@ def test_predict():
 
     expe = Experiment(model)
     res = expe.fit([data], [data_val])
-    res = KTB.predict(expe.model_dict, [data['X_vars']])
+    KTB.predict(expe.model_dict, [data['X_vars']])
 
 
 def test_utils():
@@ -276,7 +276,6 @@ def test_utils():
 def test_experiment_sequential():
     """Test the Experiment class with Sequential"""
 
-    custom_objects = dict()
     model = Sequential()
     model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
     model.add(Dense(nb_class, activation='softmax'))
