@@ -67,7 +67,7 @@ We then instanciate an :class:`alp.appcom.core.Experiment`:
 
     from alp.appcom.core import Experiment
 
-    expe = Experiment("keras", model)
+    expe = Experiment(model)
     
 
 Then, you have access to two methods to fit the model.
@@ -152,7 +152,7 @@ We then instanciate an :class:`alp.appcom.core.Experiment`:
 
     from alp.appcom.core import Experiment
 
-    expe = Experiment("sklearn", lr)
+    expe = Experiment(lr)
  
 The two methods (direct and asynchronous) are available, since we just switched backend.
 The :meth:`alp.appcom.core.Experiment.fit` method allows you to fit the model in the same process.
