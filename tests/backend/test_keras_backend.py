@@ -1,14 +1,14 @@
 """Tests for the Keras backend"""
 
 import keras
+import keras.backend as K
 import numpy as np
 import pytest
-import keras.backend as K
 
 from keras import activations
+from keras import constraints
 from keras import initializations
 from keras import regularizers
-from keras import constraints
 from keras.engine import InputSpec
 from keras.engine import Layer
 from keras.engine import Merge
@@ -21,7 +21,6 @@ from keras.models import Sequential
 from keras.utils import np_utils
 from keras.utils.test_utils import get_test_data
 from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
-
 
 from alp.appcom.core import Experiment
 from alp.appcom.utils import switch_backend
