@@ -5,22 +5,14 @@ import keras.backend as K
 import numpy as np
 import pytest
 
-from keras import activations
-from keras import constraints
-from keras import initializations
-from keras import regularizers
-from keras.engine import InputSpec
 from keras.engine import Layer
-from keras.engine import Merge
 from keras.layers import Dense
-from keras.layers import Dropout
 from keras.layers import Input
 from keras.models import Graph
 from keras.models import Model
 from keras.models import Sequential
 from keras.utils import np_utils
 from keras.utils.test_utils import get_test_data
-from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
 
 from alp.appcom.core import Experiment
 from alp.appcom.utils import switch_backend
@@ -64,7 +56,6 @@ class Dropout_cust(Layer):
 
 def _test_experiment(model, custom_objects=None):
     from alp.appcom.utils import imports
-    import keras.backend as K
 
     if custom_objects is None:
         custom_objects = dict()
