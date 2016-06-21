@@ -28,6 +28,7 @@ import types
 import dill
 import marshal
 import six
+import types
 
 from ..appcom import _path_h5
 from ..celapp import app
@@ -52,16 +53,25 @@ def serialize(cust_obj):
     Returns:
         a dict of the serialized components of the object"""
     ser_func = dict()
-    func_code = six.get_function_code(cust_obj)
-    func_code_d = marshal.dumps(func_code).decode('raw_unicode_escape')
-    ser_func['func_code_d'] = func_code_d
-    ser_func['name_d'] = marshal.dumps(cust_obj.__name__)
-    ser_func['args_d'] = marshal.dumps(six.get_function_defaults(cust_obj))
-    ser_func['clos_d'] = dill.dumps(six.get_function_closure(cust_obj))
+    if isinstance(cust_obj, types.FunctionType):
+        func_code = six.get_function_code(cust_obj)
+        func_code_d = marshal.dumps(func_code).decode('raw_unicode_escape')
+        ser_func['func_code_d'] = func_code_d
+        ser_func['name_d'] = marshal.dumps(cust_obj.__name__)
+        ser_func['args_d'] = marshal.dumps(six.get_function_defaults(cust_obj))
+        ser_func['clos_d'] = dill.dumps(six.get_function_closure(cust_obj))
+        ser_func['type_obj'] = 'func'
+    else:
+        func_code_d = dill.dumps(cust_obj).decode('raw_unicode_escape')
+        ser_func['func_code_d'] = func_code_d
+        ser_func['name_d'] = None
+        ser_func['args_d'] = None
+        ser_func['clos_d'] = None
+        ser_func['type_obj'] = 'class'
     return ser_func
 
 
-def deserialize(name_d, func_code_d, args_d, clos_d):
+def deserialize(name_d, func_code_d, args_d, clos_d, type_obj):
     """A function to deserialize an object serialized with the serialize
     function.
 
@@ -73,11 +83,16 @@ def deserialize(name_d, func_code_d, args_d, clos_d):
 
     Returns:
         a deserialized object"""
-    name = marshal.loads(name_d)
-    code = marshal.loads(func_code_d.encode('raw_unicode_escape'))
-    args = marshal.loads(args_d)
-    clos = dill.loads(clos_d)
-    return types.FunctionType(code, globals(), name, args, clos)
+    if type_obj == 'func':
+        name = marshal.loads(name_d)
+        code = marshal.loads(func_code_d.encode('raw_unicode_escape'))
+        args = marshal.loads(args_d)
+        clos = dill.loads(clos_d)
+        loaded_obj = types.FunctionType(code, globals(), name, args, clos)
+    else:
+        loaded_obj = dill.loads(func_code_d.encode('raw_unicode_escape'))
+
+    return loaded_obj
 
 
 # Serialization utilities
@@ -94,6 +109,7 @@ def to_dict_w_opt(model, metrics=None):
     """
     config = dict()
     config_m = model.get_config()
+
     config['config'] = {
         'class_name': model.__class__.__name__,
         'config': config_m,
@@ -223,7 +239,11 @@ def build_predict_func(mod):
         a Keras (Theano or Tensorflow) function
     """
     import keras.backend as K
-    return K.function(mod.inputs, mod.outputs, updates=mod.state_updates)
+    if mod.uses_learning_phase:
+        tensors = mod.inputs + [K.learning_phase()]
+    else:
+        tensors = mod.inputs
+    return K.function(tensors, mod.outputs, updates=mod.state_updates)
 
 
 def train(model, data, data_val, *args, **kwargs):
@@ -374,6 +394,7 @@ def predict(model, data, *args, **kwargs):
     if model['mod_id'] in COMPILED_MODELS:
         pred_function = COMPILED_MODELS[model['mod_id']]['pred']
         model_k = COMPILED_MODELS[model['mod_id']]['model']
+        learning_phase = COMPILED_MODELS[model['mod_id']]['learning_phase']
     else:
         # get the model arch
         model_dict = model['model_arch']
@@ -383,7 +404,6 @@ def predict(model, data, *args, **kwargs):
         # load model
         model_k = model_from_dict_w_opt(model_dict,
                                         custom_objects=custom_objects)
-
         # load the weights
         model_k.load_weights(model['params_dump'])
 
@@ -392,6 +412,8 @@ def predict(model, data, *args, **kwargs):
         COMPILED_MODELS[model['mod_id']] = dict()
         COMPILED_MODELS[model['mod_id']]['pred'] = pred_function
         COMPILED_MODELS[model['mod_id']]['model'] = model_k
+        learning_phase = model_k.uses_learning_phase
+        COMPILED_MODELS[model['mod_id']]['learning_phase'] = learning_phase
 
     # predict according to the input/output type
     if model_name == 'Graph':
@@ -410,4 +432,6 @@ def predict(model, data, *args, **kwargs):
     else:
         raise NotImplementedError(
             '{}: This type of model is not supported'.format(model_name))
+    if learning_phase:
+        data.append(0.)
     return pred_function(data)

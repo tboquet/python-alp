@@ -3,13 +3,25 @@
 import keras
 import numpy as np
 import pytest
+import keras.backend as K
+
+from keras import activations
+from keras import initializations
+from keras import regularizers
+from keras import constraints
+from keras.engine import InputSpec
+from keras.engine import Layer
+from keras.engine import Merge
 from keras.layers import Dense
+from keras.layers import Dropout
 from keras.layers import Input
 from keras.models import Graph
 from keras.models import Model
 from keras.models import Sequential
 from keras.utils import np_utils
 from keras.utils.test_utils import get_test_data
+from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
+
 
 from alp.appcom.core import Experiment
 from alp.appcom.utils import switch_backend
@@ -30,10 +42,33 @@ NAME = keras.__name__
 VERSION = keras.__version__
 
 
-def _test_experiment(model):
+class Dropout_cust(Layer):
+    '''Applies Dropout to the input.
+    '''
+    def __init__(self, p, **kwargs):
+        self.p = p
+        if 0. < self.p < 1.:
+            self.uses_learning_phase = True
+        self.supports_masking = True
+        super(Dropout_cust, self).__init__(**kwargs)
+
+    def call(self, x, mask=None):
+        if 0. < self.p < 1.:
+            x = K.in_train_phase(K.dropout(x, level=self.p), x)
+        return x
+
+    def get_config(self):
+        config = {'p': self.p}
+        base_config = super(Dropout_cust, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+
+
+def _test_experiment(model, custom_objects=None):
     from alp.appcom.utils import imports
     import keras.backend as K
 
+    if custom_objects is None:
+        custom_objects = dict()
     @imports({"K": K})
     def categorical_crossentropy_custom(y_true, y_pred):
         '''A test of custom loss function
@@ -65,8 +100,9 @@ def _test_experiment(model):
 
     metrics = ['accuracy', cosine_proximity]
 
-    custom_objects = dict()
-    custom_objects['categorical_crossentropy_custom'] = categorical_crossentropy_custom
+    cust_objects = dict()
+    cust_objects['categorical_crossentropy_custom'] = categorical_crossentropy_custom
+    cust_objects.update(custom_objects)
 
     model.compile(loss=categorical_crossentropy_custom,
                   optimizer='rmsprop',
@@ -76,7 +112,7 @@ def _test_experiment(model):
 
     assert expe.backend is not None
 
-    expe.fit([data], [data_val], custom_objects=custom_objects, nb_epoch=2,
+    expe.fit([data], [data_val], custom_objects=cust_objects, nb_epoch=2,
              batch_size=batch_size, metrics=metrics)
 
     # check data_id
@@ -89,7 +125,7 @@ def _test_experiment(model):
     assert expe.params_dump is not None
 
     # async
-    expe.fit_async([data], [data_val], custom_objects=custom_objects,
+    expe.fit_async([data], [data_val], custom_objects=cust_objects,
                    nb_epoch=2, batch_size=batch_size)
 
     # try to reload the same model
@@ -100,7 +136,7 @@ def _test_experiment(model):
     expe.model_dict = model
 
     expe.fit([data], [data_val], model=model,
-             custom_objects=custom_objects, nb_epoch=2,
+             custom_objects=cust_objects, nb_epoch=2,
              batch_size=batch_size)
     expe.predict(data['X'].astype('float32'))
 
@@ -116,11 +152,11 @@ def _test_experiment(model):
     expe = Experiment(model)
 
     expe.fit([data], [data_val], model=model,
-             custom_objects=custom_objects, nb_epoch=2,
+             custom_objects=cust_objects, nb_epoch=2,
              batch_size=batch_size)
 
     expe.fit_async([data], [data_val], model=model, metrics=metrics,
-                   custom_objects=custom_objects,
+                   custom_objects=cust_objects,
                    nb_epoch=2, batch_size=batch_size)
 
 
@@ -280,11 +316,14 @@ def test_utils():
 
 def test_experiment_sequential():
     """Test the Experiment class with Sequential"""
-
     model = Sequential()
     model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
+    model.add(Dropout_cust(0.5))
     model.add(Dense(nb_class, activation='softmax'))
-    _test_experiment(model)
+
+    custom_objects = {'Dropout_cust': Dropout_cust}
+
+    _test_experiment(model, custom_objects=custom_objects)
 
 def test_experiment_model():
     """Test the Experiment class with Model"""
