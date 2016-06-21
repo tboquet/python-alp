@@ -28,7 +28,6 @@ import types
 import dill
 import marshal
 import six
-import types
 
 from ..appcom import _path_h5
 from ..celapp import app
