@@ -137,7 +137,7 @@ class Experiment(object):
             model(model, optionnal): a model from a supported backend
 
         Returns:
-            the id of the model in the db, the id of the data in the db and
+            the id of the model in the db, the id of the data in the db and a
             path to the parameters.
         """
         _recompile = False
