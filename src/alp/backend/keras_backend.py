@@ -28,7 +28,7 @@ import types
 import dill
 import marshal
 import six
-from six.moves import zip
+from six.moves import zip as szip
 
 from ..appcom import _path_h5
 from ..backend import common as cm
@@ -295,7 +295,7 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
 
     # fit the model according to the input/output type
     if mod_name is "Graph":
-        for d, dv in zip(data, data_val):
+        for d, dv in szip(data, data_val):
             if generator:
                 h = model.fit_generator(generator=d,
                                         validation_data=dv,
@@ -312,7 +312,7 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
         results['metrics']['iter'] = h.epoch[-1] * len(data)
 
     elif mod_name is "Sequential" or mod_name is "Model":
-        for d, dv in zip(data, data_val):
+        for d, dv in szip(data, data_val):
             if not fit_gen_val:
                 dv = (dv['X'], dv['y'])
             if generator:
