@@ -28,12 +28,11 @@ import types
 import dill
 import marshal
 import six
+from six.moves import zip
 
 from ..appcom import _path_h5
 from ..backend import common as cm
 from ..celapp import app
-
-from six.moves import zip
 
 COMPILED_MODELS = dict()
 TO_SERIALIZE = ['custom_objects']
