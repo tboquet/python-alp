@@ -24,6 +24,7 @@ apt:
   packages:
     - libhdf5-dev
 before_install:
+  - sudo dpkg -L libhdf5-dev
   - sudo rabbitmqctl stop
   - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1397BC53640DB551
   - sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
