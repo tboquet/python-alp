@@ -26,7 +26,6 @@ in memory compiled function, this function is used instead.
 import types
 
 import dill
-import itertools
 import marshal
 import six
 
@@ -285,7 +284,7 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
         kwargs.pop('batch_size')
 
     val_gen = (hasattr(data_val[-1], 'next') or
-                hasattr(data_val[-1], '__next__'))
+               hasattr(data_val[-1], '__next__'))
 
     if val_gen:
         if generator:

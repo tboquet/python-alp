@@ -154,21 +154,22 @@ def to_fuel_h5(inputs, outputs, start, stop,
     import h5py
     import os
     from fuel.datasets.hdf5 import H5PYDataset
-    
+
     suffix = 'hdf5'
-    
+
     inp = 'input_'
     out = 'output_'
-    
+
     full_path = os.path.join(file_location, file_name + '.' + suffix)
     f = h5py.File(full_path, mode='w')
-    
+
     dict_data_set = dict()
     split_dict = dict()
     split_dict['train'] = dict()
     split_dict['test'] = dict()
+
     max_v = max_v_len(inputs)
-    
+
     try:
         for k, v in norm_iterator(inputs, 'inp'):
             dict_data_set[inp + k] = f.create_dataset(inp + k, v.shape,

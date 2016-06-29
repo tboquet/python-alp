@@ -1,9 +1,7 @@
 import copy
 import hashlib
-import itertools
 import json
 import pickle
-
 
 
 def clean_model(model):

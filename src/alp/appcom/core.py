@@ -193,7 +193,6 @@ class Experiment(object):
             self.model_dict = self.backend.to_dict_w_opt(self.model,
                                                          self.metrics)
 
-
         data_hash = ''
         for g in gen_train:
             data_hash += cm.create_gen_hash(gen_train)
