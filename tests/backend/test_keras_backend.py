@@ -5,6 +5,10 @@ import keras.backend as K
 import numpy as np
 import pytest
 
+from fuel.datasets.hdf5 import H5PYDataset
+from fuel.schemes import SequentialScheme
+from fuel.streams import DataStream
+from fuel.transformers import ScaleAndShift
 from keras.engine import Layer
 from keras.layers import Dense
 from keras.layers import Input
@@ -21,10 +25,6 @@ from alp.backend import keras_backend as KTB
 from alp.backend.common import transform_gen
 from alp.backend.keras_backend import get_function_name
 from alp.backend.keras_backend import to_dict_w_opt
-from fuel.datasets.hdf5 import H5PYDataset
-from fuel.schemes import SequentialScheme
-from fuel.streams import DataStream
-from fuel.transformers import ScaleAndShift
 
 np.random.seed(1337)
 
