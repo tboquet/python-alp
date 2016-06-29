@@ -14,6 +14,7 @@ import copy
 import sys
 
 from ..appcom.utils import background
+from ..backend import common as cm
 from ..dbbackend import get_models
 from .utils import init_backend
 from .utils import switch_backend
@@ -85,7 +86,7 @@ class Experiment(object):
         self.__model_dict['data_id'] = data_id
         self.__data_id = data_id
 
-    def fit(self, data, data_val, model=None, async=False, *args, **kwargs):
+    def fit(self, data, data_val, model=None, *args, **kwargs):
         """Build and fit a model given data and hyperparameters
 
         Args:
@@ -112,10 +113,14 @@ class Experiment(object):
                                                          self.metrics)
         if self.model is None:
             raise Exception('No model provided')
+
+        data_hash = cm.create_data_hash(data)
         kwargs = self._check_serialize(kwargs)
+
         res = self.backend.fit(self.backend_name, self.backend_version,
                                copy.deepcopy(self.model_dict), data,
-                               data_val, *args, **kwargs)
+                               data_hash, data_val,
+                               *args, **kwargs)
         self.mod_id = res['model_id']
         self.data_id = res['data_id']
         self.params_dump = res['params_dump']
@@ -125,7 +130,7 @@ class Experiment(object):
 
         return self.full_res
 
-    def fit_async(self, data, data_val, model=None, async=False,
+    def fit_async(self, data, data_val, model=None,
                   *args, **kwargs):
         """Build and fit asynchronously a model given data and hyperparameters
 
@@ -152,19 +157,112 @@ class Experiment(object):
             self.model_dict = self.backend.to_dict_w_opt(self.model,
                                                          self.metrics)
 
+        data_hash = cm.create_data_hash(data)
         kwargs = self._check_serialize(kwargs)
         res = self.backend.fit.delay(self.backend_name, self.backend_version,
                                      copy.deepcopy(self.model_dict), data,
-                                     data_val, *args, **kwargs)
+                                     data_hash, data_val,
+                                     *args, **kwargs)
         self._get_results(res)
         return res
 
-    def load_model(self, mod_id, data_id):
+    def fit_gen(self, gen_train, data_val,
+                model=None, *args, **kwargs):
+        """Build and fit asynchronously a model given data and hyperparameters
+
+        Args:
+            data(list(dict)): a list of dictionnaries mapping inputs and
+                outputs names to numpy arrays for training.
+            data_val(list(dict)): a list of dictionnaries mapping inputs and
+                outputs names to numpy arrays for validation.
+            model(model, optionnal): a model from a supported backend
+
+        Returns:
+            the id of the model in the db, the id of the data in the db and a
+            path to the parameters.
+        """
+        _recompile = False
+        if model is not None:
+            self.model = model
+            _recompile = True
+        if "metrics" in kwargs:
+            self.metrics = kwargs.pop("metrics")
+            _recompile = True
+
+        if _recompile is True:
+            self.model_dict = self.backend.to_dict_w_opt(self.model,
+                                                         self.metrics)
+
+
+        data_hash = ''
+        for g in gen_train:
+            data_hash += cm.create_gen_hash(gen_train)
+        kwargs = self._check_serialize(kwargs)
+
+        res = self.backend.fit(self.backend_name,
+                               self.backend_version,
+                               copy.deepcopy(self.model_dict),
+                               gen_train, data_hash, data_val,
+                               generator=True,
+                               *args, **kwargs)
+        self.mod_id = res['model_id']
+        self.data_id = res['data_id']
+        self.params_dump = res['params_dump']
+
+        self.trained = True
+        self.full_res = res
+
+        return self.full_res
+
+    def fit_gen_async(self, gen_train, data_val,
+                      model=None, *args, **kwargs):
+        """Build and fit asynchronously a model given data and hyperparameters
+
+        Args:
+            data(list(dict)): a list of dictionnaries mapping inputs and
+                outputs names to numpy arrays for training.
+            data_val(list(dict)): a list of dictionnaries mapping inputs and
+                outputs names to numpy arrays for validation.
+            model(model, optionnal): a model from a supported backend
+
+        Returns:
+            the id of the model in the db, the id of the data in the db and a
+            path to the parameters.
+        """
+        _recompile = False
+        if model is not None:
+            self.model = model
+            _recompile = True
+        if "metrics" in kwargs:
+            self.metrics = kwargs.pop("metrics")
+            _recompile = True
+
+        if _recompile is True:
+            self.model_dict = self.backend.to_dict_w_opt(self.model,
+                                                         self.metrics)
+
+        data_hash = cm.create_gen_hash(gen_train)
+        kwargs = self._check_serialize(kwargs)
+        res = self.backend.fit(self.backend_name,
+                               self.backend_version,
+                               copy.deepcopy(self.model_dict),
+                               gen_train, data_hash, data_val,
+                               generator=True,
+                               *args, **kwargs)
+        self._get_results(res)
+        return res
+
+    def load_model(self, mod_id=None, data_id=None):
         """Load a model from the database form it's mod_id and data_id
 
         Args:
             mod_id(str): the id of the model in the database
             data_id(str): the id of the data in the database"""
+        if mod_id is None and data_id is None:
+            mod_id = self.mod_id
+            data_id = self.data_id
+        assert mod_id is not None, 'You must provide a model id'
+        assert data_id is not None, 'You must provide a data id'
         models = get_models()
         model_db = models.find_one({'mod_id': mod_id, 'data_id': data_id})
         self._switch_backend(model_db)

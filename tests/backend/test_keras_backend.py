@@ -16,9 +16,15 @@ from keras.utils.test_utils import get_test_data
 
 from alp.appcom.core import Experiment
 from alp.appcom.utils import switch_backend
+from alp.appcom.utils import to_fuel_h5
 from alp.backend import keras_backend as KTB
+from alp.backend.common import transform_gen
 from alp.backend.keras_backend import get_function_name
 from alp.backend.keras_backend import to_dict_w_opt
+from fuel.datasets.hdf5 import H5PYDataset
+from fuel.schemes import SequentialScheme
+from fuel.streams import DataStream
+from fuel.transformers import ScaleAndShift
 
 np.random.seed(1337)
 
@@ -27,8 +33,8 @@ input_dim = 2
 nb_hidden = 4
 nb_class = 2
 batch_size = 5
-train_samples = 20
-test_samples = 20
+train_samples = 128
+test_samples = 64
 NAME = keras.__name__
 VERSION = keras.__version__
 
@@ -149,6 +155,46 @@ def _test_experiment(model, custom_objects=None):
                    custom_objects=cust_objects,
                    nb_epoch=2, batch_size=batch_size)
 
+    inputs = [np.concatenate([data['X'], data_val['X']])]
+    outputs = [np.concatenate([data['y'], data_val['y']])]
+
+    scale = 1.0 / inputs[0].std(axis=0)
+    shift = - scale * inputs[0].mean(axis=0)
+
+    if model.__class__.__name__ == 'Graph':
+        inp_name = model.input_names[0]
+        out_name = model.output_names[0]
+        inputs = dict()
+        outputs = dict()
+        inputs[inp_name] = np.concatenate([data['X'], data_val['X']])
+        outputs[out_name] = np.concatenate([data['y'], data_val['y']])
+
+    full_path = to_fuel_h5(inputs, outputs, 0, 164, 'test_data')
+
+    train_set = H5PYDataset(full_path, which_sets=('train','test'))
+
+    state_train = train_set.open()
+
+    scheme = SequentialScheme(examples=128, batch_size=32)
+
+    data_stream_train = DataStream(dataset=train_set, iteration_scheme=scheme)
+
+
+    stand_stream_train = ScaleAndShift(data_stream=data_stream_train,
+                                        scale=scale, shift=shift,
+                                        which_sources=('input_X',))
+
+    expe.fit_gen([stand_stream_train], [data_val],
+                 model=model,
+                 metrics=metrics,
+                 custom_objects=cust_objects,
+                 nb_epoch=2,
+                 samples_per_epoch=128)
+
+    stand_stream_train.close()
+    data_stream_train.close()
+    train_set.close(state_train)
+
 
 def test_build_predict_func():
     """Test the build of a model"""
@@ -216,7 +262,7 @@ def test_fit():
     model_dict['model_arch'] = to_dict_w_opt(model, metrics)
 
     res = KTB.train(model_dict['model_arch'], [data], [data_val])
-    res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val])
+    res = KTB.fit(NAME, VERSION, model_dict, [data], 'test', [data_val])
 
     assert len(res) == 4
     # Case 2 without custom objects
@@ -230,7 +276,7 @@ def test_fit():
     model_dict = dict()
     model_dict['model_arch'] = to_dict_w_opt(model, metrics)
 
-    res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val])
+    res = KTB.fit(NAME, VERSION, model_dict, [data], 'test', [data_val])
 
     assert len(res) == 4
     # Case 3 Graph model
@@ -258,7 +304,7 @@ def test_fit():
     model_dict = dict()
     model_dict['model_arch'] = to_dict_w_opt(model, metrics)
 
-    res = KTB.fit(NAME, VERSION, model_dict, [data], [data_val])
+    res = KTB.fit(NAME, VERSION, model_dict, [data], 'test', [data_val])
 
     assert len(res) == 4
 

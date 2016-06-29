@@ -6,6 +6,8 @@
 import functools
 import threading
 
+from six.moves import zip
+
 
 def sliced(data, nb_train, nb_test, offset):
     """Given a dataset, returns indexes to split the data into
@@ -137,3 +139,80 @@ def imports(packages=None):
             return wrapped(*args, **kwargs)
         return inner
     return dec
+
+
+def norm_iterator(iterable, suf):
+    if isinstance(iterable, list):
+        names = [suf + '_list_' + str(i) for i, j in enumerate(iterable)]
+        return zip(names, iterable)
+    elif isinstance(iterable, dict):
+        return iterable.items()
+
+
+def to_fuel_h5(inputs, outputs, start, stop,
+               file_name, file_location=''):
+    import h5py
+    import os
+    from fuel.datasets.hdf5 import H5PYDataset
+    
+    suffix = 'hdf5'
+    
+    inp = 'input_'
+    out = 'output_'
+    
+    full_path = os.path.join(file_location, file_name + '.' + suffix)
+    f = h5py.File(full_path, mode='w')
+    
+    dict_data_set = dict()
+    split_dict = dict()
+    split_dict['train'] = dict()
+    split_dict['test'] = dict()
+    max_v = max_v_len(inputs)
+    
+    try:
+        for k, v in norm_iterator(inputs, 'inp'):
+            dict_data_set[inp + k] = f.create_dataset(inp + k, v.shape,
+                                                      v.dtype)
+            dict_data_set[inp + k][...] = v
+            split_dict['train'][inp + k] = (start, stop)
+            split_dict['test'][inp + k] = (stop, max_v)
+        for k, v in norm_iterator(outputs, 'out'):
+            dict_data_set[out + k] = f.create_dataset(out + k, v.shape,
+                                                      v.dtype)
+            dict_data_set[out + k][...] = v
+            split_dict['train'][out + k] = (start, stop)
+            split_dict['test'][out + k] = (stop, max_v)
+        f.attrs['split'] = H5PYDataset.create_split_array(split_dict)
+        f.flush()
+        f.close()
+    except:
+        f.flush()
+        f.close()
+        raise
+    return full_path
+
+
+def max_v_len(iterable_to_check):
+    max_v = 0
+    for k, v in norm_iterator(iterable_to_check, 'suf'):
+        if len(v) > max_v:
+            max_v = len(v)
+    return max_v
+
+
+def izip_dict(iterables):
+    """Builds a itertools izip iterators to output dicts
+
+    Args:
+        iterables(list): a list of dicts of the same length
+
+    Yield:
+        a dictionnary mapping names of the inputs to numpy arrays"""
+
+    iterables_func = [el.items() for el in iterables]
+    for els in zip(iterables_func):
+        results = dict()
+        for el in els:
+            for i in el:
+                results[i[0]] = i[1]
+        yield results

@@ -250,7 +250,8 @@ def train(model, data, data_val, *args, **kwargs):
 
 
 @app.task(default_retry_delay=60 * 10, max_retries=3, rate_limit='120/m')
-def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
+def fit(backend_name, backend_version, model, data, data_hash,
+        data_val, *args, **kwargs):
     """A function that takes a model and data (with validation),
         then applies the 'train' method if possible.
         The parameters are updated in case of success.
@@ -273,8 +274,7 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
     from datetime import datetime
 
     hexdi_m = cm.create_model_hash(model, 0)
-    hexdi_d = cm.create_data_hash(data)
-    params_dump = cm.create_param_dump(_path_h5, hexdi_m, hexdi_d)
+    params_dump = cm.create_param_dump(_path_h5, hexdi_m, data_hash)
 
     # update the full json
     full_json = {'backend_name': backend_name,
@@ -282,7 +282,7 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
                  'model_arch': model['model_arch'],
                  'datetime': datetime.now(),
                  'mod_id': hexdi_m,
-                 'data_id': hexdi_d,
+                 'data_id': data_hash,
                  'params_dump': params_dump,
                  'trained': 0,
                  'data_path': "sent",
@@ -304,7 +304,7 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
 
         save_params(model, filepath=params_dump)
         results['model_id'] = hexdi_m
-        results['data_id'] = hexdi_d
+        results['data_id'] = data_hash
         results['params_dump'] = params_dump
 
     except Exception:
