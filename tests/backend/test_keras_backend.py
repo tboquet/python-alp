@@ -195,7 +195,7 @@ def _test_experiment(model, custom_objects=None):
                        custom_objects=cust_objects,
                        nb_epoch=2,
                        samples_per_epoch=128)
-    
+
     stand_stream_train.close()
     data_stream_train.close()
     train_set.close(state_train)
@@ -345,7 +345,7 @@ def test_predict():
     model.compile(optimizer='sgd', loss={'output': 'categorical_crossentropy'})
 
     expe = Experiment(model)
-    res = expe.fit([data], [data_val])
+    expe.fit([data], [data_val])
     KTB.predict(expe.model_dict, [data['X_vars']])
 
 
