@@ -22,7 +22,6 @@ from alp.appcom.core import Experiment
 from alp.appcom.utils import switch_backend
 from alp.appcom.utils import to_fuel_h5
 from alp.backend import keras_backend as KTB
-from alp.backend.common import transform_gen
 from alp.backend.keras_backend import get_function_name
 from alp.backend.keras_backend import to_dict_w_opt
 
@@ -191,6 +190,12 @@ def _test_experiment(model, custom_objects=None):
                  nb_epoch=2,
                  samples_per_epoch=128)
 
+    expe.fit_gen_async([stand_stream_train], [stand_stream_train],
+                       metrics=metrics,
+                       custom_objects=cust_objects,
+                       nb_epoch=2,
+                       samples_per_epoch=128)
+    
     stand_stream_train.close()
     data_stream_train.close()
     train_set.close(state_train)
