@@ -173,7 +173,7 @@ def to_fuel_h5(inputs, outputs, start, stop,
     def insert_info_h5(iterable, suf):
         for k, v in norm_iterator(iterable):
             dict_data_set[suf + k] = f.create_dataset(suf + k, v.shape,
-                                                    v.dtype)
+                                                      v.dtype)
             dict_data_set[suf + k][...] = v
             split_dict['train'][suf + k] = (start, stop)
             split_dict['test'][suf + k] = (stop, max_v)
