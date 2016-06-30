@@ -36,7 +36,7 @@ from ..celapp import app
 
 COMPILED_MODELS = dict()
 TO_SERIALIZE = ['custom_objects']
-
+dill.settings['recurse'] = True
 
 # general utilities
 

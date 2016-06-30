@@ -161,7 +161,9 @@ def _test_experiment(model, custom_objects=None):
     scale = 1.0 / inputs[0].std(axis=0)
     shift = - scale * inputs[0].mean(axis=0)
 
-    if model.__class__.__name__ == 'Graph':
+    model_name = model.__class__.__name__
+
+    if model_name  == 'Graph':
         inp_name = model.input_names[0]
         out_name = model.output_names[0]
         inputs = dict()
@@ -169,7 +171,8 @@ def _test_experiment(model, custom_objects=None):
         inputs[inp_name] = np.concatenate([data['X'], data_val['X']])
         outputs[out_name] = np.concatenate([data['y'], data_val['y']])
 
-    full_path = to_fuel_h5(inputs, outputs, 0, 164, 'test_data')
+    full_path = to_fuel_h5(inputs, outputs, 0, 164,
+                           'test_data' + str(model_name))
 
     train_set = H5PYDataset(full_path, which_sets=('train','test'))
 
@@ -189,6 +192,14 @@ def _test_experiment(model, custom_objects=None):
                  custom_objects=cust_objects,
                  nb_epoch=2,
                  samples_per_epoch=128)
+
+    expe.fit_gen([stand_stream_train], [stand_stream_train],
+                 model=model,
+                 metrics=metrics,
+                 custom_objects=cust_objects,
+                 nb_epoch=2,
+                 samples_per_epoch=128,
+                 nb_val_samples=128)
 
     expe.fit_gen_async([stand_stream_train], [stand_stream_train],
                        model=model,
