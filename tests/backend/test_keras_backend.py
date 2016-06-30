@@ -179,7 +179,6 @@ def _test_experiment(model, custom_objects=None):
 
     data_stream_train = DataStream(dataset=train_set, iteration_scheme=scheme)
 
-
     stand_stream_train = ScaleAndShift(data_stream=data_stream_train,
                                         scale=scale, shift=shift,
                                         which_sources=('input_X',))
