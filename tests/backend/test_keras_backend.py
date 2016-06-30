@@ -125,8 +125,9 @@ def _test_experiment(model, custom_objects=None):
 
     # try to reload the same model
     expe.backend_name = "test"
-    expe.load_model(expe.mod_id, expe.data_id)
+    expe.load_model()
 
+    expe.load_model(expe.mod_id, expe.data_id)
     # check the serialization of the model
     expe.model_dict = model
 
@@ -191,6 +192,7 @@ def _test_experiment(model, custom_objects=None):
                  samples_per_epoch=128)
 
     expe.fit_gen_async([stand_stream_train], [stand_stream_train],
+                       model=model,
                        metrics=metrics,
                        custom_objects=cust_objects,
                        nb_epoch=2,
