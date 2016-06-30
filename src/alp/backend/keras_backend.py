@@ -285,12 +285,14 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
     val_gen = (hasattr(data_val[-1], 'next') or
                hasattr(data_val[-1], '__next__'))
 
+    val_gen += 'fuel' in repr(data_val[-1])
+
     if val_gen:
         if generator:
             data_val = [cm.transform_gen(dv, mod_name) for dv in data_val]
             fit_gen_val = True
         else:
-            raise Exception("You should also pass a generator fot the training"
+            raise Exception("You should also pass a generator for the training"
                             " data.")
 
     # fit the model according to the input/output type

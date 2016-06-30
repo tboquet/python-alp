@@ -141,9 +141,9 @@ def imports(packages=None):
     return dec
 
 
-def norm_iterator(iterable, suf):
+def norm_iterator(iterable):
     if isinstance(iterable, list):
-        names = [suf + '_list_' + str(i) for i, j in enumerate(iterable)]
+        names = ['_list_' + str(i) for i, j in enumerate(iterable)]
         return szip(names, iterable)
     elif isinstance(iterable, dict):
         return iterable.items()
@@ -170,18 +170,17 @@ def to_fuel_h5(inputs, outputs, start, stop,
 
     max_v = max_v_len(inputs)
 
-    for k, v in norm_iterator(inputs, 'inp'):
-        dict_data_set[inp + k] = f.create_dataset(inp + k, v.shape,
-                                                  v.dtype)
-        dict_data_set[inp + k][...] = v
-        split_dict['train'][inp + k] = (start, stop)
-        split_dict['test'][inp + k] = (stop, max_v)
-    for k, v in norm_iterator(outputs, 'out'):
-        dict_data_set[out + k] = f.create_dataset(out + k, v.shape,
-                                                  v.dtype)
-        dict_data_set[out + k][...] = v
-        split_dict['train'][out + k] = (start, stop)
-        split_dict['test'][out + k] = (stop, max_v)
+    def insert_info_h5(iterable, suf):
+        for k, v in norm_iterator(iterable):
+            dict_data_set[suf + k] = f.create_dataset(suf + k, v.shape,
+                                                    v.dtype)
+            dict_data_set[suf + k][...] = v
+            split_dict['train'][suf + k] = (start, stop)
+            split_dict['test'][suf + k] = (stop, max_v)
+
+    insert_info_h5(inputs, inp)
+    insert_info_h5(outputs, out)
+
     f.attrs['split'] = H5PYDataset.create_split_array(split_dict)
     f.flush()
     f.close()
@@ -190,25 +189,7 @@ def to_fuel_h5(inputs, outputs, start, stop,
 
 def max_v_len(iterable_to_check):
     max_v = 0
-    for _, v in norm_iterator(iterable_to_check, 'suf'):
+    for _, v in norm_iterator(iterable_to_check):
         if len(v) > max_v:
             max_v = len(v)
     return max_v
-
-
-# def izip_dict(iterables):
-#     """Builds a itertools izip iterators to output dicts
-
-#     Args:
-#         iterables(list): a list of dicts of the same length
-
-#     Yield:
-#         a dictionnary mapping names of the inputs to numpy arrays"""
-
-#     iterables_func = [el.items() for el in iterables]
-#     for els in szip(iterables_func):
-#         results = dict()
-#         for el in els:
-#             for i in el:
-#                 results[i[0]] = i[1]
-#         yield results

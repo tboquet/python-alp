@@ -245,12 +245,12 @@ class Experiment(object):
             data_hash += cm.create_gen_hash(g)
         kwargs = self._check_serialize(kwargs)
 
-        res = self.backend.fit.delay(self.backend_name,
-                                     self.backend_version,
-                                     copy.deepcopy(self.model_dict),
-                                     gen_train, data_hash, data_val,
-                                     generator=True,
-                                     *args, **kwargs)
+        res = self.backend.fit(self.backend_name,
+                               self.backend_version,
+                               copy.deepcopy(self.model_dict),
+                               gen_train, data_hash, data_val,
+                               generator=True,
+                               *args, **kwargs)
         self._get_results(res)
         return res
 
