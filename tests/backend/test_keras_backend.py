@@ -120,8 +120,8 @@ def _test_experiment(model, custom_objects=None):
     assert expe.params_dump is not None
 
     # async
-    expe.fit_async([data], [data_val], custom_objects=cust_objects,
-                   nb_epoch=2, batch_size=batch_size)
+    # expe.fit_async([data], [data_val], custom_objects=cust_objects,
+    #                nb_epoch=2, batch_size=batch_size)
 
     # try to reload the same model
     expe.backend_name = "test"
@@ -151,9 +151,9 @@ def _test_experiment(model, custom_objects=None):
              custom_objects=cust_objects, nb_epoch=2,
              batch_size=batch_size)
 
-    expe.fit_async([data], [data_val], model=model, metrics=metrics,
-                   custom_objects=cust_objects,
-                   nb_epoch=2, batch_size=batch_size)
+    # expe.fit_async([data], [data_val], model=model, metrics=metrics,
+    #                custom_objects=cust_objects,
+    #                nb_epoch=2, batch_size=batch_size)
 
     inputs = [np.concatenate([data['X'], data_val['X']])]
     outputs = [np.concatenate([data['y'], data_val['y']])]
@@ -172,7 +172,8 @@ def _test_experiment(model, custom_objects=None):
         outputs[out_name] = np.concatenate([data['y'], data_val['y']])
 
     full_path = to_fuel_h5(inputs, outputs, 0, 164,
-                           'test_data' + str(model_name))
+                           'test_data' + str(model_name),
+                           '/data_generator')
 
     train_set = H5PYDataset(full_path, which_sets=('train','test'))
 
@@ -372,12 +373,11 @@ def test_experiment_sequential():
     """Test the Experiment class with Sequential"""
     model = Sequential()
     model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
-    model.add(Dropout_cust(0.5))
     model.add(Dense(nb_class, activation='softmax'))
 
     custom_objects = {'Dropout_cust': Dropout_cust}
+    _test_experiment(model)
 
-    _test_experiment(model, custom_objects=custom_objects)
 
 def test_experiment_model():
     """Test the Experiment class with Model"""

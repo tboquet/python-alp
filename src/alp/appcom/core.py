@@ -193,9 +193,7 @@ class Experiment(object):
             self.model_dict = self.backend.to_dict_w_opt(self.model,
                                                          self.metrics)
 
-        data_hash = ''
-        for g in gen_train:
-            data_hash += cm.create_gen_hash(g)
+        data_hash = cm.create_gen_hash(gen_train)
         kwargs = self._check_serialize(kwargs)
 
         res = self.backend.fit(self.backend_name,
@@ -240,9 +238,7 @@ class Experiment(object):
             self.model_dict = self.backend.to_dict_w_opt(self.model,
                                                          self.metrics)
 
-        data_hash = ''
-        for g in gen_train:
-            data_hash += cm.create_gen_hash(g)
+        data_hash = cm.create_gen_hash(gen_train)
         kwargs = self._check_serialize(kwargs)
 
         res = self.backend.fit.delay(self.backend_name,
