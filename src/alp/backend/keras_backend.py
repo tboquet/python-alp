@@ -296,12 +296,16 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
             raise Exception("You should also pass a generator for the training"
                             " data.")
 
+    def bob():
+        while 1:
+            yield (np.ones(32,input_dim), np.ones((32, nb_classes)))
+
     # fit the model according to the input/output type
     if mod_name is "Graph":
         for d, dv in szip(data, data_val):
             if generator:
-                h = model.fit_generator(generator=d,
-                                        validation_data=dv,
+                h = model.fit_generator(generator=bob,
+                                        validation_data=bob,
                                         *args,
                                         **kwargs)
             else:
@@ -319,8 +323,8 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
             if not fit_gen_val:
                 dv = (dv['X'], dv['y'])
             if generator:
-                h = model.fit_generator(generator=d,
-                                        validation_data=dv,
+                h = model.fit_generator(generator=bob,
+                                        validation_data=bob,
                                         *args,
                                         **kwargs)
             else:
