@@ -261,6 +261,8 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
         the loss (list), the validation loss (list), the number of iterations,
         and the model
         """
+    import theano
+
     results = dict()
     results['metrics'] = dict()
     custom_objects = None
@@ -288,8 +290,6 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
 
     val_gen += 'fuel' in repr(data_val[-1])
 
-    if generator:
-        val_gen = True
     if val_gen:
         if generator:
             data_val = [cm.transform_gen(dv, mod_name) for dv in data_val]
@@ -298,16 +298,12 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
             raise Exception("You should also pass a generator for the training"
                             " data.")
 
-    def bob():
-        import numpy as np
-        while 1:
-            yield (np.ones(32, 2), np.ones((32, 2)))
     # fit the model according to the input/output type
     if mod_name is "Graph":
         for d, dv in szip(data, data_val):
             if generator:
-                h = model.fit_generator(generator=bob(),
-                                        validation_data=bob(),
+                h = model.fit_generator(generator=d,
+                                        validation_data=dv,
                                         *args,
                                         **kwargs)
             else:
@@ -325,8 +321,8 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
             if not fit_gen_val:
                 dv = (dv['X'], dv['y'])
             if generator:
-                h = model.fit_generator(generator=bob(),
-                                        validation_data=bob(),
+                h = model.fit_generator(generator=d,
+                                        validation_data=dv,
                                         *args,
                                         **kwargs)
             else:
@@ -365,7 +361,6 @@ def fit(backend_name, backend_version, model, data, data_hash, data_val,
     from datetime import datetime
     import alp.backend.common as cm
     import numpy as np
-    import theano
 
     if kwargs.get("batch_size") is None:
         kwargs['batch_size'] = 32
