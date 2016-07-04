@@ -114,8 +114,6 @@ class Experiment(object):
         if self.model is None:
             raise Exception('No model provided')
 
-        for d in data:
-            print(type(d))
         data_hash = cm.create_data_hash(data)
         kwargs = self._check_serialize(kwargs)
 
@@ -158,8 +156,6 @@ class Experiment(object):
         if _recompile is True:
             self.model_dict = self.backend.to_dict_w_opt(self.model,
                                                          self.metrics)
-        for d in data:
-            print(type(d))
         data_hash = cm.create_data_hash(data)
         kwargs = self._check_serialize(kwargs)
         res = self.backend.fit.delay(self.backend_name, self.backend_version,
@@ -195,8 +191,6 @@ class Experiment(object):
         if _recompile is True:
             self.model_dict = self.backend.to_dict_w_opt(self.model,
                                                          self.metrics)
-        for d in gen_train:
-            print(type(d))
 
         data_hash = cm.create_gen_hash(gen_train)
         kwargs = self._check_serialize(kwargs)
@@ -242,8 +236,6 @@ class Experiment(object):
         if _recompile is True:
             self.model_dict = self.backend.to_dict_w_opt(self.model,
                                                          self.metrics)
-        for d in gen_train:
-            print(type(d))
 
         data_hash = cm.create_gen_hash(gen_train)
         kwargs = self._check_serialize(kwargs)
