@@ -202,13 +202,13 @@ def _test_experiment(model, custom_objects=None):
                  samples_per_epoch=128,
                  nb_val_samples=128)
 
-    # expe.fit_gen_async([stand_stream_train], [stand_stream_train],
-    #                    model=model,
-    #                    metrics=metrics,
-    #                    custom_objects=cust_objects,
-    #                    nb_epoch=2,
-    #                    samples_per_epoch=128,
-    #                    nb_val_samples=128)
+    expe.fit_gen_async([stand_stream_train], [stand_stream_train],
+                       model=model,
+                       metrics=metrics,
+                       custom_objects=cust_objects,
+                       nb_epoch=2,
+                       samples_per_epoch=128,
+                       nb_val_samples=128)
 
     stand_stream_train.close()
     data_stream_train.close()

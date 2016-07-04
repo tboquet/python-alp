@@ -359,7 +359,8 @@ def fit(backend_name, backend_version, model, data, data_hash, data_val,
     from datetime import datetime
     import alp.backend.common as cm
     import numpy as np
-    import fuel
+    from six.moves import reload_module
+    reload_module(theano)
 
     if kwargs.get("batch_size") is None:
         kwargs['batch_size'] = 32
