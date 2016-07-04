@@ -288,7 +288,8 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
 
     val_gen += 'fuel' in repr(data_val[-1])
 
-    val_gen = True
+    if generator:
+        val_gen = True
     if val_gen:
         if generator:
             data_val = [cm.transform_gen(dv, mod_name) for dv in data_val]
@@ -298,6 +299,7 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
                             " data.")
 
     def bob():
+        import numpy as np
         while 1:
             yield (np.ones(32,input_dim), np.ones((32, nb_classes)))
     # fit the model according to the input/output type
