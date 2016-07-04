@@ -288,6 +288,7 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
 
     val_gen += 'fuel' in repr(data_val[-1])
 
+    val_gen = True
     if val_gen:
         if generator:
             data_val = [cm.transform_gen(dv, mod_name) for dv in data_val]
