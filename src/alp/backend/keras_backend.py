@@ -301,7 +301,7 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
     def bob():
         import numpy as np
         while 1:
-            yield (np.ones(32,input_dim), np.ones((32, nb_classes)))
+            yield (np.ones(32, 2), np.ones((32, 2)))
     # fit the model according to the input/output type
     if mod_name is "Graph":
         for d, dv in szip(data, data_val):
