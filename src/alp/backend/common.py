@@ -97,11 +97,11 @@ def create_param_dump(_path_h5, hexdi_m, hexdi_d):
 def open_dataset_gen(generator):
     data_stream = None
     data_set = None
-    if hasattr(genenerator, 'data_stream'):
-        data_stream = genenerator.data_stream
+    if hasattr(generator, 'data_stream'):
+        data_stream = generator.data_stream
         data_stream.dataset.open()
-    elif hasattr(genenerator, 'dataset'):
-        genenerator.dataset.open()
+    elif hasattr(generator, 'dataset'):
+        generator.dataset.open()
     else:
         raise NotImplementedError('Not able to open the dataset')
 
