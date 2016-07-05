@@ -171,7 +171,7 @@ def _test_experiment(model, custom_objects=None):
         inputs[inp_name] = np.concatenate([data['X'], data_val['X']])
         outputs[out_name] = np.concatenate([data['y'], data_val['y']])
 
-    full_path = to_fuel_h5(inputs, outputs, 0, 164,
+    full_path = to_fuel_h5(inputs, outputs, [0, 164], ['train', 'test'],
                            'test_data' + str(model_name),
                            '/data_generator')
 

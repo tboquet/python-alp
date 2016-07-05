@@ -7,6 +7,7 @@ import functools
 import threading
 
 from six.moves import zip as szip
+from itertools import islice
 
 
 def sliced(data, nb_train, nb_test, offset):
@@ -149,7 +150,19 @@ def norm_iterator(iterable):
         return iterable.items()
 
 
-def to_fuel_h5(inputs, outputs, start, stop,
+def window(seq, n=2):
+    "Returns a sliding window (of width n) over data from the iterable"
+    "   s -> (s0,s1,...s[n-1]), (s1,s2,...,sn), ...                   "
+    it = iter(seq)
+    result = tuple(islice(it, n))
+    if len(result) == n:
+        yield result    
+    for elem in it:
+        result = result[1:] + (elem,)
+        yield result
+
+
+def to_fuel_h5(inputs, outputs, slices, names,
                file_name, file_location=''):
     import h5py
     import os
@@ -165,18 +178,18 @@ def to_fuel_h5(inputs, outputs, start, stop,
 
     dict_data_set = dict()
     split_dict = dict()
-    split_dict['train'] = dict()
-    split_dict['test'] = dict()
+    for name in names:
+        split_dict[name] = dict()
 
-    max_v = max_v_len(inputs)
+    slices.append(max_v_len(inputs))
 
     def insert_info_h5(iterable, suf):
         for k, v in norm_iterator(iterable):
             dict_data_set[suf + k] = f.create_dataset(suf + k, v.shape,
                                                       v.dtype)
             dict_data_set[suf + k][...] = v
-            split_dict['train'][suf + k] = (start, stop)
-            split_dict['test'][suf + k] = (stop, max_v)
+            for sl, name in zip(window(slices, 2), names):
+                split_dict[name][suf + k] = sl
 
     insert_info_h5(inputs, inp)
     insert_info_h5(outputs, out)
