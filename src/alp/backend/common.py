@@ -95,8 +95,6 @@ def create_param_dump(_path_h5, hexdi_m, hexdi_d):
 
 
 def open_dataset_gen(generator):
-    data_stream = None
-    data_set = None
     if hasattr(generator, 'data_stream'):
         data_stream = generator.data_stream
         data_stream.dataset.open()
