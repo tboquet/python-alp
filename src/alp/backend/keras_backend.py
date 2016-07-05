@@ -283,6 +283,7 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
     mod_name = model.__class__.__name__
 
     if generator:
+        print(data)
         data = [deserialize(**d) for d in data]
         data = [cm.transform_gen(d, mod_name) for d in data]
         kwargs.pop('batch_size')

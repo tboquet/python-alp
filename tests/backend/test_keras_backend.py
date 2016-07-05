@@ -120,8 +120,8 @@ def _test_experiment(model, custom_objects=None):
     assert expe.params_dump is not None
 
     # async
-    # expe.fit_async([data], [data_val], custom_objects=cust_objects,
-    #                nb_epoch=2, batch_size=batch_size)
+    expe.fit_async([data], [data_val], custom_objects=cust_objects,
+                   nb_epoch=2, batch_size=batch_size)
 
     # try to reload the same model
     expe.backend_name = "test"
@@ -187,6 +187,7 @@ def _test_experiment(model, custom_objects=None):
                                         scale=scale, shift=shift,
                                         which_sources=('input_X',))
 
+    print("Gen simple generator")
     expe.fit_gen([stand_stream_train], [data_val],
                  model=model,
                  metrics=metrics,
@@ -194,6 +195,7 @@ def _test_experiment(model, custom_objects=None):
                  nb_epoch=2,
                  samples_per_epoch=128)
 
+    print("Gen double generator")
     expe.fit_gen([stand_stream_train], [stand_stream_train],
                  model=model,
                  metrics=metrics,
@@ -202,6 +204,7 @@ def _test_experiment(model, custom_objects=None):
                  samples_per_epoch=128,
                  nb_val_samples=128)
 
+    print("Gen async")
     expe.fit_gen_async([stand_stream_train], [stand_stream_train],
                        model=model,
                        metrics=metrics,
