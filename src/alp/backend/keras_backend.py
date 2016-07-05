@@ -286,8 +286,8 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
     mod_name = model.__class__.__name__
 
     if generator:
-        data = deserialize(**data)
-        data = [cm.transform_gen(dv, mod_name) for dv in data]
+        data = [deserialize(**d) for d in data]
+        data = [cm.transform_gen(d, mod_name) for d in data]
         kwargs.pop('batch_size')
 
     val_gen = (hasattr(data_val[-1], 'next') or
