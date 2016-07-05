@@ -241,6 +241,12 @@ class Experiment(object):
         data_hash = cm.create_gen_hash(gen_train)
         kwargs = self._check_serialize(kwargs)
         gen_train = [self.backend.serialize(g) for g in gen_train]
+        val_gen = (hasattr(data_val[-1], 'next') or
+                hasattr(data_val[-1], '__next__'))
+
+        val_gen += 'fuel' in repr(data_val[-1])
+        if val_gen:
+            data_val = [self.backend.serialize(g) for g in data_val]
 
         res = self.backend.fit.delay(self.backend_name,
                                      self.backend_version,

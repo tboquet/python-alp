@@ -262,7 +262,9 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
         and the model
         """
     if generator:
+        from six.moves import reload_module as sreload
         import theano
+        sreload(theano)
 
     results = dict()
     results['metrics'] = dict()
@@ -295,6 +297,7 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
 
     if val_gen:
         if generator:
+            data_val = [deserialize(**dv) for dv in data_val]
             data_val = [cm.transform_gen(dv, mod_name) for dv in data_val]
             fit_gen_val = True
         else:
