@@ -94,6 +94,18 @@ def create_param_dump(_path_h5, hexdi_m, hexdi_d):
     return _path_h5 + hexdi_m + hexdi_d + '.h5'
 
 
+def open_dataset_gen(generator):
+    data_stream = None
+    data_set = None
+    if hasattr(genenerator, 'data_stream'):
+        data_stream = genenerator.data_stream
+        data_stream.dataset.open()
+    elif hasattr(genenerator, 'dataset'):
+        genenerator.dataset.open()
+    else:
+        raise NotImplementedError('Not able to open the dataset')
+
+
 def transform_gen(gen_train, mod_name):
     """Transform generators of tupple to generators of dicts
 
@@ -112,6 +124,8 @@ def transform_gen(gen_train, mod_name):
 
     list_outputs = False
     list_inputs = False
+
+    open_dataset_gen(gen_train)
 
     while 1:
         for d in gen_train.get_epoch_iterator():
