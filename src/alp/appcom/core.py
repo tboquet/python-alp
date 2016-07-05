@@ -194,6 +194,7 @@ class Experiment(object):
 
         data_hash = cm.create_gen_hash(gen_train)
         kwargs = self._check_serialize(kwargs)
+        gen_train = self.backend.serialize(gen_train)
 
         res = self.backend.fit(self.backend_name,
                                self.backend_version,
