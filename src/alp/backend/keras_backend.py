@@ -261,7 +261,11 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
         the loss (list), the validation loss (list), the number of iterations,
         and the model
         """
-    import theano
+    print(type(data))
+    print(type(data_val))
+    print(generator)
+    if generator:
+        import theano
 
     results = dict()
     results['metrics'] = dict()
