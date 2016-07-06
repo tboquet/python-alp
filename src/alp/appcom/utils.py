@@ -5,9 +5,9 @@
 
 import functools
 import threading
+from itertools import islice
 
 from six.moves import zip as szip
-from itertools import islice
 
 
 def sliced(data, nb_train, nb_test, offset):

@@ -23,11 +23,11 @@ in memory compiled function, this function is used instead.
 ----------------------------------------------------------------------------
 """
 
+import pickle
 import types
 
 import dill
 import marshal
-import pickle
 import six
 from six.moves import zip as szip
 
