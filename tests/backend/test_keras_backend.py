@@ -172,8 +172,7 @@ def _test_experiment(model, custom_objects=None):
         outputs[out_name] = np.concatenate([data['y'], data_val['y']])
 
     full_path = to_fuel_h5(inputs, outputs, [0, 164], ['train', 'test'],
-                           'test_data' + str(model_name),
-                           '/data_generator')
+                           'test_data' + str(model_name))
 
     train_set = H5PYDataset(full_path, which_sets=('train','test'))
 
