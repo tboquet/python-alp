@@ -145,13 +145,13 @@ def transform_gen(gen_train, mod_name):
                         list_outputs = True
                     else:
                         outputs_dict[name[7:]] = arr
-                fin_outputs = outputs_dict
-                fin_inputs = inputs_dict
+            fin_outputs = outputs_dict
+            fin_inputs = inputs_dict
 
-                if list_outputs:
-                    fin_outputs = outputs_list
-                if list_inputs:
-                    fin_inputs = inputs_list
+            if list_outputs:
+                fin_outputs = outputs_list
+            if list_inputs:
+                fin_inputs = inputs_list
             data_out = (fin_inputs, fin_outputs)
             if mod_name == 'Graph':
                 fin_inputs.update(fin_outputs)

@@ -143,6 +143,7 @@ def imports(packages=None):
 
 
 def norm_iterator(iterable):
+    """returns a normalized iterable of tuples"""
     if isinstance(iterable, list):
         names = ['_list_' + str(i) for i, j in enumerate(iterable)]
         return szip(names, iterable)
@@ -151,19 +152,34 @@ def norm_iterator(iterable):
 
 
 def window(seq, n=2):
-    "Returns a sliding window (of width n) over data from the iterable"
-    "   s -> (s0,s1,...s[n-1]), (s1,s2,...,sn), ...                   "
+    """Returns a sliding window (of width n) over data from the iterable"""
     it = iter(seq)
     result = tuple(islice(it, n))
     if len(result) == n:
-        yield result    
+        yield result
     for elem in it:
         result = result[1:] + (elem,)
         yield result
 
 
 def to_fuel_h5(inputs, outputs, slices, names,
-               file_name, file_location=''):
+               file_name, file_path=''):
+    """Transforms list of numpy arrays to a structured hdf5 file
+
+
+    Args:
+        inputs(list): a list of inputs(numpy.arrays)
+        outputs(list): a list of outputs(numpy.arrays)
+        slices(list): a list of int representing the end of a slice and the
+            begining of another slice. The last slice is automatically added
+            if missing (maximum length of the inputs).
+        names(list): a list of names for the datasets
+        file_name(str): the name of the file to save.
+        file_path(str): the path where the file is located
+
+    Returns:
+        The file full path
+    """
     import h5py
     import os
     from fuel.datasets.hdf5 import H5PYDataset
@@ -201,6 +217,7 @@ def to_fuel_h5(inputs, outputs, slices, names,
 
 
 def max_v_len(iterable_to_check):
+    """Returns the max length of a list of iterable"""
     max_v = 0
     for _, v in norm_iterator(iterable_to_check):
         if len(v) > max_v:
