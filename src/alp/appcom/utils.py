@@ -189,7 +189,7 @@ def to_fuel_h5(inputs, outputs, slices, names,
     inp = 'input_'
     out = 'output_'
 
-    full_path = os.path.join(file_location, file_name.lower() + '.' + suffix)
+    full_path = os.path.join(file_path, file_name.lower() + '.' + suffix)
     f = h5py.File(full_path, mode='w')
 
     dict_data_set = dict()
