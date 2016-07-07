@@ -46,7 +46,7 @@ install:
   - pip --version
   - tox --version
 script:
-  - tox -vv
+  - tox -v
 after_failure:
   - more .tox/log/* | cat
   - more .tox/*/log/* | cat
