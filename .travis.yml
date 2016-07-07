@@ -25,9 +25,7 @@ apt:
     - libhdf5-dev
 before_install:
   - sudo mkdir /data_generator
-  - sudo chmod 755 /data_generator
-  - ls -alh /data_generator
-  - ls -al
+  - sudo chmod 777 /data_generator
   - sudo rabbitmqctl stop
   - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1397BC53640DB551
   - sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
@@ -48,7 +46,7 @@ install:
   - pip --version
   - tox --version
 script:
-  - sudo tox -vv
+  - tox -vv
 after_failure:
   - more .tox/log/* | cat
   - more .tox/*/log/* | cat
