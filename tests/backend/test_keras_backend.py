@@ -37,7 +37,6 @@ test_samples = 64
 NAME = keras.__name__
 VERSION = keras.__version__
 
-
 class Dropout_cust(Layer):
     '''Applies Dropout to the input.
     '''
@@ -376,7 +375,7 @@ def test_experiment_sequential():
     model.add(Dense(nb_class, activation='softmax'))
 
     custom_objects = {'Dropout_cust': Dropout_cust}
-    _test_experiment(model)
+    _test_experiment(model, custom_objects)
 
 
 def test_experiment_model():

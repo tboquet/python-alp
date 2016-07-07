@@ -65,6 +65,7 @@ def serialize(cust_obj):
         ser_func['clos_d'] = dill.dumps(six.get_function_closure(cust_obj))
         ser_func['type_obj'] = 'func'
     else:
+        cust_obj.__module__ = '__main__'
         func_code_d = dill.dumps(cust_obj).decode('raw_unicode_escape')
         ser_func['func_code_d'] = func_code_d
         ser_func['name_d'] = None
