@@ -24,6 +24,10 @@ apt:
   packages:
     - libhdf5-dev
 before_install:
+  - sudo mkdir /data_generator
+  - sudo chmod 755 /data_generator
+  - ls -alh /data_generator
+  - ls -al
   - sudo rabbitmqctl stop
   - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1397BC53640DB551
   - sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
@@ -34,7 +38,7 @@ before_install:
   - python --version
   - uname -a
   - lsb_release -a
-  - if [[ ("$TOXENV" == "py27,coveralls,codecov") ]]; then docker run --name mongo_results -v /opt/data/mongo_data/results:/data/db -p 27018:27017 -d --restart=always mongo; docker run --name mongo_models -v /opt/data/mongo_data/models:/data/db -d --restart=always mongo; docker run -d -v /opt/data/rabbitmq/dev/log:/dev/log -v /opt/data/rabbitmq:/var/lib/rabbitmq  --name=rabbitmq_sched -p 8080:15672 -p 5672:5672 --restart=always rabbitmq:3-management; docker run -d -v /opt/data/parameters_h5:/parameters_h5 -v /opt/data/r2dbh5:/r2dbh5 -v ~:/data_generator -e WORKER=TRUE --link=mongo_results:mongo_r --link=mongo_models:mongo_m --link=rabbitmq_sched:rabbitmq --name=the_worker_a --restart=always tboquet/travis_worker:latest;fi
+  - if [[ ("$TOXENV" == "py27,coveralls,codecov") ]]; then docker run --name mongo_results -v /opt/data/mongo_data/results:/data/db -p 27018:27017 -d --restart=always mongo; docker run --name mongo_models -v /opt/data/mongo_data/models:/data/db -d --restart=always mongo; docker run -d -v /opt/data/rabbitmq/dev/log:/dev/log -v /opt/data/rabbitmq:/var/lib/rabbitmq  --name=rabbitmq_sched -p 8080:15672 -p 5672:5672 --restart=always rabbitmq:3-management; docker run -d -v /opt/data/parameters_h5:/parameters_h5 -v /opt/data/r2dbh5:/r2dbh5 -v /data_generator:/data_generator -e WORKER=TRUE --link=mongo_results:mongo_r --link=mongo_models:mongo_m --link=rabbitmq_sched:rabbitmq --name=the_worker_a --restart=always tboquet/travis_worker:latest;fi
   - if [[ ("$TOXENV" == "py34,coveralls,codecov" || "$TOXENV" == "py35,coveralls,codecov") ]]; then docker run --name mongo_results -v /opt/data/mongo_data/results:/data/db -p 27018:27017 -d --restart=always mongo; docker run --name mongo_models -v /opt/data/mongo_data/models:/data/db -d --restart=always mongo; docker run -d -v /opt/data/rabbitmq/dev/log:/dev/log -v /opt/data/rabbitmq:/var/lib/rabbitmq  --name=rabbitmq_sched -p 8080:15672 -p 5672:5672 --restart=always rabbitmq:3-management; docker run -d -v /opt/data/parameters_h5:/parameters_h5 -v /opt/data/r2dbh5:/r2dbh5 -v /data_generator:/data_generator -e WORKER=TRUE --link=mongo_results:mongo_r --link=mongo_models:mongo_m --link=rabbitmq_sched:rabbitmq --name=the_worker_a --restart=always tboquet/travis_worker:py3;fi
 install:
   - pip install tox
@@ -44,7 +48,7 @@ install:
   - pip --version
   - tox --version
 script:
-  - tox -v
+  - sudo tox -vv
 after_failure:
   - more .tox/log/* | cat
   - more .tox/*/log/* | cat

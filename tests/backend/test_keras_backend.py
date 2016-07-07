@@ -171,22 +171,22 @@ def _test_experiment(model, custom_objects=None):
         inputs[inp_name] = np.concatenate([data['X'], data_val['X']])
         outputs[out_name] = np.concatenate([data['y'], data_val['y']])
 
-    full_path = to_fuel_h5(inputs, outputs, [0, 164], ['train', 'test'],
-                           'test_data' + str(model_name), '~/')
+    file_name = 'test_data_' + str(model_name)
+    file_path = to_fuel_h5(inputs, outputs, [0, 164], ['train', 'test'],
+                           file_name,
+                           '/data_generator')
 
-    train_set = H5PYDataset(full_path, which_sets=('train','test'))
-
-    state_train = train_set.open()
+    train_set = H5PYDataset(file_path,
+                            which_sets=('train','test'))
 
     scheme = SequentialScheme(examples=128, batch_size=32)
 
     data_stream_train = DataStream(dataset=train_set, iteration_scheme=scheme)
 
     stand_stream_train = ScaleAndShift(data_stream=data_stream_train,
-                                        scale=scale, shift=shift,
-                                        which_sources=('input_X',))
+                                       scale=scale, shift=shift,
+                                       which_sources=('input_X',))
 
-    print("Gen simple generator")
     expe.fit_gen([stand_stream_train], [data_val],
                  model=model,
                  metrics=metrics,
@@ -194,7 +194,6 @@ def _test_experiment(model, custom_objects=None):
                  nb_epoch=2,
                  samples_per_epoch=128)
 
-    print("Gen double generator")
     expe.fit_gen([stand_stream_train], [stand_stream_train],
                  model=model,
                  metrics=metrics,
@@ -203,7 +202,6 @@ def _test_experiment(model, custom_objects=None):
                  samples_per_epoch=128,
                  nb_val_samples=128)
 
-    print("Gen async")
     expe.fit_gen_async([stand_stream_train], [stand_stream_train],
                        model=model,
                        metrics=metrics,
@@ -214,7 +212,7 @@ def _test_experiment(model, custom_objects=None):
 
     stand_stream_train.close()
     data_stream_train.close()
-    train_set.close(state_train)
+    train_set.close(None)
 
 
 def test_build_predict_func():
