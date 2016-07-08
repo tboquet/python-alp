@@ -234,6 +234,7 @@ class TestExperiment:
                       metrics=['accuracy'])
 
         expe = Experiment(model)
+        print(self)
 
         assert expe.backend is not None
 
@@ -262,6 +263,7 @@ class TestExperiment:
             assert expe.data_id is not None
             assert expe.mod_id is not None
             assert expe.params_dump is not None
+        print(self)
 
     def test_experiment_fit_async(self, get_model, get_loss_metric,
                                   get_custom_l):
@@ -282,6 +284,7 @@ class TestExperiment:
             expe.fit_async([data], [data_val], nb_epoch=2,
                     batch_size=batch_size, metrics=metrics,
                     custom_objects=cust_objects)
+        print(self)
 
     def test_experiment_fit_gen(self, get_model, get_loss_metric,
                                 get_custom_l):
@@ -326,6 +329,7 @@ class TestExperiment:
         gen.close()
         data.close(None)
         data_stream.close()
+        print(self)
 
     def test_experiment_fit_gen_async(self, get_model, get_loss_metric,
                                       get_custom_l):
@@ -361,6 +365,7 @@ class TestExperiment:
         gen.close()
         data.close(None)
         data_stream.close()
+        print(self)
 
 
 def test_build_predict_func():
