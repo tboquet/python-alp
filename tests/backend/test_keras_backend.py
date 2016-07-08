@@ -4,6 +4,7 @@ import keras
 import keras.backend as K
 import numpy as np
 import pytest
+import six
 
 from fuel.datasets.hdf5 import H5PYDataset
 from fuel.schemes import SequentialScheme
@@ -19,8 +20,10 @@ from keras.utils import np_utils
 from keras.utils.test_utils import get_test_data
 
 from alp.appcom.core import Experiment
+from alp.appcom.utils import imports
 from alp.appcom.utils import switch_backend
 from alp.appcom.utils import to_fuel_h5
+from alp.appcom.utils import background
 from alp.backend import keras_backend as KTB
 from alp.backend.keras_backend import get_function_name
 from alp.backend.keras_backend import to_dict_w_opt
@@ -36,6 +39,67 @@ train_samples = 128
 test_samples = 64
 NAME = keras.__name__
 VERSION = keras.__version__
+
+def make_data():
+    (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
+                                                nb_test=test_samples,
+                                                input_shape=(input_dim,),
+                                                classification=True,
+                                                nb_class=nb_class)
+
+    y_tr = np_utils.to_categorical(y_tr)
+    y_te = np_utils.to_categorical(y_te)
+
+    data, data_val = dict(), dict()
+
+    data["X"] = X_tr
+    data["y"] = y_tr
+
+    data_val["X"] = X_te
+    data_val["y"] = y_te
+    return data, data_val
+
+
+def dump_data(graph=False):
+    data, data_val = make_data()
+    inputs = [np.concatenate([data['X'], data_val['X']])]
+    outputs = [np.concatenate([data['y'], data_val['y']])]
+
+    file_name = 'test_data_'
+    scale = 1.0 / inputs[0].std(axis=0)
+    shift = - scale * inputs[0].mean(axis=0)
+    if graph:
+        inputs = {'X': np.concatenate([data['X'], data_val['X']])}
+        outputs = {'y': np.concatenate([data['y'], data_val['y']])}
+        file_name += "graph_"
+        scale = 1.0 / inputs['X'].std(axis=0)
+        shift = - scale * inputs['X'].mean(axis=0)
+
+    file_path = to_fuel_h5(inputs, outputs, [0, 164], ['train', 'test'],
+                           file_name,
+                           '/data_generator')
+    return file_path, scale, shift
+
+file_path, scale, shift = dump_data()
+file_path_g, scale_g, shift_g = dump_data(graph=True)
+
+
+def make_gen(graph=False):
+    file_path_f = file_path
+    if graph:
+        file_path_f = file_path_g
+    train_set = H5PYDataset(file_path_f,
+                            which_sets=('train','test'))
+
+    scheme = SequentialScheme(examples=128, batch_size=32)
+
+    data_stream_train = DataStream(dataset=train_set, iteration_scheme=scheme)
+
+    stand_stream_train = ScaleAndShift(data_stream=data_stream_train,
+                                       scale=scale, shift=shift,
+                                       which_sources=('input_X',))
+    return stand_stream_train, train_set, data_stream_train
+
 
 class Dropout_cust(Layer):
     '''Applies Dropout to the input.
@@ -58,160 +122,245 @@ class Dropout_cust(Layer):
         return dict(list(base_config.items()) + list(config.items()))
 
 
-def _test_experiment(model, custom_objects=None):
-    from alp.appcom.utils import imports
+def sequential(custom=False):
+    model = Sequential()
+    model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
+    model.add(Dense(nb_class, activation='softmax'))
+    if custom:
+        model.add(Dropout_cust(0.5))
+    return model
 
-    if custom_objects is None:
-        custom_objects = dict()
+
+def model(custom=False):
+    inputs = Input(shape=(input_dim,), name='X')
+
+    x = Dense(nb_hidden, activation='relu')(inputs)
+    x = Dense(nb_hidden, activation='relu')(x)
+    if custom:
+        x = Dropout_cust(0.5)(x)
+    predictions = Dense(nb_class, activation='softmax')(x)
+
+    model = Model(input=inputs, output=predictions)
+    return model
+
+
+def graph(custom=False):
+    name='dense1'
+    model = Graph()
+    model.add_input(name='X', input_shape=(input_dim, ))
+
+    model.add_node(Dense(nb_hidden, activation="sigmoid"),
+                name='dense1', input='X')
+    if custom:
+        name = 'do'
+        model.add_node(Dropout_cust(0.5), name=name, input='dense1')
+    model.add_node(Dense(nb_class, activation="softmax"),
+                   name='last_dense',
+                   input=name)
+
+    model.add_output(name='y', input='last_dense')
+    return model
+
+
+def prepare_model(get_model, get_loss_metric, custom):
+    model = get_model
+
+    loss, metric = get_loss_metric
+
+    cust_objects = dict()
+
+    metrics = [metric]
+
+    if not isinstance(loss, six.string_types):
+        cust_objects = dict()
+        cust_objects['cat_cross'] = loss
+    if custom:
+        cust_objects['Dropout_vust'] = Dropout_cust
+    model.compile(loss=loss,
+                    optimizer='rmsprop',
+                    metrics=metrics)
+    return model, metrics, cust_objects
+
+
+@pytest.fixture
+def get_loss():
     @imports({"K": K})
-    def categorical_crossentropy_custom(y_true, y_pred):
+    def cat_cross(y_true, y_pred):
         '''A test of custom loss function
         '''
         return K.categorical_crossentropy(y_pred, y_true)
+    return cat_cross
 
+
+@pytest.fixture
+def get_metric():
     @imports({"K": K})
     def cosine_proximity(y_true, y_pred):
         y_true = K.l2_normalize(y_true, axis=-1)
         y_pred = K.l2_normalize(y_pred, axis=-1)
         return -K.mean(y_true * y_pred)
+    return cosine_proximity
 
-    (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
-                                                nb_test=test_samples,
-                                                input_shape=(input_dim,),
-                                                classification=True,
-                                                nb_class=nb_class)
 
-    y_tr = np_utils.to_categorical(y_tr)
-    y_te = np_utils.to_categorical(y_te)
+class TestExperiment:
+    @pytest.fixture(params=['sequential', 'model', 'graph'])
+    def get_model(self, request):
+        if request.param == 'sequential':
+            return sequential
+        elif request.param == 'model':
+            return model
+        elif request.param == 'graph':
+            return graph
 
-    data, data_val = dict(), dict()
+    @pytest.fixture(params=['classic', 'custom'])
+    def get_loss_metric(self, request):
+        if request.param == 'classic':
+            return 'categorical_crossentropy', 'accuracy'
+        elif request.param == 'custom':
+            return get_loss(), get_metric()
 
-    data["X"] = X_tr
-    data["y"] = y_tr
+    @pytest.fixture(params=['c_layer', ''])
+    def get_custom_l(self, request):
+        if request.param == 'c_layer':
+            return True
+        elif request.param == '':
+            return False
 
-    data_val["X"] = X_te
-    data_val["y"] = y_te
+    def test_experiment_instance(self, get_model):
+        model = get_model()
 
-    metrics = ['accuracy', cosine_proximity]
+        model.compile(loss='categorical_crossentropy',
+                      optimizer='rmsprop',
+                      metrics=['accuracy'])
 
-    cust_objects = dict()
-    cust_objects['categorical_crossentropy_custom'] = categorical_crossentropy_custom
-    cust_objects.update(custom_objects)
+        expe = Experiment(model)
 
-    model.compile(loss=categorical_crossentropy_custom,
-                  optimizer='rmsprop',
-                  metrics=['accuracy'])
+        assert expe.backend is not None
 
-    expe = Experiment(model)
+    def test_experiment_fit(self, get_model, get_loss_metric,
+                            get_custom_l):
+        data, data_val = make_data()
+        model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
+                                                     get_loss_metric,
+                                                     get_custom_l)
 
-    assert expe.backend is not None
+        expe = Experiment(model)
 
-    expe.fit([data], [data_val], custom_objects=cust_objects, nb_epoch=2,
-             batch_size=batch_size, metrics=metrics)
+        if get_custom_l:
+            with pytest.raises(RuntimeError) as excinfo:
+                expe.fit([data], [data_val], nb_epoch=2,
+                        batch_size=batch_size, metrics=metrics,
+                        custom_objects=cust_objects)
+                print(excinfo)
+        else:
+            expe.fit([data], [data_val], nb_epoch=2,
+                    batch_size=batch_size, metrics=metrics,
+                    custom_objects=cust_objects)
+            expe.load_model()
+            expe.load_model(expe.mod_id, expe.data_id)
 
-    # check data_id
-    assert expe.data_id is not None
+            assert expe.data_id is not None
+            assert expe.mod_id is not None
+            assert expe.params_dump is not None
 
-    # check mod_id
-    assert expe.mod_id is not None
+    def test_experiment_fit_async(self, get_model, get_loss_metric,
+                                  get_custom_l):
+        data, data_val = make_data()
+        model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
+                                                     get_loss_metric,
+                                                     get_custom_l)
 
-    # check params_dump
-    assert expe.params_dump is not None
+        expe = Experiment(model)
 
-    # async
-    expe.fit_async([data], [data_val], custom_objects=cust_objects,
-                   nb_epoch=2, batch_size=batch_size)
+        if get_custom_l:
+            with pytest.raises(RuntimeError) as excinfo:
+                expe.fit_async([data], [data_val], nb_epoch=2,
+                               batch_size=batch_size, metrics=metrics,
+                               custom_objects=cust_objects)
+                print(excinfo)
+        else:
+            expe.fit_async([data], [data_val], nb_epoch=2,
+                    batch_size=batch_size, metrics=metrics,
+                    custom_objects=cust_objects)
 
-    # try to reload the same model
-    expe.backend_name = "test"
-    expe.load_model()
+    def test_experiment_fit_gen(self, get_model, get_loss_metric,
+                                get_custom_l):
+        model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
+                                                     get_loss_metric,
+                                                     get_custom_l)
 
-    expe.load_model(expe.mod_id, expe.data_id)
-    # check the serialization of the model
-    expe.model_dict = model
+        model_name = model.__class__.__name__
+        is_graph = model_name.lower() == 'graph'
+        _, data_val_use = make_data()
+        expe = Experiment(model)
+        gen, data, data_stream = make_gen(is_graph)
 
-    expe.fit([data], [data_val], model=model,
-             custom_objects=cust_objects, nb_epoch=2,
-             batch_size=batch_size)
-    expe.predict(data['X'].astype('float32'))
 
-    # check if the cached model is used
-    expe.predict(data['X'].astype('float32'))
-    expe.predict([data['X'].astype('float32')])
-    if model.__class__.__name__ != 'Sequential':
-        expe.predict({k: data[k].astype('float32') for k in data})
+        if get_custom_l:
+            for val in [gen, data_val_use]:
+                with pytest.raises(RuntimeError) as excinfo:
+                    expe.fit_gen([gen], [val], nb_epoch=2,
+                                 model=model,
+                                 metrics=metrics,
+                                 custom_objects=cust_objects,
+                                 samples_per_epoch=128,
+                                 nb_val_samples=128)
+                    print(excinfo)
+        else:
+            for val in [gen, data_val_use]:
+                gen, data, data_stream = make_gen(is_graph)
+                expe.fit_gen([gen], [val], nb_epoch=2,
+                                model=model,
+                                metrics=metrics,
+                                custom_objects=cust_objects,
+                                samples_per_epoch=128,
+                                nb_val_samples=128)
+                gen.close()
+                data.close(None)
+                data_stream.close()
 
-    model.compile(loss=[categorical_crossentropy_custom],
-                  optimizer='rmsprop',
-                  metrics=['accuracy'])
-    expe = Experiment(model)
+            assert expe.data_id is not None
+            assert expe.mod_id is not None
+            assert expe.params_dump is not None
 
-    expe.fit([data], [data_val], model=model,
-             custom_objects=cust_objects, nb_epoch=2,
-             batch_size=batch_size)
+        gen.close()
+        data.close(None)
+        data_stream.close()
 
-    expe.fit_async([data], [data_val], model=model, metrics=metrics,
-                   custom_objects=cust_objects,
-                   nb_epoch=2, batch_size=batch_size)
+    def test_experiment_fit_gen_async(self, get_model, get_loss_metric,
+                                      get_custom_l):
+        model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
+                                                     get_loss_metric,
+                                                     get_custom_l)
 
-    inputs = [np.concatenate([data['X'], data_val['X']])]
-    outputs = [np.concatenate([data['y'], data_val['y']])]
+        model_name = model.__class__.__name__
+        is_graph = model_name.lower() == 'graph'
+        _, data_val_use = make_data()
+        expe = Experiment(model)
+        gen, data, data_stream = make_gen(is_graph)
 
-    scale = 1.0 / inputs[0].std(axis=0)
-    shift = - scale * inputs[0].mean(axis=0)
+        if get_custom_l:
+            for val in [gen, data_val_use]:
+                with pytest.raises(RuntimeError) as excinfo:
+                    expe.fit_gen_async([gen], [val], nb_epoch=2,
+                                       model=model,
+                                       metrics=metrics,
+                                       custom_objects=cust_objects,
+                                       samples_per_epoch=128,
+                                       nb_val_samples=128)
+                    print(excinfo)
+        else:
+            for val in [gen, data_val_use]:
+                expe.fit_gen_async([gen], [val], nb_epoch=2,
+                                   model=model,
+                                   metrics=metrics,
+                                   custom_objects=cust_objects,
+                                   samples_per_epoch=128,
+                                   nb_val_samples=128)
 
-    model_name = model.__class__.__name__
-
-    if model_name  == 'Graph':
-        inp_name = model.input_names[0]
-        out_name = model.output_names[0]
-        inputs = dict()
-        outputs = dict()
-        inputs[inp_name] = np.concatenate([data['X'], data_val['X']])
-        outputs[out_name] = np.concatenate([data['y'], data_val['y']])
-
-    file_name = 'test_data_' + str(model_name)
-    file_path = to_fuel_h5(inputs, outputs, [0, 164], ['train', 'test'],
-                           file_name,
-                           '/data_generator')
-
-    train_set = H5PYDataset(file_path,
-                            which_sets=('train','test'))
-
-    scheme = SequentialScheme(examples=128, batch_size=32)
-
-    data_stream_train = DataStream(dataset=train_set, iteration_scheme=scheme)
-
-    stand_stream_train = ScaleAndShift(data_stream=data_stream_train,
-                                       scale=scale, shift=shift,
-                                       which_sources=('input_X',))
-
-    expe.fit_gen([stand_stream_train], [data_val],
-                 model=model,
-                 metrics=metrics,
-                 custom_objects=cust_objects,
-                 nb_epoch=2,
-                 samples_per_epoch=128)
-
-    expe.fit_gen([stand_stream_train], [stand_stream_train],
-                 model=model,
-                 metrics=metrics,
-                 custom_objects=cust_objects,
-                 nb_epoch=2,
-                 samples_per_epoch=128,
-                 nb_val_samples=128)
-
-    expe.fit_gen_async([stand_stream_train], [stand_stream_train],
-                       model=model,
-                       metrics=metrics,
-                       custom_objects=cust_objects,
-                       nb_epoch=2,
-                       samples_per_epoch=128,
-                       nb_val_samples=128)
-
-    stand_stream_train.close()
-    data_stream_train.close()
-    train_set.close(None)
+        gen.close()
+        data.close(None)
+        data_stream.close()
 
 
 def test_build_predict_func():
@@ -248,23 +397,7 @@ def test_build_predict_func():
 
 def test_fit():
     "Test the training of a serialized model"
-
-    (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
-                                                nb_test=test_samples,
-                                                input_shape=(input_dim,),
-                                                classification=True,
-                                                nb_class=nb_class)
-
-    y_tr = np_utils.to_categorical(y_tr)
-    y_te = np_utils.to_categorical(y_te)
-
-    data, data_val = dict(), dict()
-
-    data["X"] = X_tr
-    data["y"] = y_tr
-
-    data_val["X"] = X_te
-    data_val["y"] = y_te
+    data, data_val = make_data()
 
     # Case 1 sequential model
     metrics = ['accuracy']
@@ -299,25 +432,17 @@ def test_fit():
     assert len(res) == 4
     # Case 3 Graph model
 
-    data, data_val = dict(), dict()
-
-    data["X_vars"] = X_tr
-    data["output"] = y_tr
-
-    data_val["X_vars"] = X_te
-    data_val["output"] = y_te
-
     model = Graph()
-    model.add_input(name='X_vars', input_shape=(input_dim, ))
+    model.add_input(name='X', input_shape=(input_dim, ))
 
     model.add_node(Dense(nb_hidden, activation="sigmoid"),
-                   name='Dense1', input='X_vars')
+                   name='Dense1', input='X')
     model.add_node(Dense(nb_class, activation="softmax"),
                    name='last_dense',
                    input='Dense1')
 
-    model.add_output(name='output', input='last_dense')
-    model.compile(optimizer='sgd', loss={'output': 'categorical_crossentropy'})
+    model.add_output(name='y', input='last_dense')
+    model.compile(optimizer='sgd', loss={'y': 'categorical_crossentropy'})
 
     model_dict = dict()
     model_dict['model_arch'] = to_dict_w_opt(model, metrics)
@@ -329,71 +454,9 @@ def test_fit():
 
 def test_predict():
     """Test the prediction using the backend"""
-    (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
-                                                nb_test=test_samples,
-                                                input_shape=(input_dim,),
-                                                classification=True,
-                                                nb_class=nb_class)
 
-    y_tr = np_utils.to_categorical(y_tr)
-    y_te = np_utils.to_categorical(y_te)
+    data, data_val = make_data()
 
-    data, data_val = dict(), dict()
-
-    data["X_vars"] = X_tr
-    data["output"] = y_tr
-
-    data_val["X_vars"] = X_te
-    data_val["output"] = y_te
-    model = Graph()
-    model.add_input(name='X_vars', input_shape=(input_dim, ))
-
-    model.add_node(Dense(nb_hidden, activation="sigmoid"),
-                   name='Dense1', input='X_vars')
-    model.add_node(Dense(nb_class, activation="softmax"),
-                   name='last_dense',
-                   input='Dense1')
-
-    model.add_output(name='output', input='last_dense')
-    model.compile(optimizer='sgd', loss={'output': 'categorical_crossentropy'})
-
-    expe = Experiment(model)
-    expe.fit([data], [data_val])
-    KTB.predict(expe.model_dict, [data['X_vars']])
-
-
-def test_utils():
-    assert get_function_name("bob") == "bob"
-    test_switch = switch_backend('sklearn')
-    assert test_switch is not None
-
-
-def test_experiment_sequential():
-    """Test the Experiment class with Sequential"""
-    model = Sequential()
-    model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
-    model.add(Dense(nb_class, activation='softmax'))
-
-    custom_objects = {'Dropout_cust': Dropout_cust}
-    _test_experiment(model, custom_objects)
-
-
-def test_experiment_model():
-    """Test the Experiment class with Model"""
-
-
-    inputs = Input(shape=(input_dim,), name='X')
-
-    x = Dense(nb_hidden, activation='relu')(inputs)
-    x = Dense(nb_hidden, activation='relu')(x)
-    predictions = Dense(nb_class, activation='softmax')(x)
-
-    model = Model(input=inputs, output=predictions)
-    _test_experiment(model)
-
-
-def test_experiment_legacy():
-    """Test the Experiment class with Model"""
     model = Graph()
     model.add_input(name='X', input_shape=(input_dim, ))
 
@@ -404,7 +467,56 @@ def test_experiment_legacy():
                    input='Dense1')
 
     model.add_output(name='y', input='last_dense')
-    _test_experiment(model)
+    model.compile(optimizer='sgd', loss={'y': 'categorical_crossentropy'})
+
+    expe = Experiment(model)
+    expe.fit([data], [data_val])
+    KTB.predict(expe.model_dict, [data['X']])
+
+
+def test_utils():
+    assert get_function_name("bob") == "bob"
+    test_switch = switch_backend('sklearn')
+    assert test_switch is not None
+
+
+# def test_experiment_sequential():
+#     """Test the Experiment class with Sequential"""
+#     model = Sequential()
+#     model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
+#     model.add(Dense(nb_class, activation='softmax'))
+#     model.add(Dropout_cust(0.5))
+#     custom_objects = {'Dropout_cust': Dropout_cust}
+#     _test_experiment(model, custom_objects)
+
+
+# def test_experiment_model():
+#     """Test the Experiment class with Model"""
+
+
+#     inputs = Input(shape=(input_dim,), name='X')
+
+#     x = Dense(nb_hidden, activation='relu')(inputs)
+#     x = Dense(nb_hidden, activation='relu')(x)
+#     predictions = Dense(nb_class, activation='softmax')(x)
+
+#     model = Model(input=inputs, output=predictions)
+#     _test_experiment(model)
+
+
+# def test_experiment_legacy():
+#     """Test the Experiment class with Model"""
+#     model = Graph()
+#     model.add_input(name='X', input_shape=(input_dim, ))
+
+#     model.add_node(Dense(nb_hidden, activation="sigmoid"),
+#                    name='Dense1', input='X')
+#     model.add_node(Dense(nb_class, activation="softmax"),
+#                    name='last_dense',
+#                    input='Dense1')
+
+#     model.add_output(name='y', input='last_dense')
+#     _test_experiment(model)
 
 
 if __name__ == "__main__":
