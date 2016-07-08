@@ -211,6 +211,7 @@ class TestExperiment:
             return model
         elif request.param == 'graph':
             return graph
+        print(self)
 
     @pytest.fixture(params=['classic', 'custom'])
     def get_loss_metric(self, request):
@@ -218,6 +219,7 @@ class TestExperiment:
             return 'categorical_crossentropy', 'accuracy'
         elif request.param == 'custom':
             return get_loss(), get_metric()
+        print(self)
 
     @pytest.fixture(params=['c_layer', ''])
     def get_custom_l(self, request):
@@ -225,6 +227,7 @@ class TestExperiment:
             return True
         elif request.param == '':
             return False
+        print(self)
 
     def test_experiment_instance(self, get_model):
         model = get_model()
