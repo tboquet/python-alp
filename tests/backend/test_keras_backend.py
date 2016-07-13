@@ -167,18 +167,26 @@ def prepare_model(get_model, get_loss_metric, custom):
 
     loss, metric = get_loss_metric
 
+    print(loss, metric)
+
     cust_objects = dict()
 
     metrics = [metric]
 
     if not isinstance(loss, six.string_types):
-        cust_objects = dict()
         cust_objects['cat_cross'] = loss
+        if isinstance(loss, list):
+            cust_objects['cat_cross'] = loss[-1]
+
     if custom:
-        cust_objects['Dropout_vust'] = Dropout_cust
+        cust_objects['Dropout_cust'] = Dropout_cust
+
+    print(cust_objects)
+
     model.compile(loss=loss,
-                    optimizer='rmsprop',
-                    metrics=metrics)
+                  optimizer='rmsprop',
+                  metrics=metrics,
+                  custom_objects=cust_objects)
     return model, metrics, cust_objects
 
 
@@ -374,9 +382,14 @@ class TestExperiment:
 
     def test_experiment_predict(self, get_model, get_loss_metric):
 
+        model, metrics, cust_objects = prepare_model(get_model(),
+                                                     get_loss_metric,
+                                                     False)
         data, data_val = make_data()
+        expe = Experiment(model)
         expe.fit([data], [data_val], nb_epoch=2,
-                 batch_size=batch_size)
+                 batch_size=batch_size,
+                 custom_objects=cust_objects)
         expe.predict([data_val['X']])
 
 
@@ -471,9 +484,7 @@ def test_fit():
 
 def test_predict():
     """Test the prediction using the backend"""
-
     data, data_val = make_data()
-
     model = Graph()
     model.add_input(name='X', input_shape=(input_dim, ))
 
@@ -487,9 +498,7 @@ def test_predict():
     model.compile(optimizer='sgd', loss={'y': 'categorical_crossentropy'})
 
     expe = Experiment(model)
-    expe.fit([data], [data_val])
-    KTB.predict(expe.model_dict, [data['X']])
-    expe.fit([data], [data_val])
+    res = expe.fit([data], [data_val])
     KTB.predict(expe.model_dict, [data['X']])
 
 
