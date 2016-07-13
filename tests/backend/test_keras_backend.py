@@ -389,7 +389,8 @@ class TestExperiment:
         expe = Experiment(model)
         expe.fit([data], [data_val], nb_epoch=2,
                  batch_size=batch_size,
-                 custom_objects=cust_objects)
+                 custom_objects=cust_objects,
+                 metrics=metrics)
         expe.predict([data_val['X']])
 
 
@@ -420,7 +421,7 @@ def test_build_predict_func():
     model.compile(optimizer='sgd', loss={'output': 'mse'})
 
     pred_func = KTB.build_predict_func(model)
-    res = pred_func([X_tr])
+    pred_func([X_tr])
 
     assert len(res[0]) == len(X_tr)
 
