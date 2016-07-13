@@ -11,6 +11,7 @@ from fuel.streams import DataStream
 from fuel.transformers import ScaleAndShift
 from keras.engine import Layer
 from keras.layers import Dense
+from keras.layers import Dropout
 from keras.layers import Input
 from keras.models import Graph
 from keras.models import Model
@@ -124,6 +125,7 @@ def sequential(custom=False):
     model = Sequential()
     model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
     model.add(Dense(nb_class, activation='softmax'))
+    model.add(Dropout(0.5))
     if custom:
         model.add(Dropout_cust(0.5))
     return model
@@ -134,6 +136,7 @@ def model(custom=False):
 
     x = Dense(nb_hidden, activation='relu')(inputs)
     x = Dense(nb_hidden, activation='relu')(x)
+    x = Dropout(0.5)(x)
     predictions = Dense(nb_class, activation='softmax')(x)
 
     model = Model(input=inputs, output=predictions)
@@ -144,6 +147,8 @@ def graph(custom=False):
     name='dense1'
     model = Graph()
     model.add_input(name='X', input_shape=(input_dim, ))
+
+    model.add_input(Dropout(0.5))
 
     model.add_node(Dense(nb_hidden, activation="sigmoid"),
                 name='dense1', input='X')
@@ -209,12 +214,14 @@ class TestExperiment:
             return graph
         print(self)
 
-    @pytest.fixture(params=['classic', 'custom'])
+    @pytest.fixture(params=['classic', 'custom', 'list'])
     def get_loss_metric(self, request):
         if request.param == 'classic':
             return 'categorical_crossentropy', 'accuracy'
         elif request.param == 'custom':
             return get_loss(), get_metric()
+        elif request.param == 'list':
+            return [get_loss()], get_metric()
         print(self)
 
     @pytest.fixture(params=['c_layer', ''])

@@ -66,12 +66,12 @@ def serialize(cust_obj):
         ser_func['type_obj'] = 'func'
     else:
         cust_obj.__module__ = '__main__'
-        func_code_d = dill.dumps(cust_obj).decode('raw_unicode_escape')
-        ser_func['func_code_d'] = func_code_d
         ser_func['name_d'] = None
         ser_func['args_d'] = None
         ser_func['clos_d'] = None
         ser_func['type_obj'] = 'class'
+        ser_func['func_code_d'] = dill.dumps(cust_obj).decode(
+            'raw_unicode_escape')
     return ser_func
 
 
@@ -93,7 +93,7 @@ def deserialize(name_d, func_code_d, args_d, clos_d, type_obj):
         args = marshal.loads(args_d)
         clos = dill.loads(clos_d)
         loaded_obj = types.FunctionType(code, globals(), name, args, clos)
-    else:
+    else:  # pragma: no cover
         loaded_obj = dill.loads(func_code_d.encode('raw_unicode_escape'))
 
     return loaded_obj
