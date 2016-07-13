@@ -392,6 +392,7 @@ class TestExperiment:
                  custom_objects=cust_objects,
                  metrics=metrics)
         expe.predict([data_val['X']])
+        print(self)
 
 
 def test_build_predict_func():
@@ -499,7 +500,7 @@ def test_predict():
     model.compile(optimizer='sgd', loss={'y': 'categorical_crossentropy'})
 
     expe = Experiment(model)
-    res = expe.fit([data], [data_val])
+    expe.fit([data], [data_val])
     KTB.predict(expe.model_dict, [data['X']])
 
 
