@@ -64,6 +64,13 @@ def serialize(cust_obj):
         ser_func['args_d'] = marshal.dumps(six.get_function_defaults(cust_obj))
         ser_func['clos_d'] = dill.dumps(six.get_function_closure(cust_obj))
         ser_func['type_obj'] = 'func'
+    elif isinstance(cust_obj, list):
+        ser_func['name_d'] = None
+        ser_func['args_d'] = None
+        ser_func['clos_d'] = None
+        ser_func['type_obj'] = 'list'
+        ser_func['func_code_d'] = dill.dumps(cust_obj).decode(
+            'raw_unicode_escape')
     else:
         cust_obj.__module__ = '__main__'
         ser_func['name_d'] = None
@@ -93,6 +100,8 @@ def deserialize(name_d, func_code_d, args_d, clos_d, type_obj):
         args = marshal.loads(args_d)
         clos = dill.loads(clos_d)
         loaded_obj = types.FunctionType(code, globals(), name, args, clos)
+    elif type_obj == 'list':
+        loaded_obj = dill.loads(func_code_d.encode('raw_unicode_escape'))
     else:  # pragma: no cover
         loaded_obj = dill.loads(func_code_d.encode('raw_unicode_escape'))
 
