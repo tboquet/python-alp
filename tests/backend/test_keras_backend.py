@@ -148,8 +148,6 @@ def graph(custom=False):
     model = Graph()
     model.add_input(name='X', input_shape=(input_dim, ))
 
-    model.add_input(Dropout(0.5))
-
     model.add_node(Dense(nb_hidden, activation="sigmoid"),
                 name='dense1', input='X')
     if custom:
@@ -158,8 +156,9 @@ def graph(custom=False):
     model.add_node(Dense(nb_class, activation="softmax"),
                    name='last_dense',
                    input=name)
+    model.add_node(Dropout(0.5), name='last_dropout', input='last_dense')
 
-    model.add_output(name='y', input='last_dense')
+    model.add_output(name='y', input='last_dropout')
     return model
 
 
@@ -373,6 +372,13 @@ class TestExperiment:
         data_stream.close()
         print(self)
 
+    def test_experiment_predict(self, get_model, get_loss_metric):
+
+        data, data_val = make_data()
+        expe.fit([data], [data_val], nb_epoch=2,
+                 batch_size=batch_size)
+        expe.predict([data_val['X']])
+
 
 def test_build_predict_func():
     """Test the build of a model"""
@@ -483,51 +489,14 @@ def test_predict():
     expe = Experiment(model)
     expe.fit([data], [data_val])
     KTB.predict(expe.model_dict, [data['X']])
+    expe.fit([data], [data_val])
+    KTB.predict(expe.model_dict, [data['X']])
 
 
 def test_utils():
     assert get_function_name("bob") == "bob"
     test_switch = switch_backend('sklearn')
     assert test_switch is not None
-
-
-# def test_experiment_sequential():
-#     """Test the Experiment class with Sequential"""
-#     model = Sequential()
-#     model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
-#     model.add(Dense(nb_class, activation='softmax'))
-#     model.add(Dropout_cust(0.5))
-#     custom_objects = {'Dropout_cust': Dropout_cust}
-#     _test_experiment(model, custom_objects)
-
-
-# def test_experiment_model():
-#     """Test the Experiment class with Model"""
-
-
-#     inputs = Input(shape=(input_dim,), name='X')
-
-#     x = Dense(nb_hidden, activation='relu')(inputs)
-#     x = Dense(nb_hidden, activation='relu')(x)
-#     predictions = Dense(nb_class, activation='softmax')(x)
-
-#     model = Model(input=inputs, output=predictions)
-#     _test_experiment(model)
-
-
-# def test_experiment_legacy():
-#     """Test the Experiment class with Model"""
-#     model = Graph()
-#     model.add_input(name='X', input_shape=(input_dim, ))
-
-#     model.add_node(Dense(nb_hidden, activation="sigmoid"),
-#                    name='Dense1', input='X')
-#     model.add_node(Dense(nb_class, activation="softmax"),
-#                    name='last_dense',
-#                    input='Dense1')
-
-#     model.add_output(name='y', input='last_dense')
-#     _test_experiment(model)
 
 
 if __name__ == "__main__":
