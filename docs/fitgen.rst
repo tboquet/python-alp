@@ -40,7 +40,7 @@ This dataset has a simple structure and you can divide it into multiple sets.
 .. code-block:: python
 
     slices = [0, 256, 512]
-    names = ['train', 'test', 'valid']  
+    names = ['train', 'test', 'valid']
     file_name = 'test_data_'
     scale = 1.0 / inputs[0].std(axis=0)
     shift = - scale * inputs[0].mean(axis=0)
