@@ -5,7 +5,6 @@ import keras.backend as K
 import numpy as np
 import pytest
 import six
-
 from fuel.datasets.hdf5 import H5PYDataset
 from fuel.schemes import SequentialScheme
 from fuel.streams import DataStream
@@ -23,7 +22,6 @@ from alp.appcom.core import Experiment
 from alp.appcom.utils import imports
 from alp.appcom.utils import switch_backend
 from alp.appcom.utils import to_fuel_h5
-from alp.appcom.utils import background
 from alp.backend import keras_backend as KTB
 from alp.backend.keras_backend import get_function_name
 from alp.backend.keras_backend import to_dict_w_opt
@@ -136,8 +134,6 @@ def model(custom=False):
 
     x = Dense(nb_hidden, activation='relu')(inputs)
     x = Dense(nb_hidden, activation='relu')(x)
-    if custom:
-        x = Dropout_cust(0.5)(x)
     predictions = Dense(nb_class, activation='softmax')(x)
 
     model = Model(input=inputs, output=predictions)
