@@ -35,7 +35,7 @@ input_dim = 2
 nb_hidden = 4
 nb_class = 2
 batch_size = 5
-train_samples = 128
+train_samples = 256
 test_samples = 64
 NAME = keras.__name__
 VERSION = keras.__version__
@@ -75,7 +75,7 @@ def dump_data(graph=False):
         scale = 1.0 / inputs['X'].std(axis=0)
         shift = - scale * inputs['X'].mean(axis=0)
 
-    file_path = to_fuel_h5(inputs, outputs, [0, 164], ['train', 'test'],
+    file_path = to_fuel_h5(inputs, outputs, [0, 256], ['train', 'test'],
                            file_name,
                            '/data_generator')
     return file_path, scale, shift
@@ -91,7 +91,7 @@ def make_gen(graph=False):
     train_set = H5PYDataset(file_path_f,
                             which_sets=('train','test'))
 
-    scheme = SequentialScheme(examples=128, batch_size=32)
+    scheme = SequentialScheme(examples=196, batch_size=32)
 
     data_stream_train = DataStream(dataset=train_set, iteration_scheme=scheme)
 
