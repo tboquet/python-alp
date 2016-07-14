@@ -11,7 +11,6 @@ period of time.
 """
 
 import copy
-import pickle
 import sys
 
 from ..appcom.utils import background

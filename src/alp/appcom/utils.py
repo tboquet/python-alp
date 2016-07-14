@@ -4,6 +4,7 @@
 """
 
 import functools
+import pickle
 import threading
 from itertools import islice
 
