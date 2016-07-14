@@ -421,6 +421,7 @@ class TestBackendFunctions:
         res = pred_func([X_tr, 1.])
 
         assert len(res[0]) == len(X_tr)
+        print(self)
 
     def test_fit(self, get_model):
         "Test the training of a serialized model"
@@ -438,6 +439,7 @@ class TestBackendFunctions:
         res = KTB.fit(NAME, VERSION, model_dict, [data], 'test', [data_val])
 
         assert len(res) == 4
+        print(self)
 
     def test_predict(self, get_model):
         """Test to predict using the backend"""
@@ -448,6 +450,7 @@ class TestBackendFunctions:
         expe = Experiment(model)
         expe.fit([data], [data_val])
         KTB.predict(expe.model_dict, [data['X']])
+        print(self)
 
 
 def test_utils():
