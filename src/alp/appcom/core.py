@@ -54,6 +54,10 @@ class Experiment(object):
             self.__model_dict['data_id'] = None
         else:
             self.model = model_dict
+            backend, backend_name, backend_version = init_backend(model_dict)
+            self.backend = backend
+            self.backend_name = backend_name
+            self.backend_version = backend_version
             self.__model_dict['model_arch'] = self.backend.to_dict_w_opt(
                 self.model, self.metrics)
             self.__model_dict['mod_id'] = None
@@ -261,8 +265,8 @@ class Experiment(object):
                                      gen_train, data_hash, data_val,
                                      generator=True,
                                      *args, **kwargs)
-        self._get_results(res)
-        return res
+        thread = self._get_results(res)
+        return res, thread
 
     def load_model(self, mod_id=None, data_id=None):
         """Load a model from the database form it's mod_id and data_id

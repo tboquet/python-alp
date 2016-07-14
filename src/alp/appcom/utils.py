@@ -72,7 +72,8 @@ def init_backend(model):
         from ..backend import sklearn_backend as ABE
     else:
         raise NotImplementedError(
-            "this backend is not supported")  # pragma: no cover
+            "this backend is not supported: {}".format(
+                model))  # pragma: no cover
 
     return _get_backend_attributes(ABE)
 

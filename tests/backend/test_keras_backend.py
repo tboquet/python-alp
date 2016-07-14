@@ -1,5 +1,6 @@
 """Tests for the Keras backend"""
 
+import copy
 import keras
 import keras.backend as K
 import numpy as np
@@ -210,17 +211,18 @@ def get_metric():
     return cosine_proximity
 
 
-class TestExperiment:
-    @pytest.fixture(params=['sequential', 'model', 'graph'])
-    def get_model(self, request):
-        if request.param == 'sequential':
-            return sequential
-        elif request.param == 'model':
-            return model
-        elif request.param == 'graph':
-            return graph
-        print(self)
+@pytest.fixture(scope='module', params=['sequential', 'model', 'graph'])
+def get_model(request):
+    if request.param == 'sequential':
+        return sequential
+    elif request.param == 'model':
+        return model
+    elif request.param == 'graph':
+        return graph
+    print(self)
 
+
+class TestExperiment:
     @pytest.fixture(params=['classic', 'custom', 'list'])
     def get_loss_metric(self, request):
         if request.param == 'classic':
@@ -239,7 +241,7 @@ class TestExperiment:
             return False
         print(self)
 
-    def test_experiment_instance(self, get_model):
+    def test_experiment_instance_utils(self, get_model):
         model = get_model()
 
         model.compile(loss='categorical_crossentropy',
@@ -247,6 +249,9 @@ class TestExperiment:
                       metrics=['accuracy'])
 
         expe = Experiment(model)
+        expe.model_dict = model
+        expe.backend_name = 'another_backend'
+        expe.model_dict = model
         print(self)
 
         assert expe.backend is not None
@@ -270,6 +275,11 @@ class TestExperiment:
             expe.fit([data], [data_val], nb_epoch=2,
                     batch_size=batch_size, metrics=metrics,
                     custom_objects=cust_objects)
+
+            expe.fit([data], [data_val], model=model, nb_epoch=2,
+                    batch_size=batch_size, metrics=metrics,
+                    custom_objects=cust_objects)
+
             expe.load_model()
             expe.load_model(expe.mod_id, expe.data_id)
 
@@ -295,6 +305,9 @@ class TestExperiment:
                 print(excinfo)
         else:
             expe.fit_async([data], [data_val], nb_epoch=2,
+                    batch_size=batch_size, metrics=metrics,
+                    custom_objects=cust_objects)
+            expe.fit_async([data], [data_val], model=model, nb_epoch=2,
                     batch_size=batch_size, metrics=metrics,
                     custom_objects=cust_objects)
         print(self)
@@ -395,113 +408,46 @@ class TestExperiment:
         print(self)
 
 
-def test_build_predict_func():
-    """Test the build of a model"""
-    X_tr = np.ones((train_samples, input_dim))
-    model = Sequential()
-    model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
-    model.add(Dense(nb_class, activation='softmax'))
-    model.compile(loss='categorical_crossentropy',
-                  optimizer='rmsprop',
-                  metrics=['accuracy'])
+class TestBackendFunctions:
+    def test_build_predict_func(self, get_model):
+        """Test the build of a model"""
+        X_tr = np.ones((train_samples, input_dim))
+        model = get_model()
+        model.compile(loss='categorical_crossentropy',
+                    optimizer='rmsprop',
+                    metrics=['accuracy'])
 
-    pred_func = KTB.build_predict_func(model)
-    res = pred_func([X_tr])
+        pred_func = KTB.build_predict_func(model)
+        res = pred_func([X_tr, 1.])
 
-    assert len(res[0]) == len(X_tr)
+        assert len(res[0]) == len(X_tr)
 
-    model = Graph()
-    model.add_input(name='X_vars', input_shape=(input_dim, ))
+    def test_fit(self, get_model):
+        "Test the training of a serialized model"
+        data, data_val = make_data()
 
-    model.add_node(Dense(nb_hidden, activation="sigmoid"),
-                   name='Dense1', input='X_vars')
-    model.add_node(Dense(nb_class, activation="softmax"),
-                   name='last_dense',
-                   input='Dense1')
-    model.add_output(name='output', input='last_dense')
-    model.compile(optimizer='sgd', loss={'output': 'mse'})
+        model = get_model()
+        model.compile(loss='categorical_crossentropy',
+                    optimizer='rmsprop',
+                    metrics=['accuracy'])
 
-    pred_func = KTB.build_predict_func(model)
-    pred_func([X_tr])
+        model_dict = dict()
+        model_dict['model_arch'] = to_dict_w_opt(model)
 
-    assert len(res[0]) == len(X_tr)
+        res = KTB.train(copy.deepcopy(model_dict['model_arch']), [data], [data_val])
+        res = KTB.fit(NAME, VERSION, model_dict, [data], 'test', [data_val])
 
+        assert len(res) == 4
 
-def test_fit():
-    "Test the training of a serialized model"
-    data, data_val = make_data()
+    def test_predict(self, get_model):
+        """Test to predict using the backend"""
+        data, data_val = make_data()
+        model = get_model()
+        model.compile(optimizer='sgd', loss='categorical_crossentropy')
 
-    # Case 1 sequential model
-    metrics = ['accuracy']
-
-    model = Sequential()
-    model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
-    model.add(Dense(nb_class, activation='softmax'))
-    model.compile(loss='categorical_crossentropy',
-                  optimizer='rmsprop',
-                  metrics=metrics)
-
-    model_dict = dict()
-    model_dict['model_arch'] = to_dict_w_opt(model, metrics)
-
-    res = KTB.train(model_dict['model_arch'], [data], [data_val])
-    res = KTB.fit(NAME, VERSION, model_dict, [data], 'test', [data_val])
-
-    assert len(res) == 4
-    # Case 2 without custom objects
-    model = Sequential()
-    model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
-    model.add(Dense(nb_class, activation='softmax'))
-    model.compile(loss='categorical_crossentropy',
-                  optimizer='rmsprop',
-                  metrics=['accuracy'])
-
-    model_dict = dict()
-    model_dict['model_arch'] = to_dict_w_opt(model, metrics)
-
-    res = KTB.fit(NAME, VERSION, model_dict, [data], 'test', [data_val])
-
-    assert len(res) == 4
-    # Case 3 Graph model
-
-    model = Graph()
-    model.add_input(name='X', input_shape=(input_dim, ))
-
-    model.add_node(Dense(nb_hidden, activation="sigmoid"),
-                   name='Dense1', input='X')
-    model.add_node(Dense(nb_class, activation="softmax"),
-                   name='last_dense',
-                   input='Dense1')
-
-    model.add_output(name='y', input='last_dense')
-    model.compile(optimizer='sgd', loss={'y': 'categorical_crossentropy'})
-
-    model_dict = dict()
-    model_dict['model_arch'] = to_dict_w_opt(model, metrics)
-
-    res = KTB.fit(NAME, VERSION, model_dict, [data], 'test', [data_val])
-
-    assert len(res) == 4
-
-
-def test_predict():
-    """Test the prediction using the backend"""
-    data, data_val = make_data()
-    model = Graph()
-    model.add_input(name='X', input_shape=(input_dim, ))
-
-    model.add_node(Dense(nb_hidden, activation="sigmoid"),
-                   name='Dense1', input='X')
-    model.add_node(Dense(nb_class, activation="softmax"),
-                   name='last_dense',
-                   input='Dense1')
-
-    model.add_output(name='y', input='last_dense')
-    model.compile(optimizer='sgd', loss={'y': 'categorical_crossentropy'})
-
-    expe = Experiment(model)
-    expe.fit([data], [data_val])
-    KTB.predict(expe.model_dict, [data['X']])
+        expe = Experiment(model)
+        expe.fit([data], [data_val])
+        KTB.predict(expe.model_dict, [data['X']])
 
 
 def test_utils():

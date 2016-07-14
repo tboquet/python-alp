@@ -1,8 +1,8 @@
-=======================
-Use Fuel and generators
-=======================
+======================
+Use Fuel or generators
+======================
 
-You can easily use Fuel iterators in an Experiment.
+You can easily use Fuel_ iterators in an Experiment.
 We will first create some fake data.
 
 .. code-block:: python
@@ -95,3 +95,17 @@ We can finally use the `alp.appcom.Experiment.fit_gen` method with our model and
                   custom_objects=cust_objects,
                   samples_per_epoch=128,
                   nb_val_samples=128)
+
+You can also use `alp.appcom.Experiment.fit_gen_async` with the same function parameters if you have a worker running.
+
+.. code-block:: python
+
+    expe.fit_gen([gen], [val], nb_epoch=2,
+                  model=model,
+                  metrics=metrics,
+                  custom_objects=cust_objects,
+                  samples_per_epoch=128,
+                  nb_val_samples=128)
+
+
+ .. _Fuel: https://fuel.readthedocs.io/en/latest/
