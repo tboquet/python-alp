@@ -280,6 +280,7 @@ class TestExperiment:
                     batch_size=batch_size, metrics=metrics,
                     custom_objects=cust_objects)
 
+            expe.backend = 'another_backend'
             expe.load_model()
             expe.load_model(expe.mod_id, expe.data_id)
 

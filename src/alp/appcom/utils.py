@@ -224,3 +224,15 @@ def max_v_len(iterable_to_check):
         if len(v) > max_v:
             max_v = len(v)
     return max_v
+
+
+def transform_gen(gen_train, data_val):
+    gen_train = [pickle.dumps(g) for g in gen_train]
+
+    val_gen = (hasattr(data_val[-1], 'next') or
+                hasattr(data_val[-1], '__next__'))
+    val_gen += 'fuel' in repr(data_val[-1])
+
+    if val_gen:
+        data_val = [pickle.dumps(g) for g in data_val]
+    return gen_train, data_val

@@ -19,6 +19,7 @@ from ..backend import common as cm
 from ..dbbackend import get_models
 from .utils import init_backend
 from .utils import switch_backend
+from .utils import transform_gen
 
 
 class Experiment(object):
@@ -91,6 +92,19 @@ class Experiment(object):
         self.__model_dict['data_id'] = data_id
         self.__data_id = data_id
 
+    def _check_compile(self, model, kwargs_m):
+        _recompile = False
+        if model is not None:
+            self.model = model
+            _recompile = True
+        if "metrics" in kwargs_m:
+            self.metrics = kwargs_m.pop("metrics")
+            _recompile = True
+
+        if _recompile is True:
+            self.model_dict = self.backend.to_dict_w_opt(self.model,
+                                                         self.metrics)
+
     def fit(self, data, data_val, model=None, *args, **kwargs):
         """Build and fit a model given data and hyperparameters
 
@@ -105,17 +119,8 @@ class Experiment(object):
             the id of the model in the db, the id of the data in the db and
             path to the parameters.
         """
-        _recompile = False
-        if model is not None:
-            self.model = model
-            _recompile = True
-        if "metrics" in kwargs:
-            self.metrics = kwargs.pop("metrics")
-            _recompile = True
+        self._check_compile(model, kwargs)
 
-        if _recompile is True:
-            self.model_dict = self.backend.to_dict_w_opt(self.model,
-                                                         self.metrics)
         if self.model is None:
             raise Exception('No model provided')
 
@@ -150,17 +155,11 @@ class Experiment(object):
             the id of the model in the db, the id of the data in the db and a
             path to the parameters.
         """
-        _recompile = False
-        if model is not None:
-            self.model = model
-            _recompile = True
-        if "metrics" in kwargs:
-            self.metrics = kwargs.pop("metrics")
-            _recompile = True
+        self._check_compile(model, kwargs)
 
-        if _recompile is True:
-            self.model_dict = self.backend.to_dict_w_opt(self.model,
-                                                         self.metrics)
+        if self.model is None:
+            raise Exception('No model provided')
+
         data_hash = cm.create_data_hash(data)
         kwargs = self._check_serialize(kwargs)
         res = self.backend.fit.delay(self.backend_name, self.backend_version,
@@ -185,27 +184,14 @@ class Experiment(object):
             the id of the model in the db, the id of the data in the db and a
             path to the parameters.
         """
-        _recompile = False
-        if model is not None:
-            self.model = model
-            _recompile = True
-        if "metrics" in kwargs:
-            self.metrics = kwargs.pop("metrics")
-            _recompile = True
+        self._check_compile(model, kwargs)
 
-        if _recompile is True:
-            self.model_dict = self.backend.to_dict_w_opt(self.model,
-                                                         self.metrics)
+        if self.model is None:
+            raise Exception('No model provided')
 
-        data_hash = cm.create_gen_hash(gen_train)
         kwargs = self._check_serialize(kwargs)
-        gen_train = [pickle.dumps(g) for g in gen_train]
-
-        val_gen = (hasattr(data_val[-1], 'next') or
-                   hasattr(data_val[-1], '__next__'))
-        val_gen += 'fuel' in repr(data_val[-1])
-        if val_gen:
-            data_val = [pickle.dumps(g) for g in data_val]
+        data_hash = cm.create_gen_hash(gen_train)
+        gen_train, data_val = transform_gen(gen_train, data_val)
 
         res = self.backend.fit(self.backend_name,
                                self.backend_version,
@@ -224,10 +210,10 @@ class Experiment(object):
 
     def fit_gen_async(self, gen_train, data_val,
                       model=None, *args, **kwargs):
-        """Build and fit asynchronously a model given data and hyperparameters
+        """Build and fit asynchronously a model given generator(s) and hyperparameters
 
         Args:
-            data(list(dict)): a list of dictionnaries mapping inputs and
+            gen_train(list(dict)): a list of dictionnaries mapping inputs and
                 outputs names to numpy arrays for training.
             data_val(list(dict)): a list of dictionnaries mapping inputs and
                 outputs names to numpy arrays for validation.
@@ -237,27 +223,14 @@ class Experiment(object):
             the id of the model in the db, the id of the data in the db and a
             path to the parameters.
         """
-        _recompile = False
-        if model is not None:
-            self.model = model
-            _recompile = True
-        if "metrics" in kwargs:
-            self.metrics = kwargs.pop("metrics")
-            _recompile = True
+        self._check_compile(model, kwargs)
 
-        if _recompile is True:
-            self.model_dict = self.backend.to_dict_w_opt(self.model,
-                                                         self.metrics)
+        if self.model is None:
+            raise Exception('No model provided')
 
-        data_hash = cm.create_gen_hash(gen_train)
         kwargs = self._check_serialize(kwargs)
-        gen_train = [pickle.dumps(g) for g in gen_train]
-
-        val_gen = (hasattr(data_val[-1], 'next') or
-                   hasattr(data_val[-1], '__next__'))
-        val_gen += 'fuel' in repr(data_val[-1])
-        if val_gen:
-            data_val = [pickle.dumps(g) for g in data_val]
+        data_hash = cm.create_gen_hash(gen_train)
+        gen_train, data_val = transform_gen(gen_train, data_val)
 
         res = self.backend.fit.delay(self.backend_name,
                                      self.backend_version,
