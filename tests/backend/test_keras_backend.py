@@ -306,24 +306,21 @@ class TestExperiment:
 
         if get_custom_l:
             with pytest.raises(RuntimeError) as excinfo:
-                _, th = expe.fit_async([data], [data_val], nb_epoch=2,
-                                         batch_size=batch_size,
-                                         metrics=metrics,
-                                         custom_objects=cust_objects)
+                expe.fit_async([data], [data_val], nb_epoch=2,
+                               batch_size=batch_size,
+                               metrics=metrics,
+                               custom_objects=cust_objects)
                 print(excinfo)
-                # th.join()
         else:
-            _, th = expe.fit_async([data], [data_val], nb_epoch=2,
-                                     batch_size=batch_size, metrics=metrics,
-                                     custom_objects=cust_objects)
+            expe.fit_async([data], [data_val], nb_epoch=2,
+                           batch_size=batch_size, metrics=metrics,
+                           custom_objects=cust_objects)
 
-            # th.join()
-            _, th = expe.fit_async([data], [data_val], model=model,
-                                     nb_epoch=2,
-                                     batch_size=batch_size,
-                                     metrics=metrics,
-                                     custom_objects=cust_objects)
-            # th.join()
+            expe.fit_async([data], [data_val], model=model,
+                           nb_epoch=2,
+                           batch_size=batch_size,
+                           metrics=metrics,
+                           custom_objects=cust_objects)
         print(self)
 
     def test_experiment_fit_gen(self, get_model, get_loss_metric,
@@ -386,23 +383,21 @@ class TestExperiment:
         if get_custom_l:
             for val in [gen, data_val_use]:
                 with pytest.raises(RuntimeError) as excinfo:
-                    _, th = expe.fit_gen_async([gen], [val], nb_epoch=2,
-                                                 model=model,
-                                                 metrics=metrics,
-                                                 custom_objects=cust_objects,
-                                                 samples_per_epoch=128,
-                                                 nb_val_samples=128)
+                    expe.fit_gen_async([gen], [val], nb_epoch=2,
+                                       model=model,
+                                       metrics=metrics,
+                                       custom_objects=cust_objects,
+                                       samples_per_epoch=128,
+                                       nb_val_samples=128)
                     print(excinfo)
-                    # th.join()
         else:
             for val in [gen, data_val_use]:
-                _, th = expe.fit_gen_async([gen], [val], nb_epoch=2,
-                                                 model=model,
-                                                 metrics=metrics,
-                                                 custom_objects=cust_objects,
-                                                 samples_per_epoch=128,
-                                                 nb_val_samples=128)
-                # th.join()
+                expe.fit_gen_async([gen], [val], nb_epoch=2,
+                                   model=model,
+                                   metrics=metrics,
+                                   custom_objects=cust_objects,
+                                   samples_per_epoch=128,
+                                   nb_val_samples=128)
 
         gen.close()
         data.close(None)
