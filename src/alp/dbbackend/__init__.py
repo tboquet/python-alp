@@ -20,7 +20,7 @@ _host_port = 27017
 _db_name = 'modelization'
 _collection_name = 'models'
 
-if os.getenv("TEST_MODE") == "ON":
+if os.getenv("TEST_MODE") == "ON":  # pragma: no cover
     _host_adress = '127.0.0.1'
 
 # note: we have to be able to accept other structures

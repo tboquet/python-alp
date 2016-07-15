@@ -91,19 +91,6 @@ class Experiment(object):
         self.__model_dict['data_id'] = data_id
         self.__data_id = data_id
 
-    def _check_compile(self, model, kwargs_m):
-        _recompile = False
-        if model is not None:
-            self.model = model
-            _recompile = True
-        if "metrics" in kwargs_m:
-            self.metrics = kwargs_m.pop("metrics")
-            _recompile = True
-
-        if _recompile is True:
-            self.model_dict = self.backend.to_dict_w_opt(self.model,
-                                                         self.metrics)
-
     def fit(self, data, data_val, model=None, *args, **kwargs):
         """Build and fit a model given data and hyperparameters
 
@@ -118,18 +105,16 @@ class Experiment(object):
             the id of the model in the db, the id of the data in the db and
             path to the parameters.
         """
-        self._check_compile(model, kwargs)
-
-        if self.model is None:
-            raise Exception('No model provided')
-
-        data_hash = cm.create_data_hash(data)
-        kwargs = self._check_serialize(kwargs)
+        data, data_val, data_hash = self._prepare_message(model,
+                                                          data,
+                                                          data_val,
+                                                          kwargs)
 
         res = self.backend.fit(self.backend_name, self.backend_version,
                                copy.deepcopy(self.model_dict), data,
                                data_hash, data_val,
                                *args, **kwargs)
+
         self.mod_id = res['model_id']
         self.data_id = res['data_id']
         self.params_dump = res['params_dump']
@@ -154,19 +139,17 @@ class Experiment(object):
             the id of the model in the db, the id of the data in the db and a
             path to the parameters.
         """
-        self._check_compile(model, kwargs)
+        data, data_val, data_hash = self._prepare_message(model,
+                                                          data,
+                                                          data_val,
+                                                          kwargs)
 
-        if self.model is None:
-            raise Exception('No model provided')
-
-        data_hash = cm.create_data_hash(data)
-        kwargs = self._check_serialize(kwargs)
         res = self.backend.fit.delay(self.backend_name, self.backend_version,
                                      copy.deepcopy(self.model_dict), data,
                                      data_hash, data_val,
                                      *args, **kwargs)
-        self._get_results(res)
-        return res
+        thread = self._get_results(res)
+        return res, thread
 
     def fit_gen(self, gen_train, data_val,
                 model=None, *args, **kwargs):
@@ -183,20 +166,25 @@ class Experiment(object):
             the id of the model in the db, the id of the data in the db and a
             path to the parameters.
         """
-        self._check_compile(model, kwargs)
+        generator = True
 
-        if self.model is None:
-            raise Exception('No model provided')
+        # self._check_compile(model, kwargs)
 
-        kwargs = self._check_serialize(kwargs)
-        data_hash = cm.create_gen_hash(gen_train)
-        gen_train, data_val = transform_gen(gen_train, data_val)
+        # kwargs = self._check_serialize(kwargs)
+        # data_hash = cm.create_gen_hash(gen_train)
+        # gen_train, data_val = transform_gen(gen_train, data_val)
+
+        gen_train, data_val, data_hash = self._prepare_message(model,
+                                                               gen_train,
+                                                               data_val,
+                                                               kwargs,
+                                                               generator)
 
         res = self.backend.fit(self.backend_name,
                                self.backend_version,
                                copy.deepcopy(self.model_dict),
                                gen_train, data_hash, data_val,
-                               generator=True,
+                               generator=generator,
                                *args, **kwargs)
         self.mod_id = res['model_id']
         self.data_id = res['data_id']
@@ -222,21 +210,27 @@ class Experiment(object):
             the id of the model in the db, the id of the data in the db and a
             path to the parameters.
         """
-        self._check_compile(model, kwargs)
+        generator = True
 
-        if self.model is None:
-            raise Exception('No model provided')
+        # self._check_compile(model, kwargs)
 
-        kwargs = self._check_serialize(kwargs)
-        data_hash = cm.create_gen_hash(gen_train)
-        gen_train, data_val = transform_gen(gen_train, data_val)
+        # kwargs = self._check_serialize(kwargs)
+        # data_hash = cm.create_gen_hash(gen_train)
+        # gen_train, data_val = transform_gen(gen_train, data_val)
+
+        gen_train, data_val, data_hash = self._prepare_message(model,
+                                                               gen_train,
+                                                               data_val,
+                                                               kwargs,
+                                                               generator)
 
         res = self.backend.fit.delay(self.backend_name,
                                      self.backend_version,
                                      copy.deepcopy(self.model_dict),
                                      gen_train, data_hash, data_val,
-                                     generator=True,
+                                     generator=generator,
                                      *args, **kwargs)
+
         thread = self._get_results(res)
         return res, thread
 
@@ -260,11 +254,36 @@ class Experiment(object):
         self.data_id = model_db['data_id']
         self.trained = True
 
+    def predict(self, data):
+        """Make predictions given data"""
+        if self.trained:
+            return self.backend.predict(self.model_dict, data)
+        else:
+            raise Exception("You must have a trained model"
+                            "in order to make predictions")
+
+    def _check_compile(self, model, kwargs_m):
+        _recompile = False
+        if model is not None:
+            self.model = model
+            _recompile = True
+        if "metrics" in kwargs_m:
+            self.metrics = kwargs_m.pop("metrics")
+            _recompile = True
+
+        if _recompile is True:
+            self.model_dict = self.backend.to_dict_w_opt(self.model,
+                                                         self.metrics)
+
+        if self.model is None:
+            raise Exception('No model provided')
+
     def _switch_backend(self, model_db):
         """A utility function to switch backend when loading a model
 
         Args:
-            model_db(dict): """
+            model_db(dict): the dictionnary stored in the database
+        """
         if model_db['backend_name'] != self.backend_name:
             backend = switch_backend(model_db['backend_name'])
             self.backend_name = backend.__name__
@@ -276,20 +295,40 @@ class Experiment(object):
                 sys.stderr.write('Warning: the backend versions'
                                  'do not match.\n')  # pragma: no cover
 
-    def predict(self, data):
-        """Make predictions given data"""
-        if self.trained:
-            return self.backend.predict(self.model_dict, data)
-        else:
-            raise Exception("You must have a trained model"
-                            "in order to make predictions")
-
     def _check_serialize(self, kwargs):
+        """Serialize the object mapped in the kwargs
+
+        Args:
+           kwargs(dict): keyword arguments
+
+        Returns:
+            kwargs
+        """
         for k in kwargs:
             if k in self.backend.TO_SERIALIZE:
                 kwargs[k] = {j: self.backend.serialize(kwargs[k][j])
                              for j in kwargs[k]}
         return kwargs
+
+    def _prepare_message(self, model, data, data_val, kwargs, generator=False):
+        """Prepare the elements to be passed to the backend
+
+        Args:
+            model(supported model): the model to be prepared
+            data(list): the list of dicts or generators used for training
+            data_val(list): the list of dicts or generator used for validation
+        """
+        self._check_compile(model, kwargs)
+
+        kwargs = self._check_serialize(kwargs)
+
+        if generator:
+            data_hash = cm.create_gen_hash(data)
+            data, data_val = transform_gen(data, data_val)
+        else:
+            data_hash = cm.create_data_hash(data)
+
+        return data, data_val, data_hash
 
     @background
     def _get_results(self, res):

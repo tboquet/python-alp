@@ -25,6 +25,7 @@ from alp.appcom.utils import imports
 from alp.appcom.utils import switch_backend
 from alp.appcom.utils import to_fuel_h5
 from alp.backend import keras_backend as KTB
+from alp.backend.common import open_dataset_gen
 from alp.backend.keras_backend import get_function_name
 from alp.backend.keras_backend import to_dict_w_opt
 
@@ -137,8 +138,9 @@ def model(custom=False):
 
     x = Dense(nb_hidden, activation='relu')(inputs)
     x = Dense(nb_hidden, activation='relu')(x)
-    x = Dropout(0.5)(x)
-    predictions = Dense(nb_class, activation='softmax')(x)
+    predictions = Dense(nb_class,
+                        activation='softmax',
+                        name='main_loss')(x)
 
     model = Model(input=inputs, output=predictions)
     return model
@@ -168,8 +170,6 @@ def prepare_model(get_model, get_loss_metric, custom):
 
     loss, metric = get_loss_metric
 
-    print(loss, metric)
-
     cust_objects = dict()
 
     metrics = [metric]
@@ -179,10 +179,16 @@ def prepare_model(get_model, get_loss_metric, custom):
         if isinstance(loss, list):
             cust_objects['cat_cross'] = loss[-1]
 
+        if model.__class__.__name__ == 'Model':
+            loss_replace = loss
+            if isinstance(loss, list):
+                loss_replace = loss[-1]
+            loss = dict()
+            loss['main_loss'] = loss_replace
+
     if custom:
         cust_objects['Dropout_cust'] = Dropout_cust
 
-    print(cust_objects)
 
     model.compile(loss=loss,
                   optimizer='rmsprop',
@@ -280,7 +286,7 @@ class TestExperiment:
                     batch_size=batch_size, metrics=metrics,
                     custom_objects=cust_objects)
 
-            expe.backend = 'another_backend'
+            expe.backend_name = 'another_backend'
             expe.load_model()
             expe.load_model(expe.mod_id, expe.data_id)
 
@@ -300,17 +306,24 @@ class TestExperiment:
 
         if get_custom_l:
             with pytest.raises(RuntimeError) as excinfo:
-                expe.fit_async([data], [data_val], nb_epoch=2,
-                               batch_size=batch_size, metrics=metrics,
-                               custom_objects=cust_objects)
+                res, th = expe.fit_async([data], [data_val], nb_epoch=2,
+                                         batch_size=batch_size,
+                                         metrics=metrics,
+                                         custom_objects=cust_objects)
                 print(excinfo)
+                # th.join()
         else:
-            expe.fit_async([data], [data_val], nb_epoch=2,
-                    batch_size=batch_size, metrics=metrics,
-                    custom_objects=cust_objects)
-            expe.fit_async([data], [data_val], model=model, nb_epoch=2,
-                    batch_size=batch_size, metrics=metrics,
-                    custom_objects=cust_objects)
+            res, th = expe.fit_async([data], [data_val], nb_epoch=2,
+                                     batch_size=batch_size, metrics=metrics,
+                                     custom_objects=cust_objects)
+
+            # th.join()
+            res, th = expe.fit_async([data], [data_val], model=model,
+                                     nb_epoch=2,
+                                     batch_size=batch_size,
+                                     metrics=metrics,
+                                     custom_objects=cust_objects)
+            # th.join()
         print(self)
 
     def test_experiment_fit_gen(self, get_model, get_loss_metric,
@@ -373,21 +386,23 @@ class TestExperiment:
         if get_custom_l:
             for val in [gen, data_val_use]:
                 with pytest.raises(RuntimeError) as excinfo:
-                    expe.fit_gen_async([gen], [val], nb_epoch=2,
-                                       model=model,
-                                       metrics=metrics,
-                                       custom_objects=cust_objects,
-                                       samples_per_epoch=128,
-                                       nb_val_samples=128)
+                    res, th = expe.fit_gen_async([gen], [val], nb_epoch=2,
+                                                 model=model,
+                                                 metrics=metrics,
+                                                 custom_objects=cust_objects,
+                                                 samples_per_epoch=128,
+                                                 nb_val_samples=128)
                     print(excinfo)
+                    # th.join()
         else:
             for val in [gen, data_val_use]:
-                expe.fit_gen_async([gen], [val], nb_epoch=2,
-                                   model=model,
-                                   metrics=metrics,
-                                   custom_objects=cust_objects,
-                                   samples_per_epoch=128,
-                                   nb_val_samples=128)
+                res, th = expe.fit_gen_async([gen], [val], nb_epoch=2,
+                                                 model=model,
+                                                 metrics=metrics,
+                                                 custom_objects=cust_objects,
+                                                 samples_per_epoch=128,
+                                                 nb_val_samples=128)
+                # th.join()
 
         gen.close()
         data.close(None)
@@ -399,13 +414,20 @@ class TestExperiment:
         model, metrics, cust_objects = prepare_model(get_model(),
                                                      get_loss_metric,
                                                      False)
+
+        model_name = model.__class__.__name__
         data, data_val = make_data()
+
         expe = Experiment(model)
         expe.fit([data], [data_val], nb_epoch=2,
                  batch_size=batch_size,
                  custom_objects=cust_objects,
                  metrics=metrics)
+
+        if model_name == 'Graph' or model_name == 'Model':
+            expe.predict({'X': data_val['X']})
         expe.predict([data_val['X']])
+        expe.predict(data_val['X'])
         print(self)
 
 
@@ -418,8 +440,15 @@ class TestBackendFunctions:
                     optimizer='rmsprop',
                     metrics=['accuracy'])
 
+        model_name = model.__class__.__name__
+
         pred_func = KTB.build_predict_func(model)
-        res = pred_func([X_tr, 1.])
+
+        tensors = [X_tr]
+        if model_name != 'Model':
+            tensors.append(1.)
+
+        res = pred_func(tensors)
 
         assert len(res[0]) == len(X_tr)
         print(self)
@@ -458,6 +487,8 @@ def test_utils():
     assert get_function_name("bob") == "bob"
     test_switch = switch_backend('sklearn')
     assert test_switch is not None
+    gen, data, data_stream = make_gen()
+    open_dataset_gen(data_stream)
 
 
 if __name__ == "__main__":

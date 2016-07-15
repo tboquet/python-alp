@@ -65,7 +65,8 @@ def serialize(cust_obj):
         ser_func['clos_d'] = dill.dumps(six.get_function_closure(cust_obj))
         ser_func['type_obj'] = 'func'
     else:
-        cust_obj.__module__ = '__main__'
+        if hasattr(cust_obj, '__module__'):
+            cust_obj.__module__ = '__main__'
         ser_func['name_d'] = None
         ser_func['args_d'] = None
         ser_func['clos_d'] = None
