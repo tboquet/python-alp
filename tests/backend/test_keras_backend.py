@@ -306,19 +306,19 @@ class TestExperiment:
 
         if get_custom_l:
             with pytest.raises(RuntimeError) as excinfo:
-                res, th = expe.fit_async([data], [data_val], nb_epoch=2,
+                _, th = expe.fit_async([data], [data_val], nb_epoch=2,
                                          batch_size=batch_size,
                                          metrics=metrics,
                                          custom_objects=cust_objects)
                 print(excinfo)
                 # th.join()
         else:
-            res, th = expe.fit_async([data], [data_val], nb_epoch=2,
+            _, th = expe.fit_async([data], [data_val], nb_epoch=2,
                                      batch_size=batch_size, metrics=metrics,
                                      custom_objects=cust_objects)
 
             # th.join()
-            res, th = expe.fit_async([data], [data_val], model=model,
+            _, th = expe.fit_async([data], [data_val], model=model,
                                      nb_epoch=2,
                                      batch_size=batch_size,
                                      metrics=metrics,
@@ -386,7 +386,7 @@ class TestExperiment:
         if get_custom_l:
             for val in [gen, data_val_use]:
                 with pytest.raises(RuntimeError) as excinfo:
-                    res, th = expe.fit_gen_async([gen], [val], nb_epoch=2,
+                    _, th = expe.fit_gen_async([gen], [val], nb_epoch=2,
                                                  model=model,
                                                  metrics=metrics,
                                                  custom_objects=cust_objects,
@@ -396,7 +396,7 @@ class TestExperiment:
                     # th.join()
         else:
             for val in [gen, data_val_use]:
-                res, th = expe.fit_gen_async([gen], [val], nb_epoch=2,
+                _, th = expe.fit_gen_async([gen], [val], nb_epoch=2,
                                                  model=model,
                                                  metrics=metrics,
                                                  custom_objects=cust_objects,
@@ -489,6 +489,9 @@ def test_utils():
     assert test_switch is not None
     gen, data, data_stream = make_gen()
     open_dataset_gen(data_stream)
+    gen.close()
+    data.close(None)
+    data_stream.close()
 
 
 if __name__ == "__main__":

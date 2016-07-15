@@ -168,12 +168,6 @@ class Experiment(object):
         """
         generator = True
 
-        # self._check_compile(model, kwargs)
-
-        # kwargs = self._check_serialize(kwargs)
-        # data_hash = cm.create_gen_hash(gen_train)
-        # gen_train, data_val = transform_gen(gen_train, data_val)
-
         gen_train, data_val, data_hash = self._prepare_message(model,
                                                                gen_train,
                                                                data_val,
@@ -211,12 +205,6 @@ class Experiment(object):
             path to the parameters.
         """
         generator = True
-
-        # self._check_compile(model, kwargs)
-
-        # kwargs = self._check_serialize(kwargs)
-        # data_hash = cm.create_gen_hash(gen_train)
-        # gen_train, data_val = transform_gen(gen_train, data_val)
 
         gen_train, data_val, data_hash = self._prepare_message(model,
                                                                gen_train,
