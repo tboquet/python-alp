@@ -485,6 +485,7 @@ class TestBackendFunctions:
     def test_serialization(self):
         model = sequential()
         to_dict_w_opt(model)
+        print(self)
 
     def test_deserialization(self):
         model = sequential()
@@ -494,6 +495,7 @@ class TestBackendFunctions:
         custom_objects = {k: serialize(custom_objects[k])
                           for k in custom_objects}
         model_from_dict_w_opt(ser_mod, custom_objects=custom_objects)
+        print(self)
 
 
 def test_utils():
