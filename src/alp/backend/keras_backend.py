@@ -32,9 +32,9 @@ import six
 from six.moves import zip as szip
 
 from ..appcom import _path_h5
+from ..appcom.utils import check_gen
 from ..backend import common as cm
 from ..celapp import app
-from ..appcom.utils import check_gen
 
 COMPILED_MODELS = dict()
 TO_SERIALIZE = ['custom_objects']
