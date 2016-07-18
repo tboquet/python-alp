@@ -1,7 +1,7 @@
 """Tests for the Keras backend"""
 
-import alp.appcom.utils as utls
 import copy
+
 import keras
 import keras.backend as K
 import numpy as np
@@ -21,6 +21,7 @@ from keras.models import Sequential
 from keras.utils import np_utils
 from keras.utils.test_utils import get_test_data
 
+import alp.appcom.utils as utls
 from alp.appcom.core import Experiment
 from alp.appcom.utils import imports
 from alp.appcom.utils import switch_backend
