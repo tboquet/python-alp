@@ -267,10 +267,10 @@ class Experiment(object):
                      generator=False, delay=False,
                      *args, **kwargs):
         data, data_val, data_hash = self._prepare_message(model,
-                                                               data,
-                                                               data_val,
-                                                               kwargs,
-                                                               generator)
+                                                          data,
+                                                          data_val,
+                                                          kwargs,
+                                                          generator)
 
         f = self.backend.fit
         if delay:

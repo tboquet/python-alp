@@ -207,7 +207,7 @@ def max_v_len(iterable_to_check):
 def transform_gen(gen_train, data_val):
     gen_train = [pickle.dumps(g) for g in gen_train]
 
-    val_gen = is_gen(data_val)
+    val_gen = check_gen(data_val)
 
     if val_gen:
         data_val = [pickle.dumps(g) for g in data_val]

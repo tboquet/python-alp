@@ -34,6 +34,7 @@ from six.moves import zip as szip
 from ..appcom import _path_h5
 from ..backend import common as cm
 from ..celapp import app
+from ..appcom.utils import check_gen
 
 COMPILED_MODELS = dict()
 TO_SERIALIZE = ['custom_objects']
@@ -292,10 +293,7 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
         data = [cm.transform_gen(d, mod_name) for d in data]
         kwargs.pop('batch_size')
 
-    val_gen = (hasattr(data_val[-1], 'next') or
-               hasattr(data_val[-1], '__next__'))
-
-    val_gen += 'fuel' in repr(data_val[-1])
+    val_gen = check_gen(data_val)
 
     if val_gen:
         if generator:
