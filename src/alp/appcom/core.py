@@ -107,7 +107,7 @@ class Experiment(object):
         """
         res = self._prepare_fit(model, data, data_val, False, False,
                                 *args, **kwargs)
-        return self.full_res
+        return res
 
     def fit_async(self, data, data_val, model=None,
                   *args, **kwargs):
