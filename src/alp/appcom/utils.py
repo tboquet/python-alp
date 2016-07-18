@@ -216,7 +216,7 @@ def transform_gen(gen_train, data_val):
 
 def check_gen(iterable):
     is_gen = (hasattr(iterable[-1], 'next') or
-               hasattr(iterable[-1], '__next__'))
+              hasattr(iterable[-1], '__next__'))
     is_gen += 'fuel' in repr(iterable[-1])
 
     return is_gen
