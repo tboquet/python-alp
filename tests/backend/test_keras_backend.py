@@ -29,8 +29,8 @@ from alp.backend import keras_backend as KTB
 from alp.backend.common import open_dataset_gen
 from alp.backend.keras_backend import get_function_name
 from alp.backend.keras_backend import model_from_dict_w_opt
-from alp.backend.keras_backend import to_dict_w_opt
 from alp.backend.keras_backend import serialize
+from alp.backend.keras_backend import to_dict_w_opt
 
 np.random.seed(1337)
 
