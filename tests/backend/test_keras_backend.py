@@ -1,5 +1,6 @@
 """Tests for the Keras backend"""
 
+import alp.appcom.utils as utls
 import copy
 import keras
 import keras.backend as K
@@ -27,7 +28,9 @@ from alp.appcom.utils import to_fuel_h5
 from alp.backend import keras_backend as KTB
 from alp.backend.common import open_dataset_gen
 from alp.backend.keras_backend import get_function_name
+from alp.backend.keras_backend import model_from_dict_w_opt
 from alp.backend.keras_backend import to_dict_w_opt
+from alp.backend.keras_backend import serialize
 
 np.random.seed(1337)
 
@@ -302,6 +305,7 @@ class TestExperiment:
                                                      get_loss_metric,
                                                      get_custom_l)
 
+        cust_objects['test_list'] = [1, 2]
         expe = Experiment(model)
 
         if get_custom_l:
@@ -477,6 +481,19 @@ class TestBackendFunctions:
         KTB.predict(expe.model_dict, [data['X']])
         print(self)
 
+    def test_serialization(self):
+        model = sequential()
+        to_dict_w_opt(model)
+
+    def test_deserialization(self):
+        model = sequential()
+        model.compile(optimizer='sgd', loss='categorical_crossentropy')
+        ser_mod = to_dict_w_opt(model)
+        custom_objects = {'test_loss': [1, 2]}
+        custom_objects = {k: serialize(custom_objects[k])
+                          for k in custom_objects}
+        model_from_dict_w_opt(ser_mod, custom_objects=custom_objects)
+
 
 def test_utils():
     assert get_function_name("bob") == "bob"
@@ -487,6 +504,8 @@ def test_utils():
     gen.close()
     data.close(None)
     data_stream.close()
+    for i in range(1, 20):
+        utls.window(list(range(i*2)), i)
 
 
 if __name__ == "__main__":

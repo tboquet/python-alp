@@ -145,6 +145,8 @@ def transform_gen(gen_train, mod_name):
                         list_outputs = True
                     else:
                         outputs_dict[name[7:]] = arr
+                else:  # pragma: no cover
+                    raise("Not input nor output, please check your generator")
             fin_outputs = outputs_dict
             fin_inputs = inputs_dict
 

@@ -11,7 +11,7 @@ if not os.access(_alp_base_dir, os.W_OK):  # pragma: no cover
 
 
 _alp_dir = os.path.join(_alp_base_dir, '.alp')
-if not os.path.exists(_alp_dir):
+if not os.path.exists(_alp_dir):  # pragma: no cover
     os.makedirs(_alp_dir)
 
 _db_engine = 'mongodb'
