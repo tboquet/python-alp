@@ -1,4 +1,4 @@
-"""Tests for the Keras backend"""
+"""Tests for Keras backend"""
 
 import copy
 
