@@ -251,7 +251,7 @@ def train(model, data, data_val, *args, **kwargs):
 
 @app.task(default_retry_delay=60 * 10, max_retries=3, rate_limit='120/m')
 def fit(backend_name, backend_version, model, data, data_hash,
-        data_val, *args, **kwargs):
+        data_val, generator=False, *args, **kwargs):
     """A function that takes a model and data (with validation),
         then applies the 'train' method if possible.
         The parameters are updated in case of success.

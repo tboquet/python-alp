@@ -282,13 +282,10 @@ class TestExperiment:
                         custom_objects=cust_objects)
                 print(excinfo)
         else:
-            expe.fit([data], [data_val], nb_epoch=2,
-                    batch_size=batch_size, metrics=metrics,
-                    custom_objects=cust_objects)
-
-            expe.fit([data], [data_val], model=model, nb_epoch=2,
-                    batch_size=batch_size, metrics=metrics,
-                    custom_objects=cust_objects)
+            for model in [None, model]:
+                expe.fit([data], [data_val], model=model, nb_epoch=2,
+                        batch_size=batch_size, metrics=metrics,
+                        custom_objects=cust_objects)
 
             expe.backend_name = 'another_backend'
             expe.load_model()
@@ -317,15 +314,10 @@ class TestExperiment:
                                custom_objects=cust_objects)
                 print(excinfo)
         else:
-            expe.fit_async([data], [data_val], nb_epoch=2,
-                           batch_size=batch_size, metrics=metrics,
-                           custom_objects=cust_objects)
-
-            expe.fit_async([data], [data_val], model=model,
-                           nb_epoch=2,
-                           batch_size=batch_size,
-                           metrics=metrics,
-                           custom_objects=cust_objects)
+            for model in [None, model]:
+                expe.fit_async([data], [data_val], model=model, nb_epoch=2,
+                        batch_size=batch_size, metrics=metrics,
+                        custom_objects=cust_objects)
         print(self)
 
     def test_experiment_fit_gen(self, get_model, get_loss_metric,

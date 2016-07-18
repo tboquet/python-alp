@@ -105,23 +105,8 @@ class Experiment(object):
             the id of the model in the db, the id of the data in the db and
             path to the parameters.
         """
-        data, data_val, data_hash = self._prepare_message(model,
-                                                          data,
-                                                          data_val,
-                                                          kwargs)
-
-        res = self.backend.fit(self.backend_name, self.backend_version,
-                               copy.deepcopy(self.model_dict), data,
-                               data_hash, data_val,
-                               *args, **kwargs)
-
-        self.mod_id = res['model_id']
-        self.data_id = res['data_id']
-        self.params_dump = res['params_dump']
-
-        self.trained = True
-        self.full_res = res
-
+        res = self._prepare_fit(model, data, data_val, False, False,
+                                *args, **kwargs)
         return self.full_res
 
     def fit_async(self, data, data_val, model=None,
@@ -139,88 +124,48 @@ class Experiment(object):
             the id of the model in the db, the id of the data in the db and a
             path to the parameters.
         """
-        data, data_val, data_hash = self._prepare_message(model,
-                                                          data,
-                                                          data_val,
-                                                          kwargs)
+        res = self._prepare_fit(model, data, data_val, False, True,
+                                *args, **kwargs)
 
-        res = self.backend.fit.delay(self.backend_name, self.backend_version,
-                                     copy.deepcopy(self.model_dict), data,
-                                     data_hash, data_val,
-                                     *args, **kwargs)
-        thread = self._get_results(res)
-        return res, thread
+        return res
 
     def fit_gen(self, gen_train, data_val,
                 model=None, *args, **kwargs):
         """Build and fit asynchronously a model given data and hyperparameters
 
         Args:
-            data(list(dict)): a list of dictionnaries mapping inputs and
-                outputs names to numpy arrays for training.
+            gen_train(list(dict)): a list of generators.
             data_val(list(dict)): a list of dictionnaries mapping inputs and
-                outputs names to numpy arrays for validation.
+                outputs names to numpy arrays or generators for validation.
             model(model, optionnal): a model from a supported backend
 
         Returns:
             the id of the model in the db, the id of the data in the db and a
             path to the parameters.
         """
-        generator = True
+        res = self._prepare_fit(model, gen_train, data_val, True, False,
+                                *args, **kwargs)
 
-        gen_train, data_val, data_hash = self._prepare_message(model,
-                                                               gen_train,
-                                                               data_val,
-                                                               kwargs,
-                                                               generator)
-
-        res = self.backend.fit(self.backend_name,
-                               self.backend_version,
-                               copy.deepcopy(self.model_dict),
-                               gen_train, data_hash, data_val,
-                               generator=generator,
-                               *args, **kwargs)
-        self.mod_id = res['model_id']
-        self.data_id = res['data_id']
-        self.params_dump = res['params_dump']
-
-        self.trained = True
-        self.full_res = res
-
-        return self.full_res
+        return res
 
     def fit_gen_async(self, gen_train, data_val,
                       model=None, *args, **kwargs):
-        """Build and fit asynchronously a model given generator(s) and hyperparameters
+        """Build and fit asynchronously a model given generator(s) and
+        hyperparameters.
 
         Args:
-            gen_train(list(dict)): a list of dictionnaries mapping inputs and
-                outputs names to numpy arrays for training.
+            gen_train(list(dict)): a list of generators.
             data_val(list(dict)): a list of dictionnaries mapping inputs and
-                outputs names to numpy arrays for validation.
+                outputs names to numpy arrays or generators for validation.
             model(model, optionnal): a model from a supported backend
 
         Returns:
             the id of the model in the db, the id of the data in the db and a
             path to the parameters.
         """
-        generator = True
-
-        gen_train, data_val, data_hash = self._prepare_message(model,
-                                                               gen_train,
-                                                               data_val,
-                                                               kwargs,
-                                                               generator)
-
-        res = self.backend.fit.delay(self.backend_name,
-                                     self.backend_version,
-                                     copy.deepcopy(self.model_dict),
-                                     gen_train, data_hash, data_val,
-                                     generator=generator,
-                                     *args, **kwargs)
-
-        thread = self._get_results(res)
-        return res, thread
+        res = self._prepare_fit(model, gen_train, data_val, True, True,
+                                *args, **kwargs)
+        return res
 
     def load_model(self, mod_id=None, data_id=None):
         """Load a model from the database form it's mod_id and data_id
@@ -317,6 +262,39 @@ class Experiment(object):
             data_hash = cm.create_data_hash(data)
 
         return data, data_val, data_hash
+
+    def _prepare_fit(self, model, data, data_val,
+                     generator=False, delay=False,
+                     *args, **kwargs):
+        data, data_val, data_hash = self._prepare_message(model,
+                                                               data,
+                                                               data_val,
+                                                               kwargs,
+                                                               generator)
+
+        f = self.backend.fit
+        if delay:
+            f = self.backend.fit.delay
+        res = f(self.backend_name,
+                self.backend_version,
+                copy.deepcopy(self.model_dict),
+                data, data_hash, data_val,
+                generator=generator,
+                *args, **kwargs)
+        return self._handle_results(res, delay)
+
+    def _handle_results(self, res, delay):
+        if delay:
+            thread = self._get_results(res)
+        else:
+            self.mod_id = res['model_id']
+            self.data_id = res['data_id']
+            self.params_dump = res['params_dump']
+
+            self.trained = True
+            self.full_res = res
+            thread = None
+        return res, thread
 
     @background
     def _get_results(self, res):
