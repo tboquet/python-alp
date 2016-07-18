@@ -207,10 +207,16 @@ def max_v_len(iterable_to_check):
 def transform_gen(gen_train, data_val):
     gen_train = [pickle.dumps(g) for g in gen_train]
 
-    val_gen = (hasattr(data_val[-1], 'next') or
-               hasattr(data_val[-1], '__next__'))
-    val_gen += 'fuel' in repr(data_val[-1])
+    val_gen = is_gen(data_val)
 
     if val_gen:
         data_val = [pickle.dumps(g) for g in data_val]
     return gen_train, data_val
+
+
+def check_gen(iterable):
+    is_gen = (hasattr(iterable[-1], 'next') or
+               hasattr(iterable[-1], '__next__'))
+    is_gen += 'fuel' in repr(iterable[-1])
+
+    return is_gen
