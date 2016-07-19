@@ -1,8 +1,8 @@
 import copy
 import hashlib
 import json
-import numpy as np
 import pickle
+import numpy as np
 
 from datetime import datetime
 
