@@ -40,10 +40,16 @@ input_dim = 2
 nb_hidden = 4
 nb_class = 2
 batch_size = 5
-train_samples = 256
-test_samples = 64
+train_samples = 512
+test_samples = 128
 NAME = keras.__name__
 VERSION = keras.__version__
+
+def close_gens(gen, data, data_stream):
+    gen.close()
+    data.close(None)
+    data_stream.close()
+
 
 def make_data():
     (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
@@ -70,39 +76,42 @@ def dump_data(graph=False):
     inputs = [np.concatenate([data['X'], data_val['X']])]
     outputs = [np.concatenate([data['y'], data_val['y']])]
 
-    file_name = 'test_data_'
+    file_name = 'test_data'
     scale = 1.0 / inputs[0].std(axis=0)
     shift = - scale * inputs[0].mean(axis=0)
     if graph:
         inputs = {'X': np.concatenate([data['X'], data_val['X']])}
         outputs = {'y': np.concatenate([data['y'], data_val['y']])}
-        file_name += "graph_"
-        scale = 1.0 / inputs['X'].std(axis=0)
-        shift = - scale * inputs['X'].mean(axis=0)
+        file_name += "_graph"
+        # scale = 1.0 / inputs['X'].std(axis=0)
+        # shift = - scale * inputs['X'].mean(axis=0)
 
-    file_path = to_fuel_h5(inputs, outputs, [0, 256], ['train', 'test'],
-                           file_name,
-                           '/data_generator')
-    return file_path, scale, shift
+    file_path, i_names, o_names = to_fuel_h5(inputs, outputs, [0, 128],
+                                             ['train', 'test'],
+                                             file_name,
+                                             '/data_generator')
+    return file_path, scale, shift, i_names, o_names
 
-file_path, scale, shift = dump_data()
-file_path_g, scale_g, shift_g = dump_data(graph=True)
+file_path, scale, shift, i_names, o_names = dump_data()
+file_path_g, scale_g, shift_g, i_names_g, o_names_g = dump_data(graph=True)
 
 
 def make_gen(graph=False):
     file_path_f = file_path
+    names_select = i_names
     if graph:
         file_path_f = file_path_g
+        names_select = i_names_g
     train_set = H5PYDataset(file_path_f,
                             which_sets=('train','test'))
 
-    scheme = SequentialScheme(examples=196, batch_size=32)
+    scheme = SequentialScheme(examples=128, batch_size=32)
 
     data_stream_train = DataStream(dataset=train_set, iteration_scheme=scheme)
 
     stand_stream_train = ScaleAndShift(data_stream=data_stream_train,
                                        scale=scale, shift=shift,
-                                       which_sources=('input_X',))
+                                       which_sources=(names_select[-1],))
     return stand_stream_train, train_set, data_stream_train
 
 
@@ -330,12 +339,13 @@ class TestExperiment:
         is_graph = model_name.lower() == 'graph'
         _, data_val_use = make_data()
         expe = Experiment(model)
-        gen, data, data_stream = make_gen(is_graph)
 
 
         if get_custom_l:
-            for val in [gen, data_val_use]:
+            for val in [1, data_val_use]:
                 gen, data, data_stream = make_gen(is_graph)
+                if val == 1:
+                    val, data_2, data_stream_2 = make_gen(is_graph)
                 with pytest.raises(RuntimeError) as excinfo:
                     expe.fit_gen([gen], [val], nb_epoch=2,
                                  model=model,
@@ -344,26 +354,28 @@ class TestExperiment:
                                  samples_per_epoch=128,
                                  nb_val_samples=128)
                     print(excinfo)
+                close_gens(gen, data, data_stream)
+                if val == 1:
+                    close_gens(val, data_2, data_stream_2)
         else:
-            for val in [gen, data_val_use]:
+            for val in [1, data_val_use]:
                 gen, data, data_stream = make_gen(is_graph)
+                if val == 1:
+                    val, data_2, data_stream_2 = make_gen(is_graph)
                 expe.fit_gen([gen], [val], nb_epoch=2,
                                 model=model,
                                 metrics=metrics,
                                 custom_objects=cust_objects,
                                 samples_per_epoch=128,
                                 nb_val_samples=128)
-                gen.close()
-                data.close(None)
-                data_stream.close()
 
+                close_gens(gen, data, data_stream)
+                if val == 1:
+                    close_gens(val, data_2, data_stream_2)
             assert expe.data_id is not None
             assert expe.mod_id is not None
             assert expe.params_dump is not None
 
-        gen.close()
-        data.close(None)
-        data_stream.close()
         print(self)
 
     def test_experiment_fit_gen_async(self, get_model, get_loss_metric,
@@ -376,11 +388,12 @@ class TestExperiment:
         is_graph = model_name.lower() == 'graph'
         _, data_val_use = make_data()
         expe = Experiment(model)
-        gen, data, data_stream = make_gen(is_graph)
 
         if get_custom_l:
-            for val in [gen, data_val_use]:
+            for val in [1, data_val_use]:
                 gen, data, data_stream = make_gen(is_graph)
+                if val == 1:
+                    val, data_2, data_stream_2 = make_gen(is_graph)
                 with pytest.raises(RuntimeError) as excinfo:
                     expe.fit_gen_async([gen], [val], nb_epoch=2,
                                        model=model,
@@ -389,19 +402,23 @@ class TestExperiment:
                                        samples_per_epoch=128,
                                        nb_val_samples=128)
                     print(excinfo)
+                close_gens(gen, data, data_stream)
+                if val == 1:
+                    close_gens(val, data_2, data_stream_2)
         else:
-            for val in [gen, data_val_use]:
+            for val in [1, data_val_use]:
                 gen, data, data_stream = make_gen(is_graph)
+                if val == 1:
+                    val, data_2, data_stream_2 = make_gen(is_graph)
                 expe.fit_gen_async([gen], [val], nb_epoch=2,
                                    model=model,
                                    metrics=metrics,
                                    custom_objects=cust_objects,
                                    samples_per_epoch=128,
                                    nb_val_samples=128)
-
-        gen.close()
-        data.close(None)
-        data_stream.close()
+                close_gens(gen, data, data_stream)
+                if val == 1:
+                    close_gens(val, data_2, data_stream_2)
         print(self)
 
     def test_experiment_predict(self, get_model, get_loss_metric):

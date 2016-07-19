@@ -121,7 +121,7 @@ def imports(packages=None):
 def norm_iterator(iterable):
     """returns a normalized iterable of tuples"""
     if isinstance(iterable, list):
-        names = ['_list_' + str(i) for i, j in enumerate(iterable)]
+        names = ['list_' + str(i) for i, j in enumerate(iterable)]
         return szip(names, iterable)
     elif isinstance(iterable, dict):
         return iterable.items()
@@ -179,20 +179,23 @@ def to_fuel_h5(inputs, outputs, slices, names,
     slices.append(max_v_len(inputs))
 
     def insert_info_h5(iterable, suf):
+        names_out = []
         for k, v in norm_iterator(iterable):
             dict_data_set[suf + k] = f.create_dataset(suf + k, v.shape,
                                                       v.dtype)
             dict_data_set[suf + k][...] = v
             for sl, name in zip(window(slices, 2), names):
                 split_dict[name][suf + k] = sl
+            names_out.append(suf + str(k))
+        return names_out
 
-    insert_info_h5(inputs, inp)
-    insert_info_h5(outputs, out)
+    inputs_names = insert_info_h5(inputs, inp)
+    outputs_names = insert_info_h5(outputs, out)
 
     f.attrs['split'] = H5PYDataset.create_split_array(split_dict)
     f.flush()
     f.close()
-    return full_path
+    return full_path, inputs_names, outputs_names
 
 
 def max_v_len(iterable_to_check):

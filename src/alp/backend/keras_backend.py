@@ -48,6 +48,10 @@ def get_backend():
     return CB
 
 
+def save_params(model, filepath):
+    model.save_weights(filepath, overwrite=True)
+
+
 def serialize(cust_obj):
     """A function to serialize custom objects passed to a model
 
@@ -366,7 +370,6 @@ def fit(backend_name, backend_version, model, data, data_hash, data_val,
     from alp import dbbackend as db
     from datetime import datetime
     import alp.backend.common as cm
-    import numpy as np
 
     if kwargs.get("batch_size") is None:
         kwargs['batch_size'] = 32
@@ -374,8 +377,9 @@ def fit(backend_name, backend_version, model, data, data_hash, data_val,
     batch_size = kwargs['batch_size']
 
     model_c = cm.clean_model(model)
-    hexdi_m = cm.create_model_hash(model_c, batch_size)
-    params_dump = cm.create_param_dump(_path_h5, hexdi_m, data_hash)
+
+    hexdi_m, params_dump = cm.make_all_hash(model_c, batch_size, data_hash,
+                                            _path_h5)
 
     # update the full json
     full_json = {'backend_name': backend_name,
@@ -386,31 +390,17 @@ def fit(backend_name, backend_version, model, data, data_hash, data_val,
                  'data_id': data_hash,
                  'params_dump': params_dump,
                  'batch_size': kwargs['batch_size'],
-                 'trained': 0,
-                 'data_path': "sent",
-                 'root': "sent",
-                 'data_s': "sent"}
+                 'trained': 0}
+
     mod_id = db.insert(full_json)
 
     try:
-        results, model = train(model['model_arch'], data,
-                               data_val,
-                               generator=generator,
-                               *args, **kwargs)
-        res_dict = {
-            'iter_stopped': results['metrics']['iter'],
-            'trained': 1,
-            'date_finished_training': datetime.now()}
-        for metric in results['metrics']:
-            res_dict[metric] = results['metrics'][metric]
-            if metric in ['loss', 'val_loss']:
-                res_dict[metric] = np.min(results['metrics'][metric])
-        db.update({"_id": mod_id}, {'$set': res_dict})
+        results, res_dict = cm.train_pipe(train, save_params, model, data,
+                                          data_val, generator, params_dump,
+                                          data_hash, hexdi_m,
+                                          *args, **kwargs)
 
-        model.save_weights(params_dump, overwrite=True)
-        results['model_id'] = hexdi_m
-        results['data_id'] = data_hash
-        results['params_dump'] = params_dump
+        db.update({"_id": mod_id}, {'$set': res_dict})
 
     except Exception:
         db.update({"_id": mod_id}, {'$set': {'error': 1}})

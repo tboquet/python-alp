@@ -273,8 +273,7 @@ def fit(backend_name, backend_version, model, data, data_hash,
     import alp.backend.common as cm
     from datetime import datetime
 
-    hexdi_m = cm.create_model_hash(model, 0)
-    params_dump = cm.create_param_dump(_path_h5, hexdi_m, data_hash)
+    hexdi_m, params_dump = cm.make_all_hash(model, 0, data_hash, _path_h5)
 
     # update the full json
     full_json = {'backend_name': backend_name,
@@ -284,10 +283,7 @@ def fit(backend_name, backend_version, model, data, data_hash,
                  'mod_id': hexdi_m,
                  'data_id': data_hash,
                  'params_dump': params_dump,
-                 'trained': 0,
-                 'data_path': "sent",
-                 'root': "sent",
-                 'data_s': "sent"}
+                 'trained': 0}
     mod_id = db.insert(full_json)
 
     try:
@@ -300,12 +296,13 @@ def fit(backend_name, backend_version, model, data, data_hash,
             'date_finished_training': datetime.now()}
         for metric in results['metrics']:
             res_dict[metric] = results['metrics'][metric]
-        db.update({"_id": mod_id}, {'$set': res_dict})
 
         save_params(model, filepath=params_dump)
         results['model_id'] = hexdi_m
         results['data_id'] = data_hash
         results['params_dump'] = params_dump
+
+        db.update({"_id": mod_id}, {'$set': res_dict})
 
     except Exception:
         db.update({"_id": mod_id}, {'$set': {'error': 1}})

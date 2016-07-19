@@ -1,7 +1,10 @@
 import copy
 import hashlib
 import json
+import numpy as np
 import pickle
+
+from datetime import datetime
 
 
 def clean_model(model):
@@ -93,6 +96,12 @@ def create_param_dump(_path_h5, hexdi_m, hexdi_d):
         the full path where to dump the params"""
     return _path_h5 + hexdi_m + hexdi_d + '.h5'
 
+ 
+def make_all_hash(model_c, batch_size, data_hash, _path_h5):
+    hexdi_m = create_model_hash(model_c, batch_size)
+    params_dump = create_param_dump(_path_h5, hexdi_m, data_hash)
+    return hexdi_m, params_dump
+
 
 def open_dataset_gen(generator):
     if hasattr(generator, 'data_stream'):
@@ -101,7 +110,7 @@ def open_dataset_gen(generator):
     elif hasattr(generator, 'dataset'):
         generator.dataset.open()
     else:
-        raise NotImplementedError('Not able to open the dataset')
+        raise NotImplementedError('not able to open the dataset')
 
 
 def transform_gen(gen_train, mod_name):
@@ -159,3 +168,26 @@ def transform_gen(gen_train, mod_name):
                 fin_inputs.update(fin_outputs)
                 data_out = fin_inputs
             yield data_out
+
+
+def train_pipe(train_f, save_f, model, data, data_val, generator, params_dump,
+               data_hash, hexdi_m,
+               *args, **kwargs):
+    results, model = train_f(model['model_arch'], data,
+                             data_val,
+                             generator=generator,
+                             *args, **kwargs)
+    res_dict = {
+        'iter_stopped': results['metrics']['iter'],
+        'trained': 1,
+        'date_finished_training': datetime.now()}
+    for metric in results['metrics']:
+        res_dict[metric] = results['metrics'][metric]
+        if metric in ['loss', 'val_loss']:
+            res_dict[metric] = np.min(results['metrics'][metric])
+
+    save_f(model, params_dump)
+    results['model_id'] = hexdi_m
+    results['data_id'] = data_hash
+    results['params_dump'] = params_dump
+    return results, res_dict
