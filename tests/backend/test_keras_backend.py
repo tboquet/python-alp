@@ -335,6 +335,7 @@ class TestExperiment:
 
         if get_custom_l:
             for val in [gen, data_val_use]:
+                gen, data, data_stream = make_gen(is_graph)
                 with pytest.raises(RuntimeError) as excinfo:
                     expe.fit_gen([gen], [val], nb_epoch=2,
                                  model=model,
@@ -379,6 +380,7 @@ class TestExperiment:
 
         if get_custom_l:
             for val in [gen, data_val_use]:
+                gen, data, data_stream = make_gen(is_graph)
                 with pytest.raises(RuntimeError) as excinfo:
                     expe.fit_gen_async([gen], [val], nb_epoch=2,
                                        model=model,
@@ -389,6 +391,7 @@ class TestExperiment:
                     print(excinfo)
         else:
             for val in [gen, data_val_use]:
+                gen, data, data_stream = make_gen(is_graph)
                 expe.fit_gen_async([gen], [val], nb_epoch=2,
                                    model=model,
                                    metrics=metrics,
@@ -457,7 +460,8 @@ class TestBackendFunctions:
         model_dict = dict()
         model_dict['model_arch'] = to_dict_w_opt(model)
 
-        res = KTB.train(copy.deepcopy(model_dict['model_arch']), [data], [data_val])
+        res = KTB.train(copy.deepcopy(model_dict['model_arch']), [data],
+                        [data_val])
         res = KTB.fit(NAME, VERSION, model_dict, [data], 'test', [data_val])
 
         assert len(res) == 4
