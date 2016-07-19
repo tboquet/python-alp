@@ -191,7 +191,7 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
     return model
 
 
-def train(model, data, data_val, *args, **kwargs):
+def train(model, data, data_val, generator=False, *args, **kwargs):
     """Fit a model given parameters and a serialized model
 
     Args:
@@ -287,20 +287,10 @@ def fit(backend_name, backend_version, model, data, data_hash,
     mod_id = db.insert(full_json)
 
     try:
-        results, model = train(model['model_arch'], data,
-                               data_val,
-                               *args, **kwargs)
-        res_dict = {
-            'iter_stopped': results['metrics']['iter'],
-            'trained': 1,
-            'date_finished_training': datetime.now()}
-        for metric in results['metrics']:
-            res_dict[metric] = results['metrics'][metric]
-
-        save_params(model, filepath=params_dump)
-        results['model_id'] = hexdi_m
-        results['data_id'] = data_hash
-        results['params_dump'] = params_dump
+        results, res_dict = cm.train_pipe(train, save_params, model, data,
+                                          data_val, generator, params_dump,
+                                          data_hash, hexdi_m,
+                                          *args, **kwargs)
 
         db.update({"_id": mod_id}, {'$set': res_dict})
 

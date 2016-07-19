@@ -96,7 +96,7 @@ def create_param_dump(_path_h5, hexdi_m, hexdi_d):
         the full path where to dump the params"""
     return _path_h5 + hexdi_m + hexdi_d + '.h5'
 
- 
+
 def make_all_hash(model_c, batch_size, data_hash, _path_h5):
     hexdi_m = create_model_hash(model_c, batch_size)
     params_dump = create_param_dump(_path_h5, hexdi_m, data_hash)

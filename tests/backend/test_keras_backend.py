@@ -86,7 +86,7 @@ def dump_data(graph=False):
         # scale = 1.0 / inputs['X'].std(axis=0)
         # shift = - scale * inputs['X'].mean(axis=0)
 
-    file_path, i_names, o_names = to_fuel_h5(inputs, outputs, [0, 128],
+    file_path, i_names, o_names = to_fuel_h5(inputs, outputs, [0, 164],
                                              ['train', 'test'],
                                              file_name,
                                              '/data_generator')
