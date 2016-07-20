@@ -86,7 +86,7 @@ def dump_data(graph=False):
         # scale = 1.0 / inputs['X'].std(axis=0)
         # shift = - scale * inputs['X'].mean(axis=0)
 
-    file_path, i_names, o_names = to_fuel_h5(inputs, outputs, [0, 164],
+    file_path, i_names, o_names = to_fuel_h5(inputs, outputs, [0, 256],
                                              ['train', 'test'],
                                              file_name,
                                              '/data_generator')
@@ -351,12 +351,12 @@ class TestExperiment:
                                  model=model,
                                  metrics=metrics,
                                  custom_objects=cust_objects,
-                                 samples_per_epoch=128,
+                                 samples_per_epoch=64,
                                  nb_val_samples=128)
                     print(excinfo)
-                close_gens(gen, data, data_stream)
-                if val == 1:
-                    close_gens(val, data_2, data_stream_2)
+                    close_gens(gen, data, data_stream)
+                    if val == 1:
+                        close_gens(val, data_2, data_stream_2)
         else:
             for val in [1, data_val_use]:
                 gen, data, data_stream = make_gen(is_graph)
@@ -366,7 +366,7 @@ class TestExperiment:
                                 model=model,
                                 metrics=metrics,
                                 custom_objects=cust_objects,
-                                samples_per_epoch=128,
+                                samples_per_epoch=64,
                                 nb_val_samples=128)
 
                 close_gens(gen, data, data_stream)
@@ -399,12 +399,12 @@ class TestExperiment:
                                        model=model,
                                        metrics=metrics,
                                        custom_objects=cust_objects,
-                                       samples_per_epoch=128,
+                                       samples_per_epoch=64,
                                        nb_val_samples=128)
                     print(excinfo)
-                close_gens(gen, data, data_stream)
-                if val == 1:
-                    close_gens(val, data_2, data_stream_2)
+                    close_gens(gen, data, data_stream)
+                    if val == 1:
+                        close_gens(val, data_2, data_stream_2)
         else:
             for val in [1, data_val_use]:
                 gen, data, data_stream = make_gen(is_graph)
@@ -414,7 +414,7 @@ class TestExperiment:
                                    model=model,
                                    metrics=metrics,
                                    custom_objects=cust_objects,
-                                   samples_per_epoch=128,
+                                   samples_per_epoch=64,
                                    nb_val_samples=128)
                 close_gens(gen, data, data_stream)
                 if val == 1:
