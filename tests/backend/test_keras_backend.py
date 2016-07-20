@@ -103,9 +103,9 @@ def make_gen(graph=False):
         file_path_f = file_path_g
         names_select = i_names_g
     train_set = H5PYDataset(file_path_f,
-                            which_sets=('train','test'))
+                            which_sets=('train', 'test'))
 
-    scheme = SequentialScheme(examples=64, batch_size=4)
+    scheme = SequentialScheme(examples=128, batch_size=batch_size)
 
     data_stream_train = DataStream(dataset=train_set, iteration_scheme=scheme)
 
