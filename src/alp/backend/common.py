@@ -2,9 +2,9 @@ import copy
 import hashlib
 import json
 import pickle
-import numpy as np
-
 from datetime import datetime
+
+import numpy as np
 
 
 def clean_model(model):
