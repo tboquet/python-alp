@@ -11,7 +11,7 @@ if not os.access(_alp_base_dir, os.W_OK):  # pragma: no cover
 
 
 _alp_dir = os.path.join(_alp_base_dir, '.alp')
-if not os.path.exists(_alp_dir):
+if not os.path.exists(_alp_dir):  # pragma: no cover
     os.makedirs(_alp_dir)
 
 _db_engine = 'mongodb'
@@ -20,7 +20,7 @@ _host_port = 27017
 _db_name = 'modelization'
 _collection_name = 'models'
 
-if os.getenv("TEST_MODE") == "ON":
+if os.getenv("TEST_MODE") == "ON":  # pragma: no cover
     _host_adress = '127.0.0.1'
 
 # note: we have to be able to accept other structures
