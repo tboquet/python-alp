@@ -38,7 +38,6 @@ from ..celapp import app
 
 COMPILED_MODELS = dict()
 TO_SERIALIZE = ['custom_objects']
-dill.settings['recurse'] = True
 
 
 # general utilities
@@ -70,8 +69,8 @@ def serialize(cust_obj):
         ser_func['clos_d'] = dill.dumps(six.get_function_closure(cust_obj))
         ser_func['type_obj'] = 'func'
     else:
-        if hasattr(cust_obj, '__module__'):
-            cust_obj.__module__ = '__main__'
+        # if hasattr(cust_obj, '__module__'):
+        #     cust_obj.__module__ = '__main__'
         ser_func['name_d'] = None
         ser_func['args_d'] = None
         ser_func['clos_d'] = None
@@ -101,7 +100,6 @@ def deserialize(name_d, func_code_d, args_d, clos_d, type_obj):
         loaded_obj = types.FunctionType(code, globals(), name, args, clos)
     else:  # pragma: no cover
         loaded_obj = dill.loads(func_code_d.encode('raw_unicode_escape'))
-
     return loaded_obj
 
 
@@ -172,6 +170,9 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
 
     custom_objects = {k: deserialize(**custom_objects[k])
                       for k in custom_objects}
+
+    for k in custom_objects:
+        custom_objects[k] = custom_objects[k]()
 
     model = layer_from_config(model_dict['config'],
                               custom_objects=custom_objects)
