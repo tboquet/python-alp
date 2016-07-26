@@ -23,6 +23,7 @@ in memory compiled function, this function is used instead.
 ----------------------------------------------------------------------------
 """
 
+import inspect
 import pickle
 import types
 
@@ -69,8 +70,8 @@ def serialize(cust_obj):
         ser_func['clos_d'] = dill.dumps(six.get_function_closure(cust_obj))
         ser_func['type_obj'] = 'func'
     else:
-        # if hasattr(cust_obj, '__module__'):
-        #     cust_obj.__module__ = '__main__'
+        if hasattr(cust_obj, '__module__'):
+            cust_obj.__module__ = '__main__'
         ser_func['name_d'] = None
         ser_func['args_d'] = None
         ser_func['clos_d'] = None
@@ -172,7 +173,9 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
                       for k in custom_objects}
 
     for k in custom_objects:
-        custom_objects[k] = custom_objects[k]()
+        if inspect.isfunction(custom_objects[k]):
+            custom_objects[k] = custom_objects[k]()
+
 
     model = layer_from_config(model_dict['config'],
                               custom_objects=custom_objects)
