@@ -115,6 +115,7 @@ def to_dict_w_opt(model, metrics=None):
     }
     if hasattr(model, 'optimizer'):
         config['optimizer'] = model.optimizer.get_config()
+        config['optimizer']['name'] = model.optimizer.__class__.__name__
         config['metrics'] = []
         config['ser_metrics'] = dict()
     if hasattr(model, 'loss'):
