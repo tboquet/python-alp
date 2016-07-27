@@ -47,7 +47,7 @@ def _test_fit_predict_model(imodel):
     model_deserialized = SKB.model_from_dict_w_opt(model_dict['model_arch'])
     assert model_deserialized is not None
 
-    res = SKB.fit(NAME, VERSION, model_dict, [data], [data_val])
+    res = SKB.fit(NAME, VERSION, model_dict, [data], 'test', [data_val])
     assert len(res) == 4
 
     expe = Experiment(model=imodel)

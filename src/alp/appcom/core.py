@@ -14,9 +14,11 @@ import copy
 import sys
 
 from ..appcom.utils import background
+from ..backend import common as cm
 from ..dbbackend import get_models
 from .utils import init_backend
 from .utils import switch_backend
+from .utils import transform_gen
 
 
 class Experiment(object):
@@ -52,6 +54,10 @@ class Experiment(object):
             self.__model_dict['data_id'] = None
         else:
             self.model = model_dict
+            backend, backend_name, backend_version = init_backend(model_dict)
+            self.backend = backend
+            self.backend_name = backend_name
+            self.backend_version = backend_version
             self.__model_dict['model_arch'] = self.backend.to_dict_w_opt(
                 self.model, self.metrics)
             self.__model_dict['mod_id'] = None
@@ -85,7 +91,7 @@ class Experiment(object):
         self.__model_dict['data_id'] = data_id
         self.__data_id = data_id
 
-    def fit(self, data, data_val, model=None, async=False, *args, **kwargs):
+    def fit(self, data, data_val, model=None, *args, **kwargs):
         """Build and fit a model given data and hyperparameters
 
         Args:
@@ -99,33 +105,11 @@ class Experiment(object):
             the id of the model in the db, the id of the data in the db and
             path to the parameters.
         """
-        _recompile = False
-        if model is not None:
-            self.model = model
-            _recompile = True
-        if "metrics" in kwargs:
-            self.metrics = kwargs.pop("metrics")
-            _recompile = True
+        res = self._prepare_fit(model, data, data_val, False, False,
+                                *args, **kwargs)
+        return res
 
-        if _recompile is True:
-            self.model_dict = self.backend.to_dict_w_opt(self.model,
-                                                         self.metrics)
-        if self.model is None:
-            raise Exception('No model provided')
-        kwargs = self._check_serialize(kwargs)
-        res = self.backend.fit(self.backend_name, self.backend_version,
-                               copy.deepcopy(self.model_dict), data,
-                               data_val, *args, **kwargs)
-        self.mod_id = res['model_id']
-        self.data_id = res['data_id']
-        self.params_dump = res['params_dump']
-
-        self.trained = True
-        self.full_res = res
-
-        return self.full_res
-
-    def fit_async(self, data, data_val, model=None, async=False,
+    def fit_async(self, data, data_val, model=None,
                   *args, **kwargs):
         """Build and fit asynchronously a model given data and hyperparameters
 
@@ -140,31 +124,60 @@ class Experiment(object):
             the id of the model in the db, the id of the data in the db and a
             path to the parameters.
         """
-        _recompile = False
-        if model is not None:
-            self.model = model
-            _recompile = True
-        if "metrics" in kwargs:
-            self.metrics = kwargs.pop("metrics")
-            _recompile = True
+        res = self._prepare_fit(model, data, data_val, False, True,
+                                *args, **kwargs)
 
-        if _recompile is True:
-            self.model_dict = self.backend.to_dict_w_opt(self.model,
-                                                         self.metrics)
-
-        kwargs = self._check_serialize(kwargs)
-        res = self.backend.fit.delay(self.backend_name, self.backend_version,
-                                     copy.deepcopy(self.model_dict), data,
-                                     data_val, *args, **kwargs)
-        self._get_results(res)
         return res
 
-    def load_model(self, mod_id, data_id):
+    def fit_gen(self, gen_train, data_val,
+                model=None, *args, **kwargs):
+        """Build and fit asynchronously a model given data and hyperparameters
+
+        Args:
+            gen_train(list(dict)): a list of generators.
+            data_val(list(dict)): a list of dictionnaries mapping inputs and
+                outputs names to numpy arrays or generators for validation.
+            model(model, optionnal): a model from a supported backend
+
+        Returns:
+            the id of the model in the db, the id of the data in the db and a
+            path to the parameters.
+        """
+        res = self._prepare_fit(model, gen_train, data_val, True, False,
+                                *args, **kwargs)
+
+        return res
+
+    def fit_gen_async(self, gen_train, data_val,
+                      model=None, *args, **kwargs):
+        """Build and fit asynchronously a model given generator(s) and
+        hyperparameters.
+
+        Args:
+            gen_train(list(dict)): a list of generators.
+            data_val(list(dict)): a list of dictionnaries mapping inputs and
+                outputs names to numpy arrays or generators for validation.
+            model(model, optionnal): a model from a supported backend
+
+        Returns:
+            the id of the model in the db, the id of the data in the db and a
+            path to the parameters.
+        """
+        res = self._prepare_fit(model, gen_train, data_val, True, True,
+                                *args, **kwargs)
+        return res
+
+    def load_model(self, mod_id=None, data_id=None):
         """Load a model from the database form it's mod_id and data_id
 
         Args:
             mod_id(str): the id of the model in the database
             data_id(str): the id of the data in the database"""
+        if mod_id is None and data_id is None:
+            mod_id = self.mod_id
+            data_id = self.data_id
+        assert mod_id is not None, 'You must provide a model id'
+        assert data_id is not None, 'You must provide a data id'
         models = get_models()
         model_db = models.find_one({'mod_id': mod_id, 'data_id': data_id})
         self._switch_backend(model_db)
@@ -174,11 +187,36 @@ class Experiment(object):
         self.data_id = model_db['data_id']
         self.trained = True
 
+    def predict(self, data):
+        """Make predictions given data"""
+        if self.trained:
+            return self.backend.predict(self.model_dict, data)
+        else:
+            raise Exception("You must have a trained model"
+                            "in order to make predictions")
+
+    def _check_compile(self, model, kwargs_m):
+        _recompile = False
+        if model is not None:
+            self.model = model
+            _recompile = True
+        if "metrics" in kwargs_m:
+            self.metrics = kwargs_m.pop("metrics")
+            _recompile = True
+
+        if _recompile is True:
+            self.model_dict = self.backend.to_dict_w_opt(self.model,
+                                                         self.metrics)
+
+        if self.model is None:
+            raise Exception('No model provided')
+
     def _switch_backend(self, model_db):
         """A utility function to switch backend when loading a model
 
         Args:
-            model_db(dict): """
+            model_db(dict): the dictionnary stored in the database
+        """
         if model_db['backend_name'] != self.backend_name:
             backend = switch_backend(model_db['backend_name'])
             self.backend_name = backend.__name__
@@ -190,20 +228,73 @@ class Experiment(object):
                 sys.stderr.write('Warning: the backend versions'
                                  'do not match.\n')  # pragma: no cover
 
-    def predict(self, data):
-        """Make predictions given data"""
-        if self.trained:
-            return self.backend.predict(self.model_dict, data)
-        else:
-            raise Exception("You must have a trained model"
-                            "in order to make predictions")
-
     def _check_serialize(self, kwargs):
+        """Serialize the object mapped in the kwargs
+
+        Args:
+           kwargs(dict): keyword arguments
+
+        Returns:
+            kwargs
+        """
         for k in kwargs:
             if k in self.backend.TO_SERIALIZE:
                 kwargs[k] = {j: self.backend.serialize(kwargs[k][j])
                              for j in kwargs[k]}
         return kwargs
+
+    def _prepare_message(self, model, data, data_val, kwargs, generator=False):
+        """Prepare the elements to be passed to the backend
+
+        Args:
+            model(supported model): the model to be prepared
+            data(list): the list of dicts or generators used for training
+            data_val(list): the list of dicts or generator used for validation
+        """
+        self._check_compile(model, kwargs)
+
+        kwargs = self._check_serialize(kwargs)
+
+        if generator:
+            data_hash = cm.create_gen_hash(data)
+            data, data_val = transform_gen(data, data_val)
+        else:
+            data_hash = cm.create_data_hash(data)
+
+        return data, data_val, data_hash
+
+    def _prepare_fit(self, model, data, data_val,
+                     generator=False, delay=False,
+                     *args, **kwargs):
+        data, data_val, data_hash = self._prepare_message(model,
+                                                          data,
+                                                          data_val,
+                                                          kwargs,
+                                                          generator)
+
+        f = self.backend.fit
+        if delay:
+            f = self.backend.fit.delay
+        res = f(self.backend_name,
+                self.backend_version,
+                copy.deepcopy(self.model_dict),
+                data, data_hash, data_val,
+                generator=generator,
+                *args, **kwargs)
+        return self._handle_results(res, delay)
+
+    def _handle_results(self, res, delay):
+        if delay:
+            thread = self._get_results(res)
+        else:
+            self.mod_id = res['model_id']
+            self.data_id = res['data_id']
+            self.params_dump = res['params_dump']
+
+            self.trained = True
+            self.full_res = res
+            thread = None
+        return res, thread
 
     @background
     def _get_results(self, res):

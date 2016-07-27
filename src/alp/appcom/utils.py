@@ -4,35 +4,11 @@
 """
 
 import functools
+import pickle
 import threading
+from itertools import islice
 
-
-def sliced(data, nb_train, nb_test, offset):
-    """Given a dataset, returns indexes to split the data into
-    a train and a validation set.
-
-    Args:
-        data(dict): a dictionnary mapping names to np.arrays
-        nb_train(int): the number of train samples
-        nb_test(int): the number of test samples
-        offset(int): the first observation offset
-
-    Returns:
-        `beg`, `endt`, `endv`, the indexes corresponding to
-         the beginning, the end of training end the end of
-         testing."""
-    for k in data.keys():
-        first = k
-        break
-    assert len(data[first]) > nb_train + nb_test + offset, \
-        'nb or nb + offset too large:' \
-        ' len(data):{}' \
-        ', len(selection): {}'.format(len(data[first]),
-                                      nb_train + nb_test + offset)
-    beg = offset - len(data[first])
-    endt = beg + nb_train
-    endv = endt + nb_test
-    return beg, endt, endv
+from six.moves import zip as szip
 
 
 def _get_backend_attributes(ABE):
@@ -69,7 +45,8 @@ def init_backend(model):
         from ..backend import sklearn_backend as ABE
     else:
         raise NotImplementedError(
-            "this backend is not supported")  # pragma: no cover
+            "this backend is not supported: {}".format(
+                model))  # pragma: no cover
 
     return _get_backend_attributes(ABE)
 
@@ -86,6 +63,8 @@ def switch_backend(backend_name):
         from ..backend.keras_backend import get_backend
     elif backend_name == 'sklearn':
         from ..backend.keras_backend import get_backend
+    else:
+        raise NotImplementedError
     return get_backend()
 
 
@@ -137,3 +116,110 @@ def imports(packages=None):
             return wrapped(*args, **kwargs)
         return inner
     return dec
+
+
+def norm_iterator(iterable):
+    """returns a normalized iterable of tuples"""
+    if isinstance(iterable, list):
+        names = ['list_' + str(i) for i, j in enumerate(iterable)]
+        return szip(names, iterable)
+    elif isinstance(iterable, dict):
+        return iterable.items()
+    else:
+        raise NotImplementedError('Iterables other than lists and dicts '
+                                  'cannot be passed to this function')
+
+
+def window(seq, n=2):
+    """Returns a sliding window (of width n) over data from the iterable"""
+    it = iter(seq)
+    result = tuple(islice(it, n))
+    if len(result) == n:
+        yield result
+    for elem in it:
+        result = result[1:] + (elem,)
+        yield result
+
+
+def to_fuel_h5(inputs, outputs, slices, names,
+               file_name, file_path=''):
+    """Transforms list of numpy arrays to a structured hdf5 file
+
+
+    Args:
+        inputs(list): a list of inputs(numpy.arrays)
+        outputs(list): a list of outputs(numpy.arrays)
+        slices(list): a list of int representing the end of a slice and the
+            begining of another slice. The last slice is automatically added
+            if missing (maximum length of the inputs).
+        names(list): a list of names for the datasets
+        file_name(str): the name of the file to save.
+        file_path(str): the path where the file is located
+
+    Returns:
+        The file full path
+    """
+    import h5py
+    import os
+    from fuel.datasets.hdf5 import H5PYDataset
+
+    suffix = 'hdf5'
+
+    inp = 'input_'
+    out = 'output_'
+
+    full_path = os.path.join(file_path, file_name.lower() + '.' + suffix)
+    f = h5py.File(full_path, mode='w')
+
+    dict_data_set = dict()
+    split_dict = dict()
+    for name in names:
+        split_dict[name] = dict()
+
+    slices.append(max_v_len(inputs))
+
+    def insert_info_h5(iterable, suf):
+        names_out = []
+        for k, v in norm_iterator(iterable):
+            dict_data_set[suf + k] = f.create_dataset(suf + k, v.shape,
+                                                      v.dtype)
+            dict_data_set[suf + k][...] = v
+            for sl, name in zip(window(slices, 2), names):
+                split_dict[name][suf + k] = sl
+            names_out.append(suf + str(k))
+        return names_out
+
+    inputs_names = insert_info_h5(inputs, inp)
+    outputs_names = insert_info_h5(outputs, out)
+
+    f.attrs['split'] = H5PYDataset.create_split_array(split_dict)
+    f.flush()
+    f.close()
+    return full_path, inputs_names, outputs_names
+
+
+def max_v_len(iterable_to_check):
+    """Returns the max length of a list of iterable"""
+    max_v = 0
+    for _, v in norm_iterator(iterable_to_check):
+        if len(v) > max_v:
+            max_v = len(v)
+    return max_v
+
+
+def transform_gen(gen_train, data_val):
+    gen_train = [pickle.dumps(g) for g in gen_train]
+
+    val_gen = check_gen(data_val)
+
+    if val_gen:
+        data_val = [pickle.dumps(g) for g in data_val]
+    return gen_train, data_val
+
+
+def check_gen(iterable):
+    is_gen = (hasattr(iterable[-1], 'next') or
+              hasattr(iterable[-1], '__next__'))
+    is_gen += 'fuel' in repr(iterable[-1])
+
+    return is_gen

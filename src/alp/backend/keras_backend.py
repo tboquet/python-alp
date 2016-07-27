@@ -23,17 +23,22 @@ in memory compiled function, this function is used instead.
 ----------------------------------------------------------------------------
 """
 
+import pickle
 import types
 
 import dill
 import marshal
 import six
+from six.moves import zip as szip
 
 from ..appcom import _path_h5
+from ..appcom.utils import check_gen
+from ..backend import common as cm
 from ..celapp import app
 
 COMPILED_MODELS = dict()
 TO_SERIALIZE = ['custom_objects']
+dill.settings['recurse'] = True
 
 
 # general utilities
@@ -41,6 +46,10 @@ TO_SERIALIZE = ['custom_objects']
 def get_backend():
     import keras as CB
     return CB
+
+
+def save_params(model, filepath):
+    model.save_weights(filepath, overwrite=True)
 
 
 def serialize(cust_obj):
@@ -61,12 +70,14 @@ def serialize(cust_obj):
         ser_func['clos_d'] = dill.dumps(six.get_function_closure(cust_obj))
         ser_func['type_obj'] = 'func'
     else:
-        func_code_d = dill.dumps(cust_obj).decode('raw_unicode_escape')
-        ser_func['func_code_d'] = func_code_d
+        if hasattr(cust_obj, '__module__'):
+            cust_obj.__module__ = '__main__'
         ser_func['name_d'] = None
         ser_func['args_d'] = None
         ser_func['clos_d'] = None
         ser_func['type_obj'] = 'class'
+        ser_func['func_code_d'] = dill.dumps(cust_obj).decode(
+            'raw_unicode_escape')
     return ser_func
 
 
@@ -88,7 +99,7 @@ def deserialize(name_d, func_code_d, args_d, clos_d, type_obj):
         args = marshal.loads(args_d)
         clos = dill.loads(clos_d)
         loaded_obj = types.FunctionType(code, globals(), name, args, clos)
-    else:
+    else:  # pragma: no cover
         loaded_obj = dill.loads(func_code_d.encode('raw_unicode_escape'))
 
     return loaded_obj
@@ -246,7 +257,7 @@ def build_predict_func(mod):
     return K.function(tensors, mod.outputs, updates=mod.state_updates)
 
 
-def train(model, data, data_val, *args, **kwargs):
+def train(model, data, data_val, generator=False, *args, **kwargs):
     """Fit a model given hyperparameters and a serialized model
 
     Args:
@@ -259,42 +270,79 @@ def train(model, data, data_val, *args, **kwargs):
         the loss (list), the validation loss (list), the number of iterations,
         and the model
         """
+    if generator:
+        from six.moves import reload_module as sreload
+        import theano
+        sreload(theano)
+
     results = dict()
     results['metrics'] = dict()
     custom_objects = None
+    fit_gen_val = False
     suf = 'val_'
 
     if 'custom_objects' in kwargs:
         custom_objects = kwargs.pop('custom_objects')
+
     # load model
     model = model_from_dict_w_opt(model, custom_objects=custom_objects)
+
     metrics_names = model.metrics_names
     for metric in metrics_names:
         results['metrics'][metric] = []
         results['metrics']['val_' + metric] = []
     mod_name = model.__class__.__name__
 
+    if generator:
+        data = [pickle.loads(d) for d in data]
+        data = [cm.transform_gen(d, mod_name) for d in data]
+        kwargs.pop('batch_size')
+
+    val_gen = check_gen(data_val)
+
+    if val_gen:
+        if generator:
+            data_val = [pickle.loads(dv) for dv in data_val]
+            data_val = [cm.transform_gen(dv, mod_name) for dv in data_val]
+            fit_gen_val = True
+        else:
+            raise Exception("You should also pass a generator for the training"
+                            " data.")
+
     # fit the model according to the input/output type
     if mod_name is "Graph":
-        for d, dv in zip(data, data_val):
-            h = model.fit(data=d,
-                          validation_data=dv,
-                          *args,
-                          **kwargs)
+        for d, dv in szip(data, data_val):
+            if generator:
+                h = model.fit_generator(generator=d,
+                                        validation_data=dv,
+                                        *args,
+                                        **kwargs)
+            else:
+                h = model.fit(data=d,
+                              validation_data=dv,
+                              *args,
+                              **kwargs)
             for metric in metrics_names:
                 results['metrics'][metric] += h.history[metric]
                 results['metrics']['val_' + metric] += h.history[metric]
         results['metrics']['iter'] = h.epoch[-1] * len(data)
 
     elif mod_name is "Sequential" or mod_name is "Model":
-        for d, dv in zip(data, data_val):
-            X, y = d['X'], d['y']
-            X_val, y_val = dv['X'], dv['y']
-            h = model.fit(x=X,
-                          y=y,
-                          validation_data=(X_val, y_val),
-                          *args,
-                          **kwargs)
+        for d, dv in szip(data, data_val):
+            if not fit_gen_val:
+                dv = (dv['X'], dv['y'])
+            if generator:
+                h = model.fit_generator(generator=d,
+                                        validation_data=dv,
+                                        *args,
+                                        **kwargs)
+            else:
+                X, y = d['X'], d['y']
+                h = model.fit(x=X,
+                              y=y,
+                              validation_data=dv,
+                              *args,
+                              **kwargs)
             for metric in metrics_names:
                 results['metrics'][metric] += h.history[metric]
                 results['metrics'][suf + metric] += h.history[suf + metric]
@@ -306,23 +354,23 @@ def train(model, data, data_val, *args, **kwargs):
 
 
 @app.task(default_retry_delay=60 * 10, max_retries=3, rate_limit='120/m')
-def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
-    """A function to train models given a datagenerator,a serialized model,
+def fit(backend_name, backend_version, model, data, data_hash, data_val,
+        generator=False, *args, **kwargs):
+    """a function to train models given a datagenerator,a serialized model,
 
-    Args:
+    args:
         backend_name(str): the model dumped with the `to_json` method
         backend_version(str): the backend version
-        model(keras.model): a Keras model
+        model(keras.model): a keras model
         data(list): a list of np.arrays for training
         data_val(list): a list of np.arrays for validation
 
-    Returns:
-        results similar to what the fit method of Keras would return"""
+    returns:
+        results similar to what the fit method of keras would return"""
 
     from alp import dbbackend as db
     from datetime import datetime
     import alp.backend.common as cm
-    import numpy as np
 
     if kwargs.get("batch_size") is None:
         kwargs['batch_size'] = 32
@@ -330,9 +378,9 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
     batch_size = kwargs['batch_size']
 
     model_c = cm.clean_model(model)
-    hexdi_m = cm.create_model_hash(model_c, batch_size)
-    hexdi_d = cm.create_data_hash(data)
-    params_dump = cm.create_param_dump(_path_h5, hexdi_m, hexdi_d)
+
+    hexdi_m, params_dump = cm.make_all_hash(model_c, batch_size, data_hash,
+                                            _path_h5)
 
     # update the full json
     full_json = {'backend_name': backend_name,
@@ -340,33 +388,20 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
                  'model_arch': model_c['model_arch'],
                  'datetime': datetime.now(),
                  'mod_id': hexdi_m,
-                 'data_id': hexdi_d,
+                 'data_id': data_hash,
                  'params_dump': params_dump,
                  'batch_size': kwargs['batch_size'],
-                 'trained': 0,
-                 'data_path': "sent",
-                 'root': "sent",
-                 'data_s': "sent"}
+                 'trained': 0}
+
     mod_id = db.insert(full_json)
 
     try:
-        results, model = train(model['model_arch'], data,
-                               data_val,
-                               *args, **kwargs)
-        res_dict = {
-            'iter_stopped': results['metrics']['iter'],
-            'trained': 1,
-            'date_finished_training': datetime.now()}
-        for metric in results['metrics']:
-            res_dict[metric] = results['metrics'][metric]
-            if metric in ['loss', 'val_loss']:
-                res_dict[metric] = np.min(results['metrics'][metric])
-        db.update({"_id": mod_id}, {'$set': res_dict})
+        results, res_dict = cm.train_pipe(train, save_params, model, data,
+                                          data_val, generator, params_dump,
+                                          data_hash, hexdi_m,
+                                          *args, **kwargs)
 
-        model.save_weights(params_dump, overwrite=True)
-        results['model_id'] = hexdi_m
-        results['data_id'] = hexdi_d
-        results['params_dump'] = params_dump
+        db.update({"_id": mod_id}, {'$set': res_dict})
 
     except Exception:
         db.update({"_id": mod_id}, {'$set': {'error': 1}})

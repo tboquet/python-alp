@@ -191,7 +191,7 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
     return model
 
 
-def train(model, data, data_val, *args, **kwargs):
+def train(model, data, data_val, generator=False, *args, **kwargs):
     """Fit a model given parameters and a serialized model
 
     Args:
@@ -250,7 +250,8 @@ def train(model, data, data_val, *args, **kwargs):
 
 
 @app.task(default_retry_delay=60 * 10, max_retries=3, rate_limit='120/m')
-def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
+def fit(backend_name, backend_version, model, data, data_hash,
+        data_val, generator=False, *args, **kwargs):
     """A function that takes a model and data (with validation),
         then applies the 'train' method if possible.
         The parameters are updated in case of success.
@@ -272,9 +273,7 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
     import alp.backend.common as cm
     from datetime import datetime
 
-    hexdi_m = cm.create_model_hash(model, 0)
-    hexdi_d = cm.create_data_hash(data)
-    params_dump = cm.create_param_dump(_path_h5, hexdi_m, hexdi_d)
+    hexdi_m, params_dump = cm.make_all_hash(model, 0, data_hash, _path_h5)
 
     # update the full json
     full_json = {'backend_name': backend_name,
@@ -282,30 +281,18 @@ def fit(backend_name, backend_version, model, data, data_val, *args, **kwargs):
                  'model_arch': model['model_arch'],
                  'datetime': datetime.now(),
                  'mod_id': hexdi_m,
-                 'data_id': hexdi_d,
+                 'data_id': data_hash,
                  'params_dump': params_dump,
-                 'trained': 0,
-                 'data_path': "sent",
-                 'root': "sent",
-                 'data_s': "sent"}
+                 'trained': 0}
     mod_id = db.insert(full_json)
 
     try:
-        results, model = train(model['model_arch'], data,
-                               data_val,
-                               *args, **kwargs)
-        res_dict = {
-            'iter_stopped': results['metrics']['iter'],
-            'trained': 1,
-            'date_finished_training': datetime.now()}
-        for metric in results['metrics']:
-            res_dict[metric] = results['metrics'][metric]
-        db.update({"_id": mod_id}, {'$set': res_dict})
+        results, res_dict = cm.train_pipe(train, save_params, model, data,
+                                          data_val, generator, params_dump,
+                                          data_hash, hexdi_m,
+                                          *args, **kwargs)
 
-        save_params(model, filepath=params_dump)
-        results['model_id'] = hexdi_m
-        results['data_id'] = hexdi_d
-        results['params_dump'] = params_dump
+        db.update({"_id": mod_id}, {'$set': res_dict})
 
     except Exception:
         db.update({"_id": mod_id}, {'$set': {'error': 1}})
