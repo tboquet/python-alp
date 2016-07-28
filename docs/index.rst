@@ -10,6 +10,7 @@ Welcome on ALP's documentation!
    installation
    dockersetup
    tutorial
+   customobjects
    usage
    reference/index
    contributing
