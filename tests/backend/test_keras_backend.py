@@ -4,15 +4,12 @@ import copy
 
 import inspect
 import keras
-import keras.backend as K
-import numpy as np
 import pytest
 import six
 from fuel.datasets.hdf5 import H5PYDataset
 from fuel.schemes import SequentialScheme
 from fuel.streams import DataStream
 from fuel.transformers import ScaleAndShift
-from keras.engine import Layer
 from keras.layers import Dense
 from keras.layers import Dropout
 from keras.layers import Input
@@ -117,7 +114,6 @@ def return_custom():
     import keras.backend as K
     import numpy as np
     from keras.engine import Layer
-    _super = super
     class Dropout_cust(Layer):
         '''Applies Dropout to the input.
         '''
@@ -235,6 +231,7 @@ def get_loss():
 
 @pytest.fixture
 def get_metric():
+    import keras.backend as K
     @imports({"K": K})
     def cosine_proximity(y_true, y_pred):
         y_true = K.l2_normalize(y_true, axis=-1)

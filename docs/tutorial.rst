@@ -116,7 +116,7 @@ It's then possible to make predictions using the loaded model.
 
 
 Sklearn example
---------------
+---------------
 
 As previously said, another partially supported backend is `scikit-learn`_. Let's do some logistic regression.
 
