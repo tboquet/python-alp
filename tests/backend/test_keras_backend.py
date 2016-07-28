@@ -69,6 +69,7 @@ def make_data():
 
 
 def dump_data(graph=False):
+    import numpy as np
     data, data_val = make_data()
     inputs = [np.concatenate([data['X'], data_val['X']])]
     outputs = [np.concatenate([data['y'], data_val['y']])]
@@ -111,7 +112,6 @@ def make_gen(graph=False):
 
 def return_custom():
     import keras.backend as K
-    import numpy as np
     from keras.engine import Layer
     class Dropout_cust(Layer):
         '''Applies Dropout to the input.
@@ -406,6 +406,7 @@ class TestExperiment:
 
 class TestBackendFunctions:
     def test_build_predict_func(self, get_model):
+        import numpy as np
         """Test the build of a model"""
         X_tr = np.ones((train_samples, input_dim))
         model = get_model()
