@@ -6,6 +6,7 @@ import inspect
 import keras
 import pytest
 import six
+
 from fuel.datasets.hdf5 import H5PYDataset
 from fuel.schemes import SequentialScheme
 from fuel.streams import DataStream
@@ -30,8 +31,6 @@ from alp.backend.keras_backend import get_function_name
 from alp.backend.keras_backend import model_from_dict_w_opt
 from alp.backend.keras_backend import serialize
 from alp.backend.keras_backend import to_dict_w_opt
-
-np.random.seed(1337)
 
 
 input_dim = 2
