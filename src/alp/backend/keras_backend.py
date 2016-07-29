@@ -23,6 +23,7 @@ in memory compiled function, this function is used instead.
 ----------------------------------------------------------------------------
 """
 
+import inspect
 import pickle
 import types
 
@@ -38,7 +39,6 @@ from ..celapp import app
 
 COMPILED_MODELS = dict()
 TO_SERIALIZE = ['custom_objects']
-dill.settings['recurse'] = True
 
 
 # general utilities
@@ -101,7 +101,6 @@ def deserialize(name_d, func_code_d, args_d, clos_d, type_obj):
         loaded_obj = types.FunctionType(code, globals(), name, args, clos)
     else:  # pragma: no cover
         loaded_obj = dill.loads(func_code_d.encode('raw_unicode_escape'))
-
     return loaded_obj
 
 
@@ -173,6 +172,10 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
 
     custom_objects = {k: deserialize(**custom_objects[k])
                       for k in custom_objects}
+
+    for k in custom_objects:
+        if inspect.isfunction(custom_objects[k]):
+            custom_objects[k] = custom_objects[k]()
 
     model = layer_from_config(model_dict['config'],
                               custom_objects=custom_objects)
