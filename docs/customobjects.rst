@@ -43,8 +43,6 @@ We will work with the CIFAR10 dataset available via Keras.
     X_train = X_train/255
     X_test = X_test/255
 
-
-
     batch_size = 128
     print('X_train shape:', X_train.shape)
     print(X_train.shape[0], 'train samples')
@@ -104,7 +102,6 @@ Imagine you want to reimplement a dropout layer. We could wrap it in a function 
       import keras.backend as K
       import numpy as np
       from keras.engine import Layer
-      _super = super
       class Dropout_cust(Layer):
           '''Applies Dropout to the input.
           '''
@@ -113,7 +110,7 @@ Imagine you want to reimplement a dropout layer. We could wrap it in a function 
               if 0. < self.p < 1.:
                   self.uses_learning_phase = True
               self.supports_masking = True
-              _super(Dropout_cust, self).__init__(**kwargs)
+              super(Dropout_cust, self).__init__(**kwargs)
 
           def call(self, x, mask=None):
               if 0. < self.p < 1.:
@@ -122,7 +119,7 @@ Imagine you want to reimplement a dropout layer. We could wrap it in a function 
 
           def get_config(self):
               config = {'p': self.p}
-              base_config = _super(Dropout_cust, self).get_config()
+              base_config = super(Dropout_cust, self).get_config()
               return dict(list(base_config.items()) + list(config.items()))
       return Dropout_cust
 
