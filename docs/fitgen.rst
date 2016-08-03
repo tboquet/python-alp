@@ -33,17 +33,24 @@ We will first create some fake data.
     outputs = [y]
 
 
-We then import an helper function that will convert your list of inputs to an HDF5 dataset.
-This dataset has a simple structure and you can divide it into multiple sets.
+We then import an helper function that will convert our list of inputs to an HDF5 dataset.
+This dataset has a simple structure and we can divide it into multiple sets.
 
 
 .. code-block:: python
 
-    slices = [0, 256, 512]
-    names = ['train', 'test', 'valid']
-    file_name = 'test_data_'
+    # we save the mean and the scale (inverse of the standard deviation)
+    # for each channel
     scale = 1.0 / inputs[0].std(axis=0)
     shift = - scale * inputs[0].mean(axis=0)
+
+    # for 3 sets, we need 3 slices
+    slices = [0, 256, 512]
+
+    # and 3 names
+    names = ['train', 'test', 'valid']
+
+    file_name = 'test_data_'
     file_path_f = to_fuel_h5(inputs, outputs, slices, names, file_name, '/data_generator')
 
 

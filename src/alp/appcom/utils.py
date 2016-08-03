@@ -208,6 +208,15 @@ def max_v_len(iterable_to_check):
 
 
 def transform_gen(gen_train, data_val):
+    """Check and serialize the validation data object and serialize the
+    training data generator.
+
+    Args:
+        gen_train(generator): the training data generator
+        data_val(dict or generator): the training data object
+
+    Returns:
+        normalized datasets"""
     gen_train = [pickle.dumps(g) for g in gen_train]
 
     val_gen = check_gen(data_val)
