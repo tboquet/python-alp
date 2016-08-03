@@ -159,7 +159,7 @@ We then define our model and call our function to instanciate this custom layer.
 
 
 We then map the name of the custom object to our function that returns the custom object in a dictionnary.
-After wrapping the model in an `alp.appcom.core.Experiment`, we call the `alp.appcom.core.Experiment.fit_gen` method and send the custom_objects.
+After wrapping the model in an `alp.appcom.core.Experiment`, we call the :meth:`alp.appcom.core.Experiment.fit_gen` method and send the custom_objects.
 
 .. code-block:: python
 
