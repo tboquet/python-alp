@@ -91,7 +91,7 @@ We finally build our model and wrap it in an experiment.
     expe = Experiment(model)
 
 
-We can finally use the `alp.appcom.Experiment.fit_gen` method with our model and dataset.
+We can finally use the `alp.appcom.core.Experiment.fit_gen` method with our model and dataset.
 
 
 .. code-block:: python
@@ -103,7 +103,7 @@ We can finally use the `alp.appcom.Experiment.fit_gen` method with our model and
                   samples_per_epoch=128,
                   nb_val_samples=128)
 
-You can also use `alp.appcom.Experiment.fit_gen_async` with the same function parameters if you have a worker running.
+You can also use `alp.appcom.core.Experiment.fit_gen_async` with the same function parameters if you have a worker running.
 
 .. code-block:: python
 
@@ -115,4 +115,4 @@ You can also use `alp.appcom.Experiment.fit_gen_async` with the same function pa
                   nb_val_samples=128)
 
 
- .. _Fuel: https://fuel.readthedocs.io/en/latest/
+.. _Fuel: https://fuel.readthedocs.io/en/latest/
