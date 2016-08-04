@@ -1,6 +1,6 @@
-============================
-Using custom layers in Keras
-============================
+======================================
+Using custom layers for Keras with ALP
+======================================
 
 Because serialization of complex Python objects is still a challenge we will present a way of sending a custom layer with ALP.
 
