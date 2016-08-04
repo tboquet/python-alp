@@ -48,7 +48,7 @@ You can also launch monitoring containers:
 
 .. code-block:: bash
 
-    docker run -d -p 5555:5555 -v /etc/localtime:/etc/localtime:ro -v ~/scheduler/proj:/sched \
+    docker run -d -p 5555:5555 -v ~/scheduler/proj:/sched \
           --link rabbitmq_sched:rabbitmq --name=flower_monitor --restart=always tboquet/anaceflo
 
     docker run -d --link mongo_results:mongo -p 8081:8081 --name=mongo_r_monitor --restart=always knickers/mongo-express
