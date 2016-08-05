@@ -77,20 +77,9 @@ This docker container will launch sequentially `tox` and `detox`, test the libra
 
 Note, to combine the coverage data from all the tox environments run:
 
-.. list-table::
-    :widths: 10 90
-    :stub-columns: 1
+::
 
-    - - Windows
-      - ::
-
-            set PYTEST_ADDOPTS=--cov-append
-            tox
-
-    - - Other
-      - ::
-
-            PYTEST_ADDOPTS=--cov-append tox
+    PYTEST_ADDOPTS=--cov-append tox
 
 * Free software: Apache license
 
