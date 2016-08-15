@@ -3,6 +3,7 @@
 ----------------------------------------------------------------------------
 """
 
+from pymongo import DESCENDING
 from pymongo import MongoClient
 from ..dbbackend import _collection_name
 from ..dbbackend import _db_name
@@ -52,6 +53,6 @@ def create_db(drop=True):
     if drop:
         modelization.drop_collection(_collection_name)
     models = modelization['models']
-    return models.create_index([('model_id', pymongo.DESCENDING),
-                                ('data_id', pymongo.DESCENDING)],
+    return models.create_index([('model_id', DESCENDING),
+                                ('data_id', DESCENDING)],
                                unique=True)
