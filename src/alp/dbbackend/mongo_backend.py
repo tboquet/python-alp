@@ -43,3 +43,15 @@ def update(inserted_id, json_changes):
     dict_id = dict()
     dict_id['_id'] = inserted_id
     models.update(dict_id, json_changes)
+
+
+def create_db(drop=True):
+    """Delete (and optionnaly drop) the modelization database and collection"""
+    client = MongoClient(_host_adress, _host_port)
+    modelization = client[_db_name]
+    if drop:
+        modelization.drop_collection(_collection_name)
+    models = modelization['models']
+    return models.create_index([('model_id', pymongo.DESCENDING),
+                                ('data_id', pymongo.DESCENDING)],
+                               unique=True)
