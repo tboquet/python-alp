@@ -40,243 +40,75 @@ data_val["X"] = X_test
 data_val["y"] = y_test
 
 
-def _test_fit_predict_model(imodel):
+SUPPORTED = [LogisticRegression, LinearRegression, Ridge, Lasso,
+             Lars, LassoLars, OrthogonalMatchingPursuit, BayesianRidge,
+             ARDRegression, LinearDiscriminantAnalysis,
+             QuadraticDiscriminantAnalysis, KernelRidge]
 
-    model_dict = dict()
-    model_dict['model_arch'] = SKB.to_dict_w_opt(imodel)
-    model_deserialized = SKB.model_from_dict_w_opt(model_dict['model_arch'])
-    assert model_deserialized is not None
-
-    res = SKB.fit(NAME, VERSION, model_dict, [data], 'test', [data_val])
-    assert len(res) == 4
-
-    expe = Experiment(model=imodel)
-    assert expe.backend is not None
-
-    expe.fit([data], [data_val])
-    assert expe.data_id is not None
-    assert expe.mod_id is not None
-    assert expe.params_dump is not None
-
-    predexp = expe.predict(data["X"])
-    imodel.fit(X_train, y_train)
-    assert np.allclose(predexp, imodel.predict(X_train))
+keyval = dict()
+for m in SUPPORTED:
+    keyval[str(type(m()))[8:][:-2]] = m
 
 
-
-def test_fit_predict_LinearRegression_normalizeF():
-    """Tests:
-        - the to_dict_w_opt method of SKB (serialization);
-        - the model_from_dict_w_opt of SKB (deserialization);
-        - the fit method of SKB;
-        - the fit method of the Experiment;
-        - the predict method of the Experiment;
-        - the predict method of the Experiment when loading from compiled;
-        with a sklearn linear regression model where normalization is set
-         to False.
-        NB: this is only for testing purpose. One should not try to predict
-        a categorical variable with a linear regressor.
-    """
-
-    lr = LinearRegression(normalize=False)
-    _test_fit_predict_model(lr)
+@pytest.fixture(scope='module', params=list(keyval.keys()))
+def get_model(request):
+    return keyval[request.param]
 
 
-def test_fit_predict_LinearRegression_normalizeT():
-    """Tests:
-        - the to_dict_w_opt method of SKB (serialization);
-        - the model_from_dict_w_opt of SKB (deserialization);
-        - the fit method of SKB;
-        - the fit method of the Experiment;
-        - the predict method of the Experiment;
-        - the predict method of the Experiment when loading from compiled;
-        with a sklearn linear regression model where normalization is set
-         to True.
-        NB: this is only for testing purpose. One should not try to predict
-        a categorical variable with a linear regressor.
-    """
-    lr = LinearRegression(normalize=True)
-    _test_fit_predict_model(lr)
+class TestExperiment:
+    def test_experiment_instance_utils(self, get_model):
+        model = get_model()
 
+        expe = Experiment(model)
+        expe.model_dict = model
+        expe.backend_name = 'another_backend'
+        expe.model_dict = model
+        print(self)
 
-def test_fit_LogisticRegression():
-    """Tests:
-        - the to_dict_w_opt method of SKB (serialization);
-        - the model_from_dict_w_opt of SKB (deserialization);
-        - the fit method of SKB;
-        - the fit method of the Experiment;
-        - the predict method of the Experiment;
-        - the predict method of the Experiment when loading from compiled;
-        with a sklearn logistic regression model.
+        assert expe.backend is not None
 
-        NB: by default, multi-class is set to OvR, eg one classifier per class.
-        On the iris dataset, it means 3 classifiers.
-        The attributes _ coef and intercept_, of shape (3,4) and (3,1) resp are
-        serialized as intended.
-    """
+    def test_experiment_fit(self, get_model):
 
-    lr = LogisticRegression()
-    _test_fit_predict_model(lr)
+        model = get_model()
 
+        expe = Experiment(model)
 
-def test_fit_OrthogonalMatchingPursuit():
-    """Tests:
-        - the to_dict_w_opt method of SKB (serialization);
-        - the model_from_dict_w_opt of SKB (deserialization);
-        - the fit method of SKB;
-        - the fit method of the Experiment;
-        - the predict method of the Experiment;
-        - the predict method of the Experiment when loading from compiled;
-        with a sklearn omp model.
+        for mod in [None, model]:
+            expe.fit([data], [data_val], model=mod, overwrite=True)
 
-    """
+        expe.backend_name = 'another_backend'
+        expe.load_model()
+        expe.load_model(expe.mod_id, expe.data_id)
 
-    omp = OrthogonalMatchingPursuit()
-    _test_fit_predict_model(omp)
+        assert expe.data_id is not None
+        assert expe.mod_id is not None
+        assert expe.params_dump is not None
+        print(self)
 
+    def test_experiment_fit_async(self, get_model):
+        model = get_model()
 
-def test_fit_Ridge():
-    """Tests:
-        - the to_dict_w_opt method of SKB (serialization);
-        - the model_from_dict_w_opt of SKB (deserialization);
-        - the fit method of SKB;
-        - the fit method of the Experiment;
-        - the predict method of the Experiment;
-        - the predict method of the Experiment when loading from compiled;
-        with a sklearn Ridge model.
+        expe = Experiment(model)
 
-    """
+        for mod in [None, model]:
+            expe.fit([data], [data_val], model=mod, overwrite=True)
 
-    ridge = Ridge()
-    _test_fit_predict_model(ridge)
+        print(self)
 
+    def test_experiment_predict(self, get_model):
+        model = get_model()
 
-def test_fit_KernelRidge():
-    """Tests:
-        - the to_dict_w_opt method of SKB (serialization);
-        - the model_from_dict_w_opt of SKB (deserialization);
-        - the fit method of SKB;
-        - the fit method of the Experiment;
-        - the predict method of the Experiment;
-        - the predict method of the Experiment when loading from compiled;
-        with a sklearn KernelRidge model.
+        expe = Experiment(model)
 
-    """
+        for mod in [None, model]:
+            expe.fit([data], [data_val], model=mod, overwrite=True)
+        expe.load_model()
+        alp_pred = expe.predict(data['X'])
 
-    kridge = KernelRidge()
-    _test_fit_predict_model(kridge)
+        model.fit(X_train, y_train)
 
-
-def test_fit_BayesianRidge():
-    """Tests:
-        - the to_dict_w_opt method of SKB (serialization);
-        - the model_from_dict_w_opt of SKB (deserialization);
-        - the fit method of SKB;
-        - the fit method of the Experiment;
-        - the predict method of the Experiment;
-        - the predict method of the Experiment when loading from compiled;
-        with a sklearn BayesianRidge model.
-
-    """
-
-    bridge = BayesianRidge()
-    _test_fit_predict_model(bridge)
-
-
-def test_fit_LassoLars():
-    """Tests:
-        - the to_dict_w_opt method of SKB (serialization);
-        - the model_from_dict_w_opt of SKB (deserialization);
-        - the fit method of SKB;
-        - the fit method of the Experiment;
-        - the predict method of the Experiment;
-        - the predict method of the Experiment when loading from compiled;
-        with a sklearn LassoLars model.
-
-    """
-
-    ll = LassoLars()
-    _test_fit_predict_model(ll)
-
-
-def test_fit_Lars():
-    """Tests:
-        - the to_dict_w_opt method of SKB (serialization);
-        - the model_from_dict_w_opt of SKB (deserialization);
-        - the fit method of SKB;
-        - the fit method of the Experiment;
-        - the predict method of the Experiment;
-        - the predict method of the Experiment when loading from compiled;
-        with a sklearn Lars model.
-
-    """
-
-    l = Lars()
-    _test_fit_predict_model(l)
-
-
-def test_fit_Lasso():
-    """Tests:
-        - the to_dict_w_opt method of SKB (serialization);
-        - the model_from_dict_w_opt of SKB (deserialization);
-        - the fit method of SKB;
-        - the fit method of the Experiment;
-        - the predict method of the Experiment;
-        - the predict method of the Experiment when loading from compiled;
-        with a sklearn Lasso model.
-
-    """
-
-    l = Lasso()
-    _test_fit_predict_model(l)
-
-
-def test_fit_ARDRegression():
-    """Tests:
-        - the to_dict_w_opt method of SKB (serialization);
-        - the model_from_dict_w_opt of SKB (deserialization);
-        - the fit method of SKB;
-        - the fit method of the Experiment;
-        - the predict method of the Experiment;
-        - the predict method of the Experiment when loading from compiled;
-        with a sklearn ardr model.
-
-    """
-
-    ardr = ARDRegression()
-    _test_fit_predict_model(ardr)
-
-
-def test_fit_QuadraticDiscriminantAnalysis():
-    """Tests:
-        - the to_dict_w_opt method of SKB (serialization);
-        - the model_from_dict_w_opt of SKB (deserialization);
-        - the fit method of SKB;
-        - the fit method of the Experiment;
-        - the predict method of the Experiment;
-        - the predict method of the Experiment when loading from compiled;
-        with a sklearn QuadraticDiscriminantAnalysis model.
-
-    """
-
-    qda = QuadraticDiscriminantAnalysis()
-    _test_fit_predict_model(qda)
-
-
-def test_fit_LinearDiscriminantAnalysis():
-    """Tests:
-        - the to_dict_w_opt method of SKB (serialization);
-        - the model_from_dict_w_opt of SKB (deserialization);
-        - the fit method of SKB;
-        - the fit method of the Experiment;
-        - the predict method of the Experiment;
-        - the predict method of the Experiment when loading from compiled;
-        with a sklearn LinearDiscriminantAnalysis model.
-
-    """
-
-    lda = LinearDiscriminantAnalysis()
-    _test_fit_predict_model(lda)
+        assert(np.allclose(alp_pred, model.predict(data['X'])))
+        print(self)
 
 
 if __name__ == "__main__":

@@ -356,8 +356,9 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
     return results, model
 
 
-@app.task(default_retry_delay=60 * 10, max_retries=3, rate_limit='120/m')
-def fit(backend_name, backend_version, model, data, data_hash, data_val,
+@app.task(bind=True, default_retry_delay=60 * 10, max_retries=3,
+          rate_limit='120/m')
+def fit(self, backend_name, backend_version, model, data, data_hash, data_val,
         generator=False, *args, **kwargs):
     """a function to train models given a datagenerator,a serialized model,
 
@@ -378,6 +379,11 @@ def fit(backend_name, backend_version, model, data, data_hash, data_val,
     if kwargs.get("batch_size") is None:
         kwargs['batch_size'] = 32
 
+    if kwargs.get("overwrite") is None:
+        overwrite = False
+    else:
+        overwrite = kwargs.pop("overwrite")
+
     batch_size = kwargs['batch_size']
 
     model_c = cm.clean_model(model)
@@ -394,9 +400,11 @@ def fit(backend_name, backend_version, model, data, data_hash, data_val,
                  'data_id': data_hash,
                  'params_dump': params_dump,
                  'batch_size': kwargs['batch_size'],
-                 'trained': 0}
+                 'trained': 0,
+                 'mod_data_id': hexdi_m + data_hash,
+                 'task_id': self.request.id}
 
-    mod_id = db.insert(full_json)
+    mod_id = db.insert(full_json, upsert=overwrite)
 
     try:
         results, res_dict = cm.train_pipe(train, save_params, model, data,
