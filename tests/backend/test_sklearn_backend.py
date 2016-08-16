@@ -101,7 +101,8 @@ class TestExperiment:
         expe = Experiment(model)
 
         for mod in [None, model]:
-            expe.fit([data], [data_val], model=mod, overwrite=True)
+            expe.fit([data], [data_val], model=mod, custom_object={},
+                     overwrite=True)
         expe.load_model()
         alp_pred = expe.predict(data['X'])
 
