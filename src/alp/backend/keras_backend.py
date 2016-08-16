@@ -379,7 +379,7 @@ def fit(self, backend_name, backend_version, model, data, data_hash, data_val,
     if kwargs.get("batch_size") is None:
         kwargs['batch_size'] = 32
 
-    if kwargs.get("overwrite") is None:
+    if kwargs.get("overwrite") is None:  # pragma: no cover
         overwrite = False
     else:
         overwrite = kwargs.pop("overwrite")

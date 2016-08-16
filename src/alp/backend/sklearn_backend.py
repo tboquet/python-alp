@@ -274,7 +274,7 @@ def fit(self, backend_name, backend_version, model, data, data_hash,
     import alp.backend.common as cm
     from datetime import datetime
 
-    if kwargs.get("overwrite") is None:
+    if kwargs.get("overwrite") is None:  # pragma: no cover
         overwrite = False
     else:
         overwrite = kwargs.pop("overwrite")
@@ -292,7 +292,7 @@ def fit(self, backend_name, backend_version, model, data, data_hash,
                  'trained': 0,
                  'mod_data_id': hexdi_m + data_hash,
                  'task_id': self.request.id}
-    print(self.request.id)
+
     mod_id = db.insert(full_json, upsert=overwrite)
 
     try:
