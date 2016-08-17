@@ -293,10 +293,10 @@ class TestExperiment:
 
         expe = Experiment(model)
 
-        for model in [None, model]:
-            expe.fit([data], [data_val], model=model, nb_epoch=2,
-                    batch_size=batch_size, metrics=metrics,
-                    custom_objects=cust_objects)
+        for mod in [None, model]:
+            expe.fit([data], [data_val], model=mod, nb_epoch=2,
+                     batch_size=batch_size, metrics=metrics,
+                     custom_objects=cust_objects, overwrite=True)
 
         expe.backend_name = 'another_backend'
         expe.load_model()
@@ -317,10 +317,10 @@ class TestExperiment:
         cust_objects['test_list'] = [1, 2]
         expe = Experiment(model)
 
-        for model in [None, model]:
-            expe.fit_async([data], [data_val], model=model, nb_epoch=2,
-                    batch_size=batch_size, metrics=metrics,
-                    custom_objects=cust_objects)
+        for mod in [None, model]:
+            expe.fit_async([data], [data_val], model=mod, nb_epoch=2,
+                           batch_size=batch_size, metrics=metrics,
+                           custom_objects=cust_objects, overwrite=True)
         print(self)
 
     def test_experiment_fit_gen(self, get_model, get_loss_metric,
@@ -339,12 +339,12 @@ class TestExperiment:
             if val == 1:
                 val, data_2, data_stream_2 = make_gen(is_graph)
             expe.fit_gen([gen], [val], nb_epoch=2,
-                            model=model,
-                            metrics=metrics,
-                            custom_objects=cust_objects,
-                            samples_per_epoch=64,
-                            nb_val_samples=128,
-                            verbose=2)
+                         model=model,
+                         metrics=metrics,
+                         custom_objects=cust_objects,
+                         samples_per_epoch=64,
+                         nb_val_samples=128,
+                         verbose=2, overwrite=True)
 
             close_gens(gen, data, data_stream)
             if val == 1:
@@ -376,7 +376,7 @@ class TestExperiment:
                                 custom_objects=cust_objects,
                                 samples_per_epoch=64,
                                 nb_val_samples=128,
-                                verbose=2)
+                                verbose=2, overwrite=True)
             close_gens(gen, data, data_stream)
             if val == 1:
                 close_gens(val, data_2, data_stream_2)
@@ -395,7 +395,7 @@ class TestExperiment:
         expe.fit([data], [data_val], nb_epoch=2,
                  batch_size=batch_size,
                  custom_objects=cust_objects,
-                 metrics=metrics)
+                 metrics=metrics, overwrite=True)
 
         if model_name == 'Graph' or model_name == 'Model':
             expe.predict({'X': data_val['X']})

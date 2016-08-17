@@ -21,7 +21,7 @@ def get_models():
     return modelization[_collection_name]
 
 
-def insert(full_json):
+def insert(full_json, upsert=False):
     """Insert an observation in the db
 
     Args:
@@ -31,7 +31,17 @@ def insert(full_json):
     Returns:
         the id of the inserted object in the db"""
     models = get_models()
-    return models.insert_one(full_json).inserted_id
+    filter_db = dict()
+    filter_db['mod_data_id'] = full_json['mod_data_id']
+    doc_id = models.find_one(filter_db)
+    if doc_id is not None:
+        doc_id = doc_id['_id']
+    if upsert is True:
+        inserted = models.find_one_and_update(filter_db, {'$set': full_json},
+                                              upsert=upsert)
+    else:
+        inserted = models.insert_one(full_json).inserted_id
+    return inserted
 
 
 def update(inserted_id, json_changes):
@@ -53,6 +63,5 @@ def create_db(drop=True):
     if drop:
         modelization.drop_collection(_collection_name)
     models = modelization['models']
-    return models.create_index([('model_id', DESCENDING),
-                                ('data_id', DESCENDING)],
+    return models.create_index([('mod_data_id', DESCENDING)],
                                unique=True)
