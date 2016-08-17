@@ -250,227 +250,227 @@ def get_model(request):
     print(self)
 
 
-# class TestExperiment:
-#     @pytest.fixture(params=['classic', 'custom', 'list'])
-#     def get_loss_metric(self, request):
-#         if request.param == 'classic':
-#             return 'categorical_crossentropy', 'accuracy'
-#         elif request.param == 'custom':
-#             return get_loss(), get_metric()
-#         elif request.param == 'list':
-#             return [get_loss()], get_metric()
-#         print(self)
+class TestExperiment:
+    @pytest.fixture(params=['classic', 'custom', 'list'])
+    def get_loss_metric(self, request):
+        if request.param == 'classic':
+            return 'categorical_crossentropy', 'accuracy'
+        elif request.param == 'custom':
+            return get_loss(), get_metric()
+        elif request.param == 'list':
+            return [get_loss()], get_metric()
+        print(self)
 
-#     @pytest.fixture(params=['c_layer', ''])
-#     def get_custom_l(self, request):
-#         if request.param == 'c_layer':
-#             return True
-#         elif request.param == '':
-#             return False
-#         print(self)
+    @pytest.fixture(params=['c_layer', ''])
+    def get_custom_l(self, request):
+        if request.param == 'c_layer':
+            return True
+        elif request.param == '':
+            return False
+        print(self)
 
-#     def test_experiment_instance_utils(self, get_model):
-#         model = get_model()
+    def test_experiment_instance_utils(self, get_model):
+        model = get_model()
 
-#         model.compile(loss='categorical_crossentropy',
-#                       optimizer='rmsprop',
-#                       metrics=['accuracy'])
+        model.compile(loss='categorical_crossentropy',
+                      optimizer='rmsprop',
+                      metrics=['accuracy'])
 
-#         expe = Experiment(model)
-#         expe.model_dict = model
-#         expe.backend_name = 'another_backend'
-#         expe.model_dict = model
-#         print(self)
+        expe = Experiment(model)
+        expe.model_dict = model
+        expe.backend_name = 'another_backend'
+        expe.model_dict = model
+        print(self)
 
-#         assert expe.backend is not None
+        assert expe.backend is not None
 
-#     def test_experiment_fit(self, get_model, get_loss_metric,
-#                             get_custom_l):
-#         data, data_val = make_data()
-#         model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
-#                                                      get_loss_metric,
-#                                                      get_custom_l)
+    def test_experiment_fit(self, get_model, get_loss_metric,
+                            get_custom_l):
+        data, data_val = make_data()
+        model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
+                                                     get_loss_metric,
+                                                     get_custom_l)
 
-#         expe = Experiment(model)
+        expe = Experiment(model)
 
-#         for mod in [None, model]:
-#             expe.fit([data], [data_val], model=mod, nb_epoch=2,
-#                      batch_size=batch_size, metrics=metrics,
-#                      custom_objects=cust_objects, overwrite=True)
+        for mod in [None, model]:
+            expe.fit([data], [data_val], model=mod, nb_epoch=2,
+                     batch_size=batch_size, metrics=metrics,
+                     custom_objects=cust_objects, overwrite=True)
 
-#         expe.backend_name = 'another_backend'
-#         expe.load_model()
-#         expe.load_model(expe.mod_id, expe.data_id)
+        expe.backend_name = 'another_backend'
+        expe.load_model()
+        expe.load_model(expe.mod_id, expe.data_id)
 
-#         assert expe.data_id is not None
-#         assert expe.mod_id is not None
-#         assert expe.params_dump is not None
-#         print(self)
+        assert expe.data_id is not None
+        assert expe.mod_id is not None
+        assert expe.params_dump is not None
+        print(self)
 
-#     def test_experiment_fit_async(self, get_model, get_loss_metric,
-#                                   get_custom_l):
-#         data, data_val = make_data()
-#         model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
-#                                                      get_loss_metric,
-#                                                      get_custom_l)
+    def test_experiment_fit_async(self, get_model, get_loss_metric,
+                                  get_custom_l):
+        data, data_val = make_data()
+        model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
+                                                     get_loss_metric,
+                                                     get_custom_l)
 
-#         cust_objects['test_list'] = [1, 2]
-#         expe = Experiment(model)
+        cust_objects['test_list'] = [1, 2]
+        expe = Experiment(model)
 
-#         for mod in [None, model]:
-#             expe.fit_async([data], [data_val], model=mod, nb_epoch=2,
-#                            batch_size=batch_size, metrics=metrics,
-#                            custom_objects=cust_objects, overwrite=True)
-#         print(self)
+        for mod in [None, model]:
+            expe.fit_async([data], [data_val], model=mod, nb_epoch=2,
+                           batch_size=batch_size, metrics=metrics,
+                           custom_objects=cust_objects, overwrite=True)
+        print(self)
 
-#     def test_experiment_fit_gen(self, get_model, get_loss_metric,
-#                                 get_custom_l):
-#         model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
-#                                                      get_loss_metric,
-#                                                      get_custom_l)
+    def test_experiment_fit_gen(self, get_model, get_loss_metric,
+                                get_custom_l):
+        model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
+                                                     get_loss_metric,
+                                                     get_custom_l)
 
-#         model_name = model.__class__.__name__
-#         is_graph = model_name.lower() == 'graph'
-#         _, data_val_use = make_data()
-#         expe = Experiment(model)
+        model_name = model.__class__.__name__
+        is_graph = model_name.lower() == 'graph'
+        _, data_val_use = make_data()
+        expe = Experiment(model)
 
-#         for val in [1, data_val_use]:
-#             gen, data, data_stream = make_gen(is_graph)
-#             if val == 1:
-#                 val, data_2, data_stream_2 = make_gen(is_graph)
-#             expe.fit_gen([gen], [val], nb_epoch=2,
-#                          model=model,
-#                          metrics=metrics,
-#                          custom_objects=cust_objects,
-#                          samples_per_epoch=64,
-#                          nb_val_samples=128,
-#                          verbose=2, overwrite=True)
+        for val in [1, data_val_use]:
+            gen, data, data_stream = make_gen(is_graph)
+            if val == 1:
+                val, data_2, data_stream_2 = make_gen(is_graph)
+            expe.fit_gen([gen], [val], nb_epoch=2,
+                         model=model,
+                         metrics=metrics,
+                         custom_objects=cust_objects,
+                         samples_per_epoch=64,
+                         nb_val_samples=128,
+                         verbose=2, overwrite=True)
 
-#             close_gens(gen, data, data_stream)
-#             if val == 1:
-#                 close_gens(val, data_2, data_stream_2)
-#         assert expe.data_id is not None
-#         assert expe.mod_id is not None
-#         assert expe.params_dump is not None
+            close_gens(gen, data, data_stream)
+            if val == 1:
+                close_gens(val, data_2, data_stream_2)
+        assert expe.data_id is not None
+        assert expe.mod_id is not None
+        assert expe.params_dump is not None
 
-#         print(self)
+        print(self)
 
-#     def test_experiment_fit_gen_async(self, get_model, get_loss_metric,
-#                                       get_custom_l):
-#         model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
-#                                                      get_loss_metric,
-#                                                      get_custom_l)
+    def test_experiment_fit_gen_async(self, get_model, get_loss_metric,
+                                      get_custom_l):
+        model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
+                                                     get_loss_metric,
+                                                     get_custom_l)
 
-#         model_name = model.__class__.__name__
-#         is_graph = model_name.lower() == 'graph'
-#         _, data_val_use = make_data()
-#         expe = Experiment(model)
+        model_name = model.__class__.__name__
+        is_graph = model_name.lower() == 'graph'
+        _, data_val_use = make_data()
+        expe = Experiment(model)
 
-#         for val in [1, data_val_use]:
-#             gen, data, data_stream = make_gen(is_graph)
-#             if val == 1:
-#                 val, data_2, data_stream_2 = make_gen(is_graph)
-#             expe.fit_gen_async([gen], [val], nb_epoch=2,
-#                                 model=model,
-#                                 metrics=metrics,
-#                                 custom_objects=cust_objects,
-#                                 samples_per_epoch=64,
-#                                 nb_val_samples=128,
-#                                 verbose=2, overwrite=True)
-#             close_gens(gen, data, data_stream)
-#             if val == 1:
-#                 close_gens(val, data_2, data_stream_2)
-#         print(self)
+        for val in [1, data_val_use]:
+            gen, data, data_stream = make_gen(is_graph)
+            if val == 1:
+                val, data_2, data_stream_2 = make_gen(is_graph)
+            expe.fit_gen_async([gen], [val], nb_epoch=2,
+                                model=model,
+                                metrics=metrics,
+                                custom_objects=cust_objects,
+                                samples_per_epoch=64,
+                                nb_val_samples=128,
+                                verbose=2, overwrite=True)
+            close_gens(gen, data, data_stream)
+            if val == 1:
+                close_gens(val, data_2, data_stream_2)
+        print(self)
 
-#     def test_experiment_predict(self, get_model, get_loss_metric):
+    def test_experiment_predict(self, get_model, get_loss_metric):
 
-#         model, metrics, cust_objects = prepare_model(get_model(),
-#                                                      get_loss_metric,
-#                                                      False)
+        model, metrics, cust_objects = prepare_model(get_model(),
+                                                     get_loss_metric,
+                                                     False)
 
-#         model_name = model.__class__.__name__
-#         data, data_val = make_data()
+        model_name = model.__class__.__name__
+        data, data_val = make_data()
 
-#         expe = Experiment(model)
-#         expe.fit([data], [data_val], nb_epoch=2,
-#                  batch_size=batch_size,
-#                  custom_objects=cust_objects,
-#                  metrics=metrics, overwrite=True)
+        expe = Experiment(model)
+        expe.fit([data], [data_val], nb_epoch=2,
+                 batch_size=batch_size,
+                 custom_objects=cust_objects,
+                 metrics=metrics, overwrite=True)
 
-#         if model_name == 'Graph' or model_name == 'Model':
-#             expe.predict({'X': data_val['X']})
-#         expe.predict([data_val['X']])
-#         expe.predict(data_val['X'])
-#         print(self)
+        if model_name == 'Graph' or model_name == 'Model':
+            expe.predict({'X': data_val['X']})
+        expe.predict([data_val['X']])
+        expe.predict(data_val['X'])
+        print(self)
 
 
-# class TestBackendFunctions:
-#     def test_build_predict_func(self, get_model):
-#         import numpy as np
-#         """Test the build of a model"""
-#         X_tr = np.ones((train_samples, input_dim))
-#         model = get_model()
-#         model.compile(loss='categorical_crossentropy',
-#                     optimizer='rmsprop',
-#                     metrics=['accuracy'])
+class TestBackendFunctions:
+    def test_build_predict_func(self, get_model):
+        import numpy as np
+        """Test the build of a model"""
+        X_tr = np.ones((train_samples, input_dim))
+        model = get_model()
+        model.compile(loss='categorical_crossentropy',
+                    optimizer='rmsprop',
+                    metrics=['accuracy'])
 
-#         model_name = model.__class__.__name__
+        model_name = model.__class__.__name__
 
-#         pred_func = KTB.build_predict_func(model)
+        pred_func = KTB.build_predict_func(model)
 
-#         tensors = [X_tr]
-#         if model_name != 'Model':
-#             tensors.append(1.)
+        tensors = [X_tr]
+        if model_name != 'Model':
+            tensors.append(1.)
 
-#         res = pred_func(tensors)
+        res = pred_func(tensors)
 
-#         assert len(res[0]) == len(X_tr)
-#         print(self)
+        assert len(res[0]) == len(X_tr)
+        print(self)
 
-#     def test_fit(self, get_model):
-#         "Test the training of a serialized model"
-#         data, data_val = make_data()
+    def test_fit(self, get_model):
+        "Test the training of a serialized model"
+        data, data_val = make_data()
 
-#         model = get_model()
-#         model.compile(loss='categorical_crossentropy',
-#                     optimizer='rmsprop',
-#                     metrics=['accuracy'])
+        model = get_model()
+        model.compile(loss='categorical_crossentropy',
+                    optimizer='rmsprop',
+                    metrics=['accuracy'])
 
-#         model_dict = dict()
-#         model_dict['model_arch'] = to_dict_w_opt(model)
+        model_dict = dict()
+        model_dict['model_arch'] = to_dict_w_opt(model)
 
-#         res = KTB.train(copy.deepcopy(model_dict['model_arch']), [data],
-#                         [data_val])
-#         res = KTB.fit(NAME, VERSION, model_dict, [data], 'test', [data_val])
+        res = KTB.train(copy.deepcopy(model_dict['model_arch']), [data],
+                        [data_val])
+        res = KTB.fit(NAME, VERSION, model_dict, [data], 'test', [data_val])
 
-#         assert len(res) == 4
-#         print(self)
+        assert len(res) == 4
+        print(self)
 
-#     def test_predict(self, get_model):
-#         """Test to predict using the backend"""
-#         data, data_val = make_data()
-#         model = get_model()
-#         model.compile(optimizer='sgd', loss='categorical_crossentropy')
+    def test_predict(self, get_model):
+        """Test to predict using the backend"""
+        data, data_val = make_data()
+        model = get_model()
+        model.compile(optimizer='sgd', loss='categorical_crossentropy')
 
-#         expe = Experiment(model)
-#         expe.fit([data], [data_val])
-#         KTB.predict(expe.model_dict, [data['X']])
-#         print(self)
+        expe = Experiment(model)
+        expe.fit([data], [data_val])
+        KTB.predict(expe.model_dict, [data['X']])
+        print(self)
 
-#     def test_serialization(self):
-#         model = sequential()
-#         to_dict_w_opt(model)
-#         print(self)
+    def test_serialization(self):
+        model = sequential()
+        to_dict_w_opt(model)
+        print(self)
 
-#     def test_deserialization(self):
-#         model = sequential()
-#         model.compile(optimizer='sgd', loss='categorical_crossentropy')
-#         ser_mod = to_dict_w_opt(model)
-#         custom_objects = {'test_loss': [1, 2]}
-#         custom_objects = {k: serialize(custom_objects[k])
-#                           for k in custom_objects}
-#         model_from_dict_w_opt(ser_mod, custom_objects=custom_objects)
-#         print(self)
+    def test_deserialization(self):
+        model = sequential()
+        model.compile(optimizer='sgd', loss='categorical_crossentropy')
+        ser_mod = to_dict_w_opt(model)
+        custom_objects = {'test_loss': [1, 2]}
+        custom_objects = {k: serialize(custom_objects[k])
+                          for k in custom_objects}
+        model_from_dict_w_opt(ser_mod, custom_objects=custom_objects)
+        print(self)
 
 
 def test_utils():
