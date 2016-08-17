@@ -80,6 +80,8 @@ class TestExperiment:
     def test_experiment_predict(self, get_model):
         model = get_model()
 
+        model._test_ = 'test'
+
         expe = Experiment(model)
 
         for mod in [None, model]:
@@ -93,6 +95,15 @@ class TestExperiment:
         assert(np.allclose(alp_pred, model.predict(data['X'])))
         print(self)
 
+    def test_utils(self):
+        objects = [list(),
+                   [1,2],
+                   [1.,2.],
+                   list(np.array([1, 2], dtype=np.integer)),
+                   list(np.array([1., 2.], dtype=np.float)),
+                   list(np.array([np.ones((1))]))]
+        for el in objects:
+            SKB.typeconversion(el)
 
 if __name__ == "__main__":
     pytest.main([__file__])
