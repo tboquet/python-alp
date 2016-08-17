@@ -6,18 +6,6 @@ import pytest
 import sklearn
 from sklearn import cross_validation
 from sklearn import datasets
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
-from sklearn.kernel_ridge import KernelRidge
-from sklearn.linear_model import ARDRegression
-from sklearn.linear_model import BayesianRidge
-from sklearn.linear_model import Lars
-from sklearn.linear_model import Lasso
-from sklearn.linear_model import LassoLars
-from sklearn.linear_model import LinearRegression
-from sklearn.linear_model import LogisticRegression
-from sklearn.linear_model import OrthogonalMatchingPursuit
-from sklearn.linear_model import Ridge
 
 from alp.appcom.core import Experiment
 from alp.backend import sklearn_backend as SKB
@@ -40,13 +28,8 @@ data_val["X"] = X_test
 data_val["y"] = y_test
 
 
-SUPPORTED = [LogisticRegression, LinearRegression, Ridge, Lasso,
-             Lars, LassoLars, OrthogonalMatchingPursuit, BayesianRidge,
-             ARDRegression, LinearDiscriminantAnalysis,
-             QuadraticDiscriminantAnalysis, KernelRidge]
-
 keyval = dict()
-for m in SUPPORTED:
+for m in SKB.SUPPORTED[:2]:
     keyval[str(type(m()))[8:][:-2]] = m
 
 
@@ -68,7 +51,6 @@ class TestExperiment:
         assert expe.backend is not None
 
     def test_experiment_fit(self, get_model):
-
         model = get_model()
 
         expe = Experiment(model)
@@ -91,7 +73,7 @@ class TestExperiment:
         expe = Experiment(model)
 
         for mod in [None, model]:
-            expe.fit([data], [data_val], model=mod, overwrite=True)
+            expe.fit_async([data], [data_val], model=mod, overwrite=True)
 
         print(self)
 
@@ -102,7 +84,7 @@ class TestExperiment:
 
         for mod in [None, model]:
             expe.fit([data], [data_val], model=mod, custom_objects={},
-                     overwrite=True)
+                           overwrite=True)
         expe.load_model()
         alp_pred = expe.predict(data['X'])
 
