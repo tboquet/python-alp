@@ -70,7 +70,7 @@ The first container runs flower_, a simple application to monitor the broker, th
 The architecture could be resumed as:
 
 .. image:: _static/architecture.svg
-            :width: 600
+            :width: 700
 
 
 .. _flower: http://flower.readthedocs.io/en/latest/
