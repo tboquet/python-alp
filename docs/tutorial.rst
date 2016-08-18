@@ -101,7 +101,7 @@ Once the experiment has been fitted, you can access the id of the model in the d
 
 .. code-block:: python
 
-    print(expe.model_id)
+    print(expe.mod_id)
     print(expe.data_id)
 
     expe.load_model(expe.mod_id, expe.data_id)
@@ -181,7 +181,7 @@ Note that the app will change backend to the one used to define the model you're
 
 .. code-block:: python
 
-    print(expe.model_id)
+    print(expe.mod_id)
     print(expe.data_id)
 
     expe.load_model(expe.mod_id, expe.data_id)

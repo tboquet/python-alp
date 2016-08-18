@@ -406,8 +406,8 @@ class TestExperiment:
 
 class TestBackendFunctions:
     def test_build_predict_func(self, get_model):
-        import numpy as np
         """Test the build of a model"""
+        import numpy as np
         X_tr = np.ones((train_samples, input_dim))
         model = get_model()
         model.compile(loss='categorical_crossentropy',
