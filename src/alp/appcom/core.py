@@ -188,7 +188,13 @@ class Experiment(object):
         self.trained = True
 
     def predict(self, data):
-        """Make predictions given data"""
+        """Make predictions given data
+
+        Args:
+            data(np.array):
+
+        Returns:
+            an np.array of predictions"""
         if self.trained:
             return self.backend.predict(self.model_dict, data)
         else:
@@ -196,6 +202,12 @@ class Experiment(object):
                             "in order to make predictions")
 
     def _check_compile(self, model, kwargs_m):
+        """Check if we have to recompile and reserialize the model
+
+        Args:
+            model(a supported model): the model sent (could be None).
+            kwargs_m(dict): the keyword arguments passed to the wrapper
+        """
         _recompile = False
         if model is not None:
             self.model = model
@@ -250,6 +262,10 @@ class Experiment(object):
             model(supported model): the model to be prepared
             data(list): the list of dicts or generators used for training
             data_val(list): the list of dicts or generator used for validation
+
+        Returns:
+           the transformed data object, the transformed validation data object,
+           the data_hash
         """
         self._check_compile(model, kwargs)
 
@@ -266,6 +282,15 @@ class Experiment(object):
     def _prepare_fit(self, model, data, data_val,
                      generator=False, delay=False,
                      *args, **kwargs):
+        """Prepare the model and the datasets and fit the model
+
+        Args:
+            model(a supported model): the model to send
+            data(dict or generator): the training data
+            data_val(dict or generator): the validation data
+            generator(bool): if True, transforms the generators
+            delay(bool): if True, fits the model in asynchronous mode
+            """
         data, data_val, data_hash = self._prepare_message(model,
                                                           data,
                                                           data_val,
@@ -284,6 +309,14 @@ class Experiment(object):
         return self._handle_results(res, delay)
 
     def _handle_results(self, res, delay):
+        """Modify the Experiment given the results received from the worker
+
+        Args:
+            res(celery result or dict): the results returned by the model
+            delay(bool): if True the result is an async celery result
+
+        Returns:
+            the results and the thread used to handle the results"""
         if delay:
             thread = self._get_results(res)
         else:
@@ -298,6 +331,10 @@ class Experiment(object):
 
     @background
     def _get_results(self, res):
+        """Handle the results of an asynchronous task
+
+        Args:
+            res(async result): result of an asynchronous task"""
         self.async_res = res
         self.full_res = res.wait()  # pragma: no cover
         self.trained = True  # pragma: no cover

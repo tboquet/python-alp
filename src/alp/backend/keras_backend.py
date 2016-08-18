@@ -23,6 +23,7 @@ in memory compiled function, this function is used instead.
 ----------------------------------------------------------------------------
 """
 
+import inspect
 import pickle
 import types
 
@@ -38,7 +39,6 @@ from ..celapp import app
 
 COMPILED_MODELS = dict()
 TO_SERIALIZE = ['custom_objects']
-dill.settings['recurse'] = True
 
 
 # general utilities
@@ -70,7 +70,7 @@ def serialize(cust_obj):
         ser_func['clos_d'] = dill.dumps(six.get_function_closure(cust_obj))
         ser_func['type_obj'] = 'func'
     else:
-        if hasattr(cust_obj, '__module__'):
+        if hasattr(cust_obj, '__module__'):  # pragma: no cover
             cust_obj.__module__ = '__main__'
         ser_func['name_d'] = None
         ser_func['args_d'] = None
@@ -101,7 +101,6 @@ def deserialize(name_d, func_code_d, args_d, clos_d, type_obj):
         loaded_obj = types.FunctionType(code, globals(), name, args, clos)
     else:  # pragma: no cover
         loaded_obj = dill.loads(func_code_d.encode('raw_unicode_escape'))
-
     return loaded_obj
 
 
@@ -126,6 +125,7 @@ def to_dict_w_opt(model, metrics=None):
     }
     if hasattr(model, 'optimizer'):
         config['optimizer'] = model.optimizer.get_config()
+        config['optimizer']['name'] = model.optimizer.__class__.__name__
         config['metrics'] = []
         config['ser_metrics'] = dict()
     if hasattr(model, 'loss'):
@@ -172,6 +172,10 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
 
     custom_objects = {k: deserialize(**custom_objects[k])
                       for k in custom_objects}
+
+    for k in custom_objects:
+        if inspect.isfunction(custom_objects[k]):
+            custom_objects[k] = custom_objects[k]()
 
     model = layer_from_config(model_dict['config'],
                               custom_objects=custom_objects)
@@ -352,8 +356,9 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
     return results, model
 
 
-@app.task(default_retry_delay=60 * 10, max_retries=3, rate_limit='120/m')
-def fit(backend_name, backend_version, model, data, data_hash, data_val,
+@app.task(bind=True, default_retry_delay=60 * 10, max_retries=3,
+          rate_limit='120/m', queue='keras')
+def fit(self, backend_name, backend_version, model, data, data_hash, data_val,
         generator=False, *args, **kwargs):
     """a function to train models given a datagenerator,a serialized model,
 
@@ -374,6 +379,11 @@ def fit(backend_name, backend_version, model, data, data_hash, data_val,
     if kwargs.get("batch_size") is None:
         kwargs['batch_size'] = 32
 
+    if kwargs.get("overwrite") is None:  # pragma: no cover
+        overwrite = False
+    else:
+        overwrite = kwargs.pop("overwrite")
+
     batch_size = kwargs['batch_size']
 
     model_c = cm.clean_model(model)
@@ -390,9 +400,11 @@ def fit(backend_name, backend_version, model, data, data_hash, data_val,
                  'data_id': data_hash,
                  'params_dump': params_dump,
                  'batch_size': kwargs['batch_size'],
-                 'trained': 0}
+                 'trained': 0,
+                 'mod_data_id': hexdi_m + data_hash,
+                 'task_id': self.request.id}
 
-    mod_id = db.insert(full_json)
+    mod_id = db.insert(full_json, upsert=overwrite)
 
     try:
         results, res_dict = cm.train_pipe(train, save_params, model, data,
@@ -408,7 +420,7 @@ def fit(backend_name, backend_version, model, data, data_hash, data_val,
     return results
 
 
-@app.task
+@app.task(queue='keras')
 def predict(model, data, *args, **kwargs):
     """Make predictions given a model and data
 

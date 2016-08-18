@@ -173,6 +173,11 @@ def transform_gen(gen_train, mod_name):
 def train_pipe(train_f, save_f, model, data, data_val, generator, params_dump,
                data_hash, hexdi_m,
                *args, **kwargs):
+    """Common function to train models for all backends
+
+    Args:
+        train_f(function): the train function to use
+        save_f(function): the """
     results, model = train_f(model['model_arch'], data,
                              data_val,
                              generator=generator,

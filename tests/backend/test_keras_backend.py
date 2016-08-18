@@ -2,16 +2,15 @@
 
 import copy
 
+import inspect
 import keras
-import keras.backend as K
-import numpy as np
 import pytest
 import six
+
 from fuel.datasets.hdf5 import H5PYDataset
 from fuel.schemes import SequentialScheme
 from fuel.streams import DataStream
 from fuel.transformers import ScaleAndShift
-from keras.engine import Layer
 from keras.layers import Dense
 from keras.layers import Dropout
 from keras.layers import Input
@@ -32,8 +31,6 @@ from alp.backend.keras_backend import get_function_name
 from alp.backend.keras_backend import model_from_dict_w_opt
 from alp.backend.keras_backend import serialize
 from alp.backend.keras_backend import to_dict_w_opt
-
-np.random.seed(1337)
 
 
 input_dim = 2
@@ -72,6 +69,7 @@ def make_data():
 
 
 def dump_data(graph=False):
+    import numpy as np
     data, data_val = make_data()
     inputs = [np.concatenate([data['X'], data_val['X']])]
     outputs = [np.concatenate([data['y'], data_val['y']])]
@@ -83,8 +81,6 @@ def dump_data(graph=False):
         inputs = {'X': np.concatenate([data['X'], data_val['X']])}
         outputs = {'y': np.concatenate([data['y'], data_val['y']])}
         file_name += "_graph"
-        # scale = 1.0 / inputs['X'].std(axis=0)
-        # shift = - scale * inputs['X'].mean(axis=0)
 
     file_path, i_names, o_names = to_fuel_h5(inputs, outputs, [0, 256],
                                              ['train', 'test'],
@@ -114,26 +110,29 @@ def make_gen(graph=False):
                                        which_sources=(names_select[-1],))
     return stand_stream_train, train_set, data_stream_train
 
+def return_custom():
+    import keras.backend as K
+    from keras.engine import Layer
+    class Dropout_cust(Layer):
+        '''Applies Dropout to the input.
+        '''
+        def __init__(self, p, **kwargs):
+            self.p = p
+            if 0. < self.p < 1.:
+                self.uses_learning_phase = True
+            self.supports_masking = True
+            super(Dropout_cust, self).__init__(**kwargs)
 
-class Dropout_cust(Layer):
-    '''Applies Dropout to the input.
-    '''
-    def __init__(self, p, **kwargs):
-        self.p = p
-        if 0. < self.p < 1.:
-            self.uses_learning_phase = True
-        self.supports_masking = True
-        super(Dropout_cust, self).__init__(**kwargs)
+        def call(self, x, mask=None):
+            if 0. < self.p < 1.:
+                x = K.in_train_phase(K.dropout(x, level=self.p), x)
+            return x
 
-    def call(self, x, mask=None):
-        if 0. < self.p < 1.:
-            x = K.in_train_phase(K.dropout(x, level=self.p), x)
-        return x
-
-    def get_config(self):
-        config = {'p': self.p}
-        base_config = super(Dropout_cust, self).get_config()
-        return dict(list(base_config.items()) + list(config.items()))
+        def get_config(self):
+            config = {'p': self.p}
+            base_config = super(Dropout_cust, self).get_config()
+            return dict(list(base_config.items()) + list(config.items()))
+    return Dropout_cust
 
 
 def sequential(custom=False):
@@ -142,7 +141,7 @@ def sequential(custom=False):
     model.add(Dense(nb_class, activation='softmax'))
     model.add(Dropout(0.5))
     if custom:
-        model.add(Dropout_cust(0.5))
+        model.add(return_custom()(0.5))
     return model
 
 
@@ -168,7 +167,7 @@ def graph(custom=False):
                 name='dense1', input='X')
     if custom:
         name = 'do'
-        model.add_node(Dropout_cust(0.5), name=name, input='dense1')
+        model.add_node(return_custom()(0.5), name=name, input='dense1')
     model.add_node(Dense(nb_class, activation="softmax"),
                    name='last_dense',
                    input=name)
@@ -200,7 +199,14 @@ def prepare_model(get_model, get_loss_metric, custom):
             loss['main_loss'] = loss_replace
 
     if custom:
-        cust_objects['Dropout_cust'] = Dropout_cust
+        cust_objects['Dropout_cust'] = return_custom
+
+    if isinstance(loss, list):
+        loss[-1] = loss[-1]()
+    elif inspect.isfunction(loss):
+        loss = loss()
+    elif isinstance(loss, dict):
+        loss = {k: v() for k, v in loss.items()}
 
 
     model.compile(loss=loss,
@@ -212,16 +218,19 @@ def prepare_model(get_model, get_loss_metric, custom):
 
 @pytest.fixture
 def get_loss():
-    @imports({"K": K})
-    def cat_cross(y_true, y_pred):
-        '''A test of custom loss function
-        '''
-        return K.categorical_crossentropy(y_pred, y_true)
-    return cat_cross
+    def return_loss():
+        import keras.backend as K
+        def cat_cross(y_true, y_pred):
+            '''A test of custom loss function
+            '''
+            return K.categorical_crossentropy(y_pred, y_true)
+        return cat_cross
+    return return_loss
 
 
 @pytest.fixture
 def get_metric():
+    import keras.backend as K
     @imports({"K": K})
     def cosine_proximity(y_true, y_pred):
         y_true = K.l2_normalize(y_true, axis=-1)
@@ -284,25 +293,18 @@ class TestExperiment:
 
         expe = Experiment(model)
 
-        if get_custom_l:
-            with pytest.raises(RuntimeError) as excinfo:
-                expe.fit([data], [data_val], nb_epoch=2,
-                        batch_size=batch_size, metrics=metrics,
-                        custom_objects=cust_objects)
-                print(excinfo)
-        else:
-            for model in [None, model]:
-                expe.fit([data], [data_val], model=model, nb_epoch=2,
-                        batch_size=batch_size, metrics=metrics,
-                        custom_objects=cust_objects)
+        for mod in [None, model]:
+            expe.fit([data], [data_val], model=mod, nb_epoch=2,
+                     batch_size=batch_size, metrics=metrics,
+                     custom_objects=cust_objects, overwrite=True)
 
-            expe.backend_name = 'another_backend'
-            expe.load_model()
-            expe.load_model(expe.mod_id, expe.data_id)
+        expe.backend_name = 'another_backend'
+        expe.load_model()
+        expe.load_model(expe.mod_id, expe.data_id)
 
-            assert expe.data_id is not None
-            assert expe.mod_id is not None
-            assert expe.params_dump is not None
+        assert expe.data_id is not None
+        assert expe.mod_id is not None
+        assert expe.params_dump is not None
         print(self)
 
     def test_experiment_fit_async(self, get_model, get_loss_metric,
@@ -315,18 +317,10 @@ class TestExperiment:
         cust_objects['test_list'] = [1, 2]
         expe = Experiment(model)
 
-        if get_custom_l:
-            with pytest.raises(RuntimeError) as excinfo:
-                expe.fit_async([data], [data_val], nb_epoch=2,
-                               batch_size=batch_size,
-                               metrics=metrics,
-                               custom_objects=cust_objects)
-                print(excinfo)
-        else:
-            for model in [None, model]:
-                expe.fit_async([data], [data_val], model=model, nb_epoch=2,
-                        batch_size=batch_size, metrics=metrics,
-                        custom_objects=cust_objects)
+        for mod in [None, model]:
+            expe.fit_async([data], [data_val], model=mod, nb_epoch=2,
+                           batch_size=batch_size, metrics=metrics,
+                           custom_objects=cust_objects, overwrite=True)
         print(self)
 
     def test_experiment_fit_gen(self, get_model, get_loss_metric,
@@ -340,41 +334,24 @@ class TestExperiment:
         _, data_val_use = make_data()
         expe = Experiment(model)
 
+        for val in [1, data_val_use]:
+            gen, data, data_stream = make_gen(is_graph)
+            if val == 1:
+                val, data_2, data_stream_2 = make_gen(is_graph)
+            expe.fit_gen([gen], [val], nb_epoch=2,
+                         model=model,
+                         metrics=metrics,
+                         custom_objects=cust_objects,
+                         samples_per_epoch=64,
+                         nb_val_samples=128,
+                         verbose=2, overwrite=True)
 
-        if get_custom_l:
-            for val in [1, data_val_use]:
-                gen, data, data_stream = make_gen(is_graph)
-                if val == 1:
-                    val, data_2, data_stream_2 = make_gen(is_graph)
-                with pytest.raises(RuntimeError) as excinfo:
-                    expe.fit_gen([gen], [val], nb_epoch=2,
-                                 model=model,
-                                 metrics=metrics,
-                                 custom_objects=cust_objects,
-                                 samples_per_epoch=64,
-                                 nb_val_samples=128)
-                    print(excinfo)
-                    close_gens(gen, data, data_stream)
-                    if val == 1:
-                        close_gens(val, data_2, data_stream_2)
-        else:
-            for val in [1, data_val_use]:
-                gen, data, data_stream = make_gen(is_graph)
-                if val == 1:
-                    val, data_2, data_stream_2 = make_gen(is_graph)
-                expe.fit_gen([gen], [val], nb_epoch=2,
-                                model=model,
-                                metrics=metrics,
-                                custom_objects=cust_objects,
-                                samples_per_epoch=64,
-                                nb_val_samples=128)
-
-                close_gens(gen, data, data_stream)
-                if val == 1:
-                    close_gens(val, data_2, data_stream_2)
-            assert expe.data_id is not None
-            assert expe.mod_id is not None
-            assert expe.params_dump is not None
+            close_gens(gen, data, data_stream)
+            if val == 1:
+                close_gens(val, data_2, data_stream_2)
+        assert expe.data_id is not None
+        assert expe.mod_id is not None
+        assert expe.params_dump is not None
 
         print(self)
 
@@ -389,36 +366,20 @@ class TestExperiment:
         _, data_val_use = make_data()
         expe = Experiment(model)
 
-        if get_custom_l:
-            for val in [1, data_val_use]:
-                gen, data, data_stream = make_gen(is_graph)
-                if val == 1:
-                    val, data_2, data_stream_2 = make_gen(is_graph)
-                with pytest.raises(RuntimeError) as excinfo:
-                    expe.fit_gen_async([gen], [val], nb_epoch=2,
-                                       model=model,
-                                       metrics=metrics,
-                                       custom_objects=cust_objects,
-                                       samples_per_epoch=64,
-                                       nb_val_samples=128)
-                    print(excinfo)
-                    close_gens(gen, data, data_stream)
-                    if val == 1:
-                        close_gens(val, data_2, data_stream_2)
-        else:
-            for val in [1, data_val_use]:
-                gen, data, data_stream = make_gen(is_graph)
-                if val == 1:
-                    val, data_2, data_stream_2 = make_gen(is_graph)
-                expe.fit_gen_async([gen], [val], nb_epoch=2,
-                                   model=model,
-                                   metrics=metrics,
-                                   custom_objects=cust_objects,
-                                   samples_per_epoch=64,
-                                   nb_val_samples=128)
-                close_gens(gen, data, data_stream)
-                if val == 1:
-                    close_gens(val, data_2, data_stream_2)
+        for val in [1, data_val_use]:
+            gen, data, data_stream = make_gen(is_graph)
+            if val == 1:
+                val, data_2, data_stream_2 = make_gen(is_graph)
+            expe.fit_gen_async([gen], [val], nb_epoch=2,
+                                model=model,
+                                metrics=metrics,
+                                custom_objects=cust_objects,
+                                samples_per_epoch=64,
+                                nb_val_samples=128,
+                                verbose=2, overwrite=True)
+            close_gens(gen, data, data_stream)
+            if val == 1:
+                close_gens(val, data_2, data_stream_2)
         print(self)
 
     def test_experiment_predict(self, get_model, get_loss_metric):
@@ -434,7 +395,7 @@ class TestExperiment:
         expe.fit([data], [data_val], nb_epoch=2,
                  batch_size=batch_size,
                  custom_objects=cust_objects,
-                 metrics=metrics)
+                 metrics=metrics, overwrite=True)
 
         if model_name == 'Graph' or model_name == 'Model':
             expe.predict({'X': data_val['X']})
@@ -445,6 +406,7 @@ class TestExperiment:
 
 class TestBackendFunctions:
     def test_build_predict_func(self, get_model):
+        import numpy as np
         """Test the build of a model"""
         X_tr = np.ones((train_samples, input_dim))
         model = get_model()

@@ -10,6 +10,8 @@ Welcome on ALP's documentation!
    installation
    dockersetup
    tutorial
+   fitgen
+   customobjects
    usage
    reference/index
    contributing
