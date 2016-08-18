@@ -29,7 +29,7 @@ data_val["y"] = y_test
 
 
 keyval = dict()
-for m in SKB.SUPPORTED[:2]:
+for m in SKB.SUPPORTED:
     keyval[str(type(m()))[8:][:-2]] = m
 
 
