@@ -19,6 +19,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import OrthogonalMatchingPursuit
 from sklearn.linear_model import Ridge
+from sklearn.gaussian_process import GaussianProcess
 
 from ..appcom import _path_h5
 from ..celapp import app
@@ -26,18 +27,33 @@ from ..celapp import app
 SUPPORTED = [LogisticRegression, LinearRegression, Ridge, Lasso,
              Lars, LassoLars, OrthogonalMatchingPursuit, BayesianRidge,
              ARDRegression, LinearDiscriminantAnalysis,
-             QuadraticDiscriminantAnalysis, KernelRidge]
+             QuadraticDiscriminantAnalysis, KernelRidge,
+             GaussianProcess]
+
+
+def getname(model, call=True):
+    if call:
+        m = model()
+    else:
+        m = model
+    return(str(type(m))[8:][:-2])
+
 
 keyval = dict()
 for m in SUPPORTED:
-    keyval[str(type(m()))[8:][:-2]] = m()
+    keyval[getname(m)] = m()
 
 
 COMPILED_MODELS = dict()
 TO_SERIALIZE = ['custom_objects']
-
+params_GP = ['X', 'y', 'X_mean', 'y_mean',
+                  'X_std', 'y_std', 'beta', 'gamma',
+                  'beta0']
+TO_DUMP = {
+    'sklearn.gaussian_process.gaussian_process.GaussianProcess': params_GP}
 
 # general utilities
+
 
 def get_backend():
     import sklearn as SK
@@ -55,15 +71,22 @@ def save_params(model, filepath):
 
     attr = model.__dict__
     dict_params = dict()
+    additional_keys = []
+    model_name = getname(model, False)
+    if model_name in TO_DUMP:
+        for key_to_dump in TO_DUMP[model_name]:
+            additional_keys.append(key_to_dump)
+
     for k, v in attr.items():
-        if k[-1:] == '_':
+        if k[-1:] == '_' or k in additional_keys:
             dict_params[k] = typeconversion(v)
 
     f = h5py.File(filepath, 'w')
     for k, v in dict_params.items():
         if v is not None:
             f[k] = v
-        # so far seen only in Ridge when solver is not sag or lsqr.
+        # so far the None case has been seen
+        # only in Ridge when solver is not sag or lsqr.
 
     f.flush()
     f.close()
@@ -296,8 +319,9 @@ def fit(self, backend_name, backend_version, model, data, data_hash,
     mod_id = db.insert(full_json, upsert=overwrite)
 
     try:
-        results, res_dict = cm.train_pipe(train, save_params, model, data,
-                                          data_val, generator, params_dump,
+        results, res_dict = cm.train_pipe(train, save_params, model,
+                                          data, data_val,
+                                          generator, params_dump,
                                           data_hash, hexdi_m,
                                           *args, **kwargs)
 
