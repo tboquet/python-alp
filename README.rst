@@ -4,7 +4,7 @@ Overview
 
 .. start-badges
 
-|travis| |requires| |coveralls| |codecov| |codacy| |codeclimate| |docs|
+|travis| |requires| |coveralls| |codecov| |codacy| |docs|
 
 .. |travis| image:: https://travis-ci.org/tboquet/python-alp.svg?branch=master
     :alt: Travis-CI Build Status
