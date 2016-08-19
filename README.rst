@@ -26,10 +26,6 @@ Overview
     :target: https://www.codacy.com/app/tboquet/python-alp
     :alt: Codacy Code Quality Status
 
-.. |codeclimate| image:: https://codeclimate.com/github/tboquet/python-alp/badges/gpa.svg
-   :target: https://codeclimate.com/github/tboquet/python-alp
-   :alt: CodeClimate Quality Status
-
 .. |docs| image:: https://readthedocs.org/projects/python-alp/badge/?style=flat
     :target: https://readthedocs.org/projects/python-alp
     :alt: Documentation Status
