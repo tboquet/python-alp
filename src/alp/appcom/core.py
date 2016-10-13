@@ -274,6 +274,7 @@ class Experiment(object):
         if generator:
             data_hash = cm.create_gen_hash(data)
             data, data_val = transform_gen(data, data_val)
+            # TODO: insert the generator in the db
         else:
             data_hash = cm.create_data_hash(data)
 
