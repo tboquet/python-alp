@@ -5,7 +5,8 @@
 
 from pymongo import DESCENDING
 from pymongo import MongoClient
-from ..dbbackend import _collection_name
+from ..dbbackend import _models_collection
+from ..dbbackend import _generators_collection
 from ..dbbackend import _db_name
 from ..dbbackend import _host_adress
 from ..dbbackend import _host_port
@@ -18,7 +19,17 @@ def get_models():
         the collection of models"""
     client = MongoClient(_host_adress, _host_port)
     modelization = client[_db_name]
-    return modelization[_collection_name]
+    return modelization[_models_collection]
+
+
+def get_generators():
+    """Utility function to retrieve the collection of generators
+
+    Returns:
+        the collection of generators"""
+    client = MongoClient(_host_adress, _host_port)
+    modelization = client[_db_name]
+    return modelization[_generators_collection]
 
 
 def insert(full_json, upsert=False):
