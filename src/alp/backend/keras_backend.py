@@ -410,7 +410,7 @@ def fit(self, backend_name, backend_version, model, data, data_hash, data_val,
         full_json_data = {'mod_data_id': hexdi_m + data_hash,
                           'data_id': data_hash,
                           'data': data}
-        gen_id = db.insert(full_json_data, db.get_generators(), upsert=overwrite)
+        db.insert(full_json_data, db.get_generators(), upsert=overwrite)
 
     try:
         results, res_dict = cm.train_pipe(train, save_params, model, data,
