@@ -17,8 +17,8 @@ from ..appcom.utils import background
 from ..backend import common as cm
 from ..dbbackend import get_models
 from .utils import init_backend
-from .utils import switch_backend
 from .utils import pickle_gen
+from .utils import switch_backend
 
 
 class Experiment(object):

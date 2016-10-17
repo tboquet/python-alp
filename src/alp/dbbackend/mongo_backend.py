@@ -5,11 +5,11 @@
 
 from pymongo import DESCENDING
 from pymongo import MongoClient
-from ..dbbackend import _models_collection
-from ..dbbackend import _generators_collection
 from ..dbbackend import _db_name
+from ..dbbackend import _generators_collection
 from ..dbbackend import _host_adress
 from ..dbbackend import _host_port
+from ..dbbackend import _models_collection
 
 
 def get_models():
