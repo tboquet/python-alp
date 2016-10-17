@@ -71,7 +71,7 @@ def create_db(drop=True):
     client = MongoClient(_host_adress, _host_port)
     modelization = client[_db_name]
     if drop:
-        modelization.drop_collection(_collection_name)
+        modelization.drop_collection(_models_collection)
     models = modelization['models']
     return models.create_index([('mod_data_id', DESCENDING)],
                                unique=True)

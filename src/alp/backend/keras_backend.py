@@ -407,11 +407,9 @@ def fit(self, backend_name, backend_version, model, data, data_hash, data_val,
     mod_id = db.insert(full_json_model, db.get_models(), upsert=overwrite)
 
     if generator == True:
-        full_json_data = {'mod_data_id': hexdi + data_hash,
+        full_json_data = {'mod_data_id': hexdi_m + data_hash,
                           'data_id': data_hash,
-                          'data': data,
-                          'data_val': data_val}
-
+                          'data': data}
         gen_id = db.insert(full_json_data, db.get_generators(), upsert=overwrite)
 
     try:

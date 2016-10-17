@@ -19,7 +19,7 @@ _host_adress = 'mongo_m'
 _host_port = 27017
 _db_name = 'modelization'
 _models_collection = 'models'
-_generators_collection = 'models'
+_generators_collection = 'generators'
 
 if os.getenv("TEST_MODE") == "ON":  # pragma: no cover
     _host_adress = '127.0.0.1'
