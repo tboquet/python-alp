@@ -18,7 +18,7 @@ from ..backend import common as cm
 from ..dbbackend import get_models
 from .utils import init_backend
 from .utils import switch_backend
-from .utils import transform_gen
+from .utils import pickle_gen
 
 
 class Experiment(object):
@@ -273,8 +273,7 @@ class Experiment(object):
 
         if generator:
             data_hash = cm.create_gen_hash(data)
-            data, data_val = transform_gen(data, data_val)
-            # TODO: insert the generator in the db
+            data, data_val = pickle_gen(data, data_val)
         else:
             data_hash = cm.create_data_hash(data)
 

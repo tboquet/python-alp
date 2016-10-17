@@ -392,19 +392,27 @@ def fit(self, backend_name, backend_version, model, data, data_hash, data_val,
                                             _path_h5)
 
     # update the full json
-    full_json = {'backend_name': backend_name,
-                 'backend_version': backend_version,
-                 'model_arch': model_c['model_arch'],
-                 'datetime': datetime.now(),
-                 'mod_id': hexdi_m,
-                 'data_id': data_hash,
-                 'params_dump': params_dump,
-                 'batch_size': kwargs['batch_size'],
-                 'trained': 0,
-                 'mod_data_id': hexdi_m + data_hash,
-                 'task_id': self.request.id}
+    full_json_model = {'backend_name': backend_name,
+                       'backend_version': backend_version,
+                       'model_arch': model_c['model_arch'],
+                       'datetime': datetime.now(),
+                       'mod_id': hexdi_m,
+                       'data_id': data_hash,
+                       'params_dump': params_dump,
+                       'batch_size': kwargs['batch_size'],
+                       'trained': 0,
+                       'mod_data_id': hexdi_m + data_hash,
+                       'task_id': self.request.id}
 
-    mod_id = db.insert(full_json, upsert=overwrite)
+    mod_id = db.insert(full_json_model, db.get_models(), upsert=overwrite)
+
+    if generator == True:
+        full_json_data = {'mod_data_id': hexdi + data_hash,
+                          'data_id': data_hash,
+                          'data': data,
+                          'data_val': data_val}
+
+        gen_id = db.insert(full_json_data, db.get_generators(), upsert=overwrite)
 
     try:
         results, res_dict = cm.train_pipe(train, save_params, model, data,

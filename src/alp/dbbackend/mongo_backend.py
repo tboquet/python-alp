@@ -32,26 +32,25 @@ def get_generators():
     return modelization[_generators_collection]
 
 
-def insert(full_json, upsert=False):
+def insert(full_json, collection, upsert=False):
     """Insert an observation in the db
 
     Args:
         full_json(dict): a dictionnary mapping variable names to
-            carateristics of your model
+            carateristics of the model
 
     Returns:
         the id of the inserted object in the db"""
-    models = get_models()
     filter_db = dict()
     filter_db['mod_data_id'] = full_json['mod_data_id']
-    doc_id = models.find_one(filter_db)
+    doc_id = collection.find_one(filter_db)
     if doc_id is not None:
         doc_id = doc_id['_id']
     if upsert is True:
-        inserted = models.find_one_and_update(filter_db, {'$set': full_json},
-                                              upsert=upsert)
+        inserted = collection.find_one_and_update(
+            filter_db, {'$set': full_json}, upsert=upsert)
     else:
-        inserted = models.insert_one(full_json).inserted_id
+        inserted = collection.insert_one(full_json).inserted_id
     return inserted
 
 
