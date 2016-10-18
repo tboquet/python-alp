@@ -2,6 +2,6 @@ cython
 numpy
 pymongo
 -e git+git://github.com/Theano/Theano.git#egg=package
--e git+git://github.com/fchollet/keras.git#egg=package
+git+git://github.com/fchollet/keras.git
 celery
 dill
