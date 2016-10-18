@@ -154,7 +154,7 @@ def transform_gen(gen_train, mod_name):
                         list_outputs = True
                     else:
                         outputs_dict[name[7:]] = arr
-                elif 'index' in name:
+                elif 'index' in name:  # pragma: no cover
                     pass
                 else:  # pragma: no cover
                     raise("Not input nor output, please check your generator")
