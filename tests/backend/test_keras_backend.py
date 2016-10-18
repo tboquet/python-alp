@@ -19,6 +19,7 @@ from keras.models import Model
 from keras.models import Sequential
 from keras.utils import np_utils
 from keras.utils.test_utils import get_test_data
+from keras.utils.test_utils import keras_test
 
 import alp.appcom.utils as utls
 from alp.appcom.core import Experiment
@@ -284,6 +285,7 @@ class TestExperiment:
 
         assert expe.backend is not None
 
+    @keras_test
     def test_experiment_fit(self, get_model, get_loss_metric,
                             get_custom_l):
         data, data_val = make_data()
