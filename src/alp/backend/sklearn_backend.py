@@ -319,7 +319,7 @@ def fit(self, backend_name, backend_version, model, data, data_hash,
 
     mod_id = db.insert(full_json, db.get_models(), upsert=overwrite)
 
-    if generator is True:
+    if generator is True:  # pragma: no cover
         full_json_data = {'mod_data_id': hexdi_m + data_hash,
                           'data_id': data_hash,
                           'data': data,
