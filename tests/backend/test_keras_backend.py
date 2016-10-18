@@ -270,6 +270,7 @@ class TestExperiment:
             return False
         print(self)
 
+    @keras_test
     def test_experiment_instance_utils(self, get_model):
         model = get_model()
 
@@ -309,6 +310,7 @@ class TestExperiment:
         assert expe.params_dump is not None
         print(self)
 
+    @keras_test
     def test_experiment_fit_async(self, get_model, get_loss_metric,
                                   get_custom_l):
         data, data_val = make_data()
@@ -325,6 +327,7 @@ class TestExperiment:
                            custom_objects=cust_objects, overwrite=True)
         print(self)
 
+    @keras_test
     def test_experiment_fit_gen(self, get_model, get_loss_metric,
                                 get_custom_l):
         model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
@@ -357,6 +360,7 @@ class TestExperiment:
 
         print(self)
 
+    @keras_test
     def test_experiment_fit_gen_async(self, get_model, get_loss_metric,
                                       get_custom_l):
         model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
@@ -384,6 +388,7 @@ class TestExperiment:
                 close_gens(val, data_2, data_stream_2)
         print(self)
 
+    @keras_test
     def test_experiment_predict(self, get_model, get_loss_metric):
 
         model, metrics, cust_objects = prepare_model(get_model(),
@@ -429,6 +434,7 @@ class TestBackendFunctions:
         assert len(res[0]) == len(X_tr)
         print(self)
 
+    @keras_test
     def test_fit(self, get_model):
         "Test the training of a serialized model"
         data, data_val = make_data()
@@ -448,6 +454,7 @@ class TestBackendFunctions:
         assert len(res) == 4
         print(self)
 
+    @keras_test
     def test_predict(self, get_model):
         """Test to predict using the backend"""
         data, data_val = make_data()
