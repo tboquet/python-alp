@@ -19,7 +19,7 @@ from keras.models import Model
 from keras.models import Sequential
 from keras.utils import np_utils
 from keras.utils.test_utils import get_test_data
-from keras.utils.test_utils import keras_test
+import keras.backend as K
 
 import alp.appcom.utils as utls
 from alp.appcom.core import Experiment
@@ -270,7 +270,6 @@ class TestExperiment:
             return False
         print(self)
 
-    @keras_test
     def test_experiment_instance_utils(self, get_model):
         model = get_model()
 
@@ -286,7 +285,6 @@ class TestExperiment:
 
         assert expe.backend is not None
 
-    @keras_test
     def test_experiment_fit(self, get_model, get_loss_metric,
                             get_custom_l):
         data, data_val = make_data()
@@ -308,9 +306,12 @@ class TestExperiment:
         assert expe.data_id is not None
         assert expe.mod_id is not None
         assert expe.params_dump is not None
+
+        if K._BACKEND == 'tensorflow':
+            K.clear_session()
+
         print(self)
 
-    @keras_test
     def test_experiment_fit_async(self, get_model, get_loss_metric,
                                   get_custom_l):
         data, data_val = make_data()
@@ -325,9 +326,10 @@ class TestExperiment:
             expe.fit_async([data], [data_val], model=mod, nb_epoch=2,
                            batch_size=batch_size, metrics=metrics,
                            custom_objects=cust_objects, overwrite=True)
+        if K._BACKEND == 'tensorflow':
+            K.clear_session()
         print(self)
 
-    @keras_test
     def test_experiment_fit_gen(self, get_model, get_loss_metric,
                                 get_custom_l):
         model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
@@ -358,9 +360,11 @@ class TestExperiment:
         assert expe.mod_id is not None
         assert expe.params_dump is not None
 
+        if K._BACKEND == 'tensorflow':
+            K.clear_session()
+
         print(self)
 
-    @keras_test
     def test_experiment_fit_gen_async(self, get_model, get_loss_metric,
                                       get_custom_l):
         model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
@@ -386,9 +390,12 @@ class TestExperiment:
             close_gens(gen, data, data_stream)
             if val == 1:
                 close_gens(val, data_2, data_stream_2)
+
+        if K._BACKEND == 'tensorflow':
+            K.clear_session()
+
         print(self)
 
-    @keras_test
     def test_experiment_predict(self, get_model, get_loss_metric):
 
         model, metrics, cust_objects = prepare_model(get_model(),
@@ -408,6 +415,10 @@ class TestExperiment:
             expe.predict({'X': data_val['X']})
         expe.predict([data_val['X']])
         expe.predict(data_val['X'])
+
+        if K._BACKEND == 'tensorflow':
+            K.clear_session()
+
         print(self)
 
 
@@ -432,9 +443,12 @@ class TestBackendFunctions:
         res = pred_func(tensors)
 
         assert len(res[0]) == len(X_tr)
+
+        if K._BACKEND == 'tensorflow':
+            K.clear_session()
+
         print(self)
 
-    @keras_test
     def test_fit(self, get_model):
         "Test the training of a serialized model"
         data, data_val = make_data()
@@ -452,9 +466,12 @@ class TestBackendFunctions:
         res = KTB.fit(NAME, VERSION, model_dict, [data], 'test', [data_val])
 
         assert len(res) == 4
+
+        if K._BACKEND == 'tensorflow':
+            K.clear_session()
+
         print(self)
 
-    @keras_test
     def test_predict(self, get_model):
         """Test to predict using the backend"""
         data, data_val = make_data()
@@ -471,7 +488,6 @@ class TestBackendFunctions:
         to_dict_w_opt(model)
         print(self)
 
-    @keras_test
     def test_deserialization(self):
         model = sequential()
         model.compile(optimizer='sgd', loss='categorical_crossentropy')
