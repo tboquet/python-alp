@@ -419,8 +419,8 @@ class TestExperiment:
         expe.predict([data_val['X']])
         expe.predict(data_val['X'])
 
-        if K._BACKEND == 'tensorflow':
-            K.clear_session()
+        # if K._BACKEND == 'tensorflow':
+        #     K.clear_session()
 
         print(self)
 
