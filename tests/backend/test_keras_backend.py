@@ -283,6 +283,9 @@ class TestExperiment:
         expe.model_dict = model
         print(self)
 
+        if K._BACKEND == 'tensorflow':
+            K.clear_session()
+
         assert expe.backend is not None
 
     def test_experiment_fit(self, get_model, get_loss_metric,
