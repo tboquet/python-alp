@@ -499,6 +499,10 @@ class TestBackendFunctions:
         custom_objects = {k: serialize(custom_objects[k])
                           for k in custom_objects}
         model_from_dict_w_opt(ser_mod, custom_objects=custom_objects)
+
+        if K._BACKEND == 'tensorflow':
+            K.clear_session()
+
         print(self)
 
 
