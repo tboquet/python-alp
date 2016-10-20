@@ -4,6 +4,7 @@ import copy
 
 import inspect
 import keras
+import keras.backend as K
 import pytest
 import six
 
@@ -19,7 +20,6 @@ from keras.models import Model
 from keras.models import Sequential
 from keras.utils import np_utils
 from keras.utils.test_utils import get_test_data
-import keras.backend as K
 
 import alp.appcom.utils as utls
 from alp.appcom.core import Experiment
@@ -419,8 +419,8 @@ class TestExperiment:
         expe.predict([data_val['X']])
         expe.predict(data_val['X'])
 
-        if K._BACKEND == 'tensorflow':
-            K.clear_session()
+        # if K._BACKEND == 'tensorflow':
+        #     K.clear_session()
 
         print(self)
 
