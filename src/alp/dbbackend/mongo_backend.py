@@ -37,7 +37,8 @@ def insert(full_json, collection, upsert=False):
 
     Args:
         full_json(dict): a dictionnary mapping variable names to
-            carateristics of the model
+            carateristics of object. This dictionnary must have the
+            mod_data_id key.
 
     Returns:
         the id of the inserted object in the db"""
