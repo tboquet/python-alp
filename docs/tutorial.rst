@@ -135,11 +135,11 @@ First we need to get some data. The iris dataset is what we want.
 
     data, data_val = dict(), dict()
 
-    data["X"] = X_tr
-    data["y"] = y_tr
+    data["X"] = X_train
+    data["y"] = y_train
 
-    data_val["X"] = X_te
-    data_val["y"] = y_te
+    data_val["X"] = X_test
+    data_val["y"] = y_test
 
 Definining a model in scikit-learn is simple. Please note that by default, the 'multi-class' parameter is set to OvR, that is to say one classifier per class. On the iris dataset, it means 3 classifiers.
 
