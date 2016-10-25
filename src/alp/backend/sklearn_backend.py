@@ -7,9 +7,10 @@ import copy
 
 import h5py
 import numpy as np
+import pickle
+from six.moves import zip as szip
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
-from sklearn.gaussian_process import GaussianProcess
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model import ARDRegression
 from sklearn.linear_model import BayesianRidge
@@ -21,40 +22,26 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import OrthogonalMatchingPursuit
 from sklearn.linear_model import Ridge
 
-
 from ..appcom import _path_h5
+from ..appcom.utils import check_gen
 from ..celapp import app
+from ..backend import common as cm
 
 SUPPORTED = [LogisticRegression, LinearRegression, Ridge, Lasso,
              Lars, LassoLars, OrthogonalMatchingPursuit, BayesianRidge,
              ARDRegression, LinearDiscriminantAnalysis,
-             QuadraticDiscriminantAnalysis, KernelRidge,
-             GaussianProcess]
-
-
-def getname(model, call=True):
-    if call:
-        m = model()
-    else:
-        m = model
-    return(str(type(m))[8:][:-2])
-
+             QuadraticDiscriminantAnalysis, KernelRidge]
 
 keyval = dict()
 for m in SUPPORTED:
-    keyval[getname(m)] = m()
+    keyval[str(type(m()))[8:][:-2]] = m()
 
 
 COMPILED_MODELS = dict()
 TO_SERIALIZE = ['custom_objects']
-params_GP = ['X', 'y', 'X_mean', 'y_mean',
-                  'X_std', 'y_std', 'beta', 'gamma',
-                  'beta0']
-TO_DUMP = {
-    'sklearn.gaussian_process.gaussian_process.GaussianProcess': params_GP}
+
 
 # general utilities
-
 
 def get_backend():
     import sklearn as SK
@@ -72,22 +59,15 @@ def save_params(model, filepath):
 
     attr = model.__dict__
     dict_params = dict()
-    additional_keys = []
-    model_name = getname(model, False)
-    if model_name in TO_DUMP:
-        for key_to_dump in TO_DUMP[model_name]:
-            additional_keys.append(key_to_dump)
-
     for k, v in attr.items():
-        if k[-1:] == '_' or k in additional_keys:
+        if k[-1:] == '_':
             dict_params[k] = typeconversion(v)
 
     f = h5py.File(filepath, 'w')
     for k, v in dict_params.items():
         if v is not None:
             f[k] = v
-        # so far the None case has been seen
-        # only in Ridge when solver is not sag or lsqr.
+        # so far seen only in Ridge when solver is not sag or lsqr.
 
     f.flush()
     f.close()
@@ -254,18 +234,53 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
     # Load model
     model = model_from_dict_w_opt(model, custom_objects=custom_objects)
 
+    if generator:
+        data = [pickle.loads(d) for d in data]
+        data = [cm.transform_gen(d, 'Sklearn') for d in data]
+
+    val_gen = check_gen(data_val)
+
+    if val_gen:
+        if generator:
+            data_val = [pickle.loads(dv) for dv in data_val]
+            data_val = [cm.transform_gen(dv, 'Sklearn') for dv in data_val]
+            fit_gen_val = True
+        else:
+            raise Exception("You should also pass a generator for the training"
+                            " data.")
+
     # Fit the model
-    for d, dv in zip(data, data_val):
-        model.fit(d['X'], d['y'], *args, **kwargs)
+    for d, dv in szip(data, data_val):
+
+        if fit_gen_val:
+            X_val, y_val = dv
+        else:
+            X_val, y_val = dv['X'], dv['y']
+
+        if generator:
+            X, y = d
+        else:
+            X, y = d['X'], d['y']
+
+        model.fit(X, y, *args, **kwargs)
         predondata.append(model.predict(d['X']))
         predonval.append(model.predict(dv['X']))
 
     # Validates the model
     # So far, only the mae is supported.
     for metric in metrics:
-        for d, dv, pda, pva in zip(data, data_val, predondata, predonval):
-            results['metrics'][metric.__name__].append(metric(d['y'], pda))
-            results['metrics']['val_' + metric.__name__].append(metric(dv['y'],
+        for d, dv, pda, pva in szip(data, data_val, predondata, predonval):
+            if fit_gen_val:
+                X_val, y_val = dv
+            else:
+                X_val, y_val = dv['X'], dv['y']
+
+            if generator:
+                X, y = d
+            else:
+                X, y = d['X'], d['y']
+            results['metrics'][metric.__name__].append(metric(y, pda))
+            results['metrics']['val_' + metric.__name__].append(metric(y_val,
                                                                        pva))
 
     results['metrics']['iter'] = np.nan
@@ -320,9 +335,8 @@ def fit(self, backend_name, backend_version, model, data, data_hash,
     mod_id = db.insert(full_json, upsert=overwrite)
 
     try:
-        results, res_dict = cm.train_pipe(train, save_params, model,
-                                          data, data_val,
-                                          generator, params_dump,
+        results, res_dict = cm.train_pipe(train, save_params, model, data,
+                                          data_val, generator, params_dump,
                                           data_hash, hexdi_m,
                                           *args, **kwargs)
 
