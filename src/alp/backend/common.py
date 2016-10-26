@@ -127,7 +127,8 @@ def transform_gen(gen_train, mod_name):
         gen_val(Fuel data stream): a fuel validation data generator
 
     Yield:
-        a dictionnary mapping training and testing data to numpy arrays"""
+        a dictionnary mapping training and testing data to numpy arrays if
+        the model is a graph, a tupple (inputs, ouputs) instead."""
     names_dict = gen_train.sources
 
     inp = 'input_'
