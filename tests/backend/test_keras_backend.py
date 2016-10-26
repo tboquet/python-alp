@@ -418,9 +418,6 @@ class TestExperiment:
         expe.predict([data_val['X']])
         expe.predict(data_val['X'])
 
-        if K.backend() == 'tensorflow':
-            K.clear_session()
-
         print(self)
 
 
