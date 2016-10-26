@@ -111,7 +111,7 @@ def open_dataset_gen(generator):
         data_stream = generator.data_stream
         if hasattr(data_stream, 'dataset'):
             data_stream.dataset.open()
-        else:
+        else:  # pragma: no cover
             open_dataset_gen(data_stream)
     elif hasattr(generator, 'dataset'):
         generator.dataset.open()
