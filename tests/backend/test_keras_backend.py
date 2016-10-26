@@ -4,6 +4,7 @@ import copy
 
 import inspect
 import keras
+import keras.backend as K
 import pytest
 import six
 
