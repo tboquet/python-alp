@@ -29,6 +29,7 @@ import types
 
 import dill
 import marshal
+import keras.backend as K
 import six
 from six.moves import zip as szip
 
@@ -40,6 +41,13 @@ from ..celapp import app
 COMPILED_MODELS = dict()
 TO_SERIALIZE = ['custom_objects']
 
+
+if K.backend() == 'tensorflow':
+    import tensorflow as tf
+    config = tf.ConfigProto(allow_soft_placement=True)
+    config.gpu_options.allow_growth = True
+    session = tf.Session(config=config)
+    K.set_session(session)
 
 # general utilities
 
@@ -273,6 +281,7 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
         the loss (list), the validation loss (list), the number of iterations,
         and the model
         """
+
     if generator:
         from six.moves import reload_module as sreload
         import theano
@@ -374,13 +383,6 @@ def fit(self, backend_name, backend_version, model, data, data_hash, data_val,
     from alp import dbbackend as db
     from datetime import datetime
     import alp.backend.common as cm
-    import keras.backend as K
-    if K._BACKEND == 'tensorflow':
-        import tensorflow as tf
-        config = tf.ConfigProto(allow_soft_placement=True)
-        config.gpu_options.allow_growth = True
-        session = tf.Session(config=config)
-        K.set_session(session)
 
     if kwargs.get("batch_size") is None:
         kwargs['batch_size'] = 32
