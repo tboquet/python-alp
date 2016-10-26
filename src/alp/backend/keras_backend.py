@@ -371,10 +371,16 @@ def fit(self, backend_name, backend_version, model, data, data_hash, data_val,
 
     returns:
         results similar to what the fit method of keras would return"""
-
     from alp import dbbackend as db
     from datetime import datetime
     import alp.backend.common as cm
+    import keras.backend as K
+    if K._BACKEND == 'tensorflow':
+        import tensorflow as tf
+        config = tf.ConfigProto(allow_soft_placement=True)
+        config.gpu_options.allow_growth = True
+        session = tf.Session(config=config)
+        K.set_session(session)
 
     if kwargs.get("batch_size") is None:
         kwargs['batch_size'] = 32
