@@ -49,6 +49,7 @@ if K.backend() == 'tensorflow':
     session = tf.Session(config=config)
     K.set_session(session)
 
+
 # general utilities
 
 def get_backend():
