@@ -4,6 +4,7 @@ import copy
 
 import inspect
 import keras
+import keras.backend as K
 import pytest
 import six
 
@@ -305,6 +306,10 @@ class TestExperiment:
         assert expe.data_id is not None
         assert expe.mod_id is not None
         assert expe.params_dump is not None
+
+        if K.backend() == 'tensorflow':
+            K.clear_session()
+
         print(self)
 
     def test_experiment_fit_async(self, get_model, get_loss_metric,
@@ -321,6 +326,10 @@ class TestExperiment:
             expe.fit_async([data], [data_val], model=mod, nb_epoch=2,
                            batch_size=batch_size, metrics=metrics,
                            custom_objects=cust_objects, overwrite=True)
+
+        if K.backend() == 'tensorflow':
+            K.clear_session()
+
         print(self)
 
     def test_experiment_fit_gen(self, get_model, get_loss_metric,
@@ -353,6 +362,9 @@ class TestExperiment:
         assert expe.mod_id is not None
         assert expe.params_dump is not None
 
+        if K.backend() == 'tensorflow':
+            K.clear_session()
+
         print(self)
 
     def test_experiment_fit_gen_async(self, get_model, get_loss_metric,
@@ -380,6 +392,10 @@ class TestExperiment:
             close_gens(gen, data, data_stream)
             if val == 1:
                 close_gens(val, data_2, data_stream_2)
+
+        if K.backend() == 'tensorflow':
+            K.clear_session()
+
         print(self)
 
     def test_experiment_predict(self, get_model, get_loss_metric):
@@ -401,6 +417,7 @@ class TestExperiment:
             expe.predict({'X': data_val['X']})
         expe.predict([data_val['X']])
         expe.predict(data_val['X'])
+
         print(self)
 
 
@@ -425,6 +442,10 @@ class TestBackendFunctions:
         res = pred_func(tensors)
 
         assert len(res[0]) == len(X_tr)
+
+        if K.backend() == 'tensorflow':
+            K.clear_session()
+
         print(self)
 
     def test_fit(self, get_model):
@@ -444,6 +465,10 @@ class TestBackendFunctions:
         res = KTB.fit(NAME, VERSION, model_dict, [data], 'test', [data_val])
 
         assert len(res) == 4
+
+        if K.backend() == 'tensorflow':
+            K.clear_session()
+
         print(self)
 
     def test_predict(self, get_model):
@@ -455,6 +480,10 @@ class TestBackendFunctions:
         expe = Experiment(model)
         expe.fit([data], [data_val])
         KTB.predict(expe.model_dict, [data['X']])
+
+        if K.backend() == 'tensorflow':
+            K.clear_session()
+
         print(self)
 
     def test_serialization(self):
@@ -470,6 +499,10 @@ class TestBackendFunctions:
         custom_objects = {k: serialize(custom_objects[k])
                           for k in custom_objects}
         model_from_dict_w_opt(ser_mod, custom_objects=custom_objects)
+
+        if K.backend() == 'tensorflow':
+            K.clear_session()
+
         print(self)
 
 
