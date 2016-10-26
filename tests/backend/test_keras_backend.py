@@ -12,7 +12,6 @@ from fuel.datasets.hdf5 import H5PYDataset
 from fuel.schemes import SequentialScheme
 from fuel.streams import DataStream
 from fuel.transformers import ScaleAndShift
-from fuel.transformers import SourcewiseTransformer
 from keras.layers import Dense
 from keras.layers import Dropout
 from keras.layers import Input
@@ -48,23 +47,6 @@ def close_gens(gen, data, data_stream):
     gen.close()
     data.close(None)
     data_stream.close()
-
-
-class WindowMaker(SourcewiseTransformer):
-    def __init__(self, data_stream, window_size, **kwargs):
-        super(WindowMaker, self).__init__(
-              data_stream=data_stream,
-              produces_examples=data_stream.produces_examples,
-              **kwargs)
-        self.window_size = window_size
-
-    def transform_source_example(self, example, name):
-        example = extract_patches_2d(example, self.window_size)
-        return example
-
-    def transform_source_batch(self, batch, name):
-        extracted = extract_patches_2d(batch, self.window_size)
-        return extracted
 
 
 def make_data():
@@ -127,11 +109,7 @@ def make_gen(graph=False):
     stand_stream_train = ScaleAndShift(data_stream=data_stream_train,
                                        scale=scale, shift=shift,
                                        which_sources=(names_select[-1],))
-    # ft_d = WindowMaker(data_stream=stand_stream_train, window_size=(4, 2),
-    #                 which_sources=('input_X', 'ouput_y'))
-    ft_d = stand_stream_train
-    return ft_d, stand_stream_train, train_set, data_stream_train
-
+    return stand_stream_train, train_set, data_stream_train
 
 def return_custom():
     import keras.backend as K
@@ -305,9 +283,6 @@ class TestExperiment:
         expe.model_dict = model
         print(self)
 
-        if K.backend() == 'tensorflow':
-            K.clear_session()
-
         assert expe.backend is not None
 
     def test_experiment_fit(self, get_model, get_loss_metric,
@@ -350,9 +325,12 @@ class TestExperiment:
         for mod in [None, model]:
             expe.fit_async([data], [data_val], model=mod, nb_epoch=2,
                            batch_size=batch_size, metrics=metrics,
-                           custom_objects=cust_objects, overwrite=True)
+                           custom_objects=cust_objects, overwrite=True,
+                           verbose=2)
+
         if K.backend() == 'tensorflow':
             K.clear_session()
+
         print(self)
 
     def test_experiment_fit_gen(self, get_model, get_loss_metric,
@@ -367,9 +345,9 @@ class TestExperiment:
         expe = Experiment(model)
 
         for val in [1, data_val_use]:
-            gen, or_gen, data, data_stream = make_gen(is_graph)
+            gen, data, data_stream = make_gen(is_graph)
             if val == 1:
-                val, or_gen, data_2, data_stream_2 = make_gen(is_graph)
+                val, data_2, data_stream_2 = make_gen(is_graph)
             expe.fit_gen([gen], [val], nb_epoch=2,
                          model=model,
                          metrics=metrics,
@@ -402,9 +380,9 @@ class TestExperiment:
         expe = Experiment(model)
 
         for val in [1, data_val_use]:
-            gen, or_gen, data, data_stream = make_gen(is_graph)
+            gen, data, data_stream = make_gen(is_graph)
             if val == 1:
-                val, or_gen, data_2, data_stream_2 = make_gen(is_graph)
+                val, data_2, data_stream_2 = make_gen(is_graph)
             expe.fit_gen_async([gen], [val], nb_epoch=2,
                                 model=model,
                                 metrics=metrics,
@@ -440,9 +418,6 @@ class TestExperiment:
             expe.predict({'X': data_val['X']})
         expe.predict([data_val['X']])
         expe.predict(data_val['X'])
-
-        if K.backend() == 'tensorflow':
-            K.clear_session()
 
         print(self)
 
@@ -506,6 +481,10 @@ class TestBackendFunctions:
         expe = Experiment(model)
         expe.fit([data], [data_val])
         KTB.predict(expe.model_dict, [data['X']])
+
+        if K.backend() == 'tensorflow':
+            K.clear_session()
+
         print(self)
 
     def test_serialization(self):
@@ -532,7 +511,7 @@ def test_utils():
     assert get_function_name("bob") == "bob"
     test_switch = switch_backend('sklearn')
     assert test_switch is not None
-    gen, or_gen, data, data_stream = make_gen()
+    gen, data, data_stream = make_gen()
     open_dataset_gen(data_stream)
     gen.close()
     data.close(None)
