@@ -28,8 +28,8 @@ import pickle
 import types
 
 import dill
-import marshal
 import keras.backend as K
+import marshal
 import six
 from six.moves import zip as szip
 
