@@ -127,8 +127,9 @@ def make_gen(graph=False):
     stand_stream_train = ScaleAndShift(data_stream=data_stream_train,
                                        scale=scale, shift=shift,
                                        which_sources=(names_select[-1],))
-    ft_d = WindowMaker(data_stream=stand_stream_train, window_size=(4, 2),
-                    which_sources=('input_X', 'ouput_y'))
+    # ft_d = WindowMaker(data_stream=stand_stream_train, window_size=(4, 2),
+    #                 which_sources=('input_X', 'ouput_y'))
+    ft_d = stand_stream_train
     return ft_d, stand_stream_train, train_set, data_stream_train
 
 
