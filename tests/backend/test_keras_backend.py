@@ -304,7 +304,7 @@ class TestExperiment:
         expe.model_dict = model
         print(self)
 
-        if K._BACKEND == 'tensorflow':
+        if K.backend() == 'tensorflow':
             K.clear_session()
 
         assert expe.backend is not None
@@ -331,7 +331,7 @@ class TestExperiment:
         assert expe.mod_id is not None
         assert expe.params_dump is not None
 
-        if K._BACKEND == 'tensorflow':
+        if K.backend() == 'tensorflow':
             K.clear_session()
 
         print(self)
@@ -350,7 +350,7 @@ class TestExperiment:
             expe.fit_async([data], [data_val], model=mod, nb_epoch=2,
                            batch_size=batch_size, metrics=metrics,
                            custom_objects=cust_objects, overwrite=True)
-        if K._BACKEND == 'tensorflow':
+        if K.backend() == 'tensorflow':
             K.clear_session()
         print(self)
 
@@ -384,7 +384,7 @@ class TestExperiment:
         assert expe.mod_id is not None
         assert expe.params_dump is not None
 
-        if K._BACKEND == 'tensorflow':
+        if K.backend() == 'tensorflow':
             K.clear_session()
 
         print(self)
@@ -415,7 +415,7 @@ class TestExperiment:
             if val == 1:
                 close_gens(val, data_2, data_stream_2)
 
-        if K._BACKEND == 'tensorflow':
+        if K.backend() == 'tensorflow':
             K.clear_session()
 
         print(self)
@@ -440,8 +440,8 @@ class TestExperiment:
         expe.predict([data_val['X']])
         expe.predict(data_val['X'])
 
-        # if K._BACKEND == 'tensorflow':
-        #     K.clear_session()
+        if K.backend() == 'tensorflow':
+            K.clear_session()
 
         print(self)
 
@@ -468,7 +468,7 @@ class TestBackendFunctions:
 
         assert len(res[0]) == len(X_tr)
 
-        if K._BACKEND == 'tensorflow':
+        if K.backend() == 'tensorflow':
             K.clear_session()
 
         print(self)
@@ -491,7 +491,7 @@ class TestBackendFunctions:
 
         assert len(res) == 4
 
-        if K._BACKEND == 'tensorflow':
+        if K.backend() == 'tensorflow':
             K.clear_session()
 
         print(self)
@@ -521,7 +521,7 @@ class TestBackendFunctions:
                           for k in custom_objects}
         model_from_dict_w_opt(ser_mod, custom_objects=custom_objects)
 
-        if K._BACKEND == 'tensorflow':
+        if K.backend() == 'tensorflow':
             K.clear_session()
 
         print(self)
