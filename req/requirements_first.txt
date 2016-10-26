@@ -5,3 +5,4 @@ pymongo
 h5py
 Pillow
 tables==3.2.2
+pyyaml
