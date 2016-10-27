@@ -42,7 +42,7 @@ COMPILED_MODELS = dict()
 TO_SERIALIZE = ['custom_objects']
 
 
-if K.backend() == 'tensorflow':
+if K.backend() == 'tensorflow':  # pragma: no cover
     import tensorflow as tf
     config = tf.ConfigProto(allow_soft_placement=True)
     config.gpu_options.allow_growth = True
