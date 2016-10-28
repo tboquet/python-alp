@@ -19,6 +19,7 @@ from ..dbbackend import get_models
 from .utils import init_backend
 from .utils import pickle_gen
 from .utils import switch_backend
+from .utils import get_nb_chunks
 
 
 class Experiment(object):
@@ -105,8 +106,8 @@ class Experiment(object):
             the id of the model in the db, the id of the data in the db and
             path to the parameters.
         """
-        res = self._prepare_fit(model, data, data_val, False, False,
-                                *args, **kwargs)
+        res = self._prepare_fit(model, data, data_val, generator=False,
+                                delay=False, *args, **kwargs)
         return res
 
     def fit_async(self, data, data_val, model=None,
@@ -124,8 +125,8 @@ class Experiment(object):
             the id of the model in the db, the id of the data in the db and a
             path to the parameters.
         """
-        res = self._prepare_fit(model, data, data_val, False, True,
-                                *args, **kwargs)
+        res = self._prepare_fit(model, data, data_val, generator=False,
+                                delay=True, *args, **kwargs)
 
         return res
 
@@ -143,8 +144,8 @@ class Experiment(object):
             the id of the model in the db, the id of the data in the db and a
             path to the parameters.
         """
-        res = self._prepare_fit(model, gen_train, data_val, True, False,
-                                *args, **kwargs)
+        res = self._prepare_fit(model, gen_train, data_val, generator=True,
+                                delay=False, *args, **kwargs)
 
         return res
 
@@ -163,8 +164,8 @@ class Experiment(object):
             the id of the model in the db, the id of the data in the db and a
             path to the parameters.
         """
-        res = self._prepare_fit(model, gen_train, data_val, True, True,
-                                *args, **kwargs)
+        res = self._prepare_fit(model, gen_train, data_val, generator=True,
+                                delay=True, *args, **kwargs)
         return res
 
     def load_model(self, mod_id=None, data_id=None):
@@ -272,12 +273,20 @@ class Experiment(object):
         kwargs = self._check_serialize(kwargs)
 
         if generator:
+            nb_data_chunks = get_nb_chunks(data)
+            nb_data_val_chunks = get_nb_chunks(data_val)
+            equal = nb_data_chunks == nb_val_data_chunk
+            val_one = nb_data_val_chunks == 1
+
+            assert equal or val_one, (
+                'You must provide equal sized generators '
+                'or  a validation generator with one batch')
             data_hash = cm.create_gen_hash(data)
             data, data_val = pickle_gen(data, data_val)
         else:
             data_hash = cm.create_data_hash(data)
 
-        return data, data_val, data_hash
+        return data, data_val, data_hash, equal
 
     def _prepare_fit(self, model, data, data_val,
                      generator=False, delay=False,
@@ -291,11 +300,11 @@ class Experiment(object):
             generator(bool): if True, transforms the generators
             delay(bool): if True, fits the model in asynchronous mode
             """
-        data, data_val, data_hash = self._prepare_message(model,
-                                                          data,
-                                                          data_val,
-                                                          kwargs,
-                                                          generator)
+        data, data_val, data_hash, size_gen = self._prepare_message(model,
+                                                                    data,
+                                                                    data_val,
+                                                                    kwargs,
+                                                                    generator)
 
         f = self.backend.fit
         if delay:
@@ -304,6 +313,7 @@ class Experiment(object):
                 self.backend_version,
                 copy.deepcopy(self.model_dict),
                 data, data_hash, data_val,
+                size_gen=size_gen,
                 generator=generator,
                 *args, **kwargs)
         return self._handle_results(res, delay)
