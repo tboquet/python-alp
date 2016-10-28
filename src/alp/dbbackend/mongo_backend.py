@@ -5,10 +5,11 @@
 
 from pymongo import DESCENDING
 from pymongo import MongoClient
-from ..dbbackend import _collection_name
 from ..dbbackend import _db_name
+from ..dbbackend import _generators_collection
 from ..dbbackend import _host_adress
 from ..dbbackend import _host_port
+from ..dbbackend import _models_collection
 
 
 def get_models():
@@ -18,29 +19,39 @@ def get_models():
         the collection of models"""
     client = MongoClient(_host_adress, _host_port)
     modelization = client[_db_name]
-    return modelization[_collection_name]
+    return modelization[_models_collection]
 
 
-def insert(full_json, upsert=False):
+def get_generators():
+    """Utility function to retrieve the collection of generators
+
+    Returns:
+        the collection of generators"""
+    client = MongoClient(_host_adress, _host_port)
+    modelization = client[_db_name]
+    return modelization[_generators_collection]
+
+
+def insert(full_json, collection, upsert=False):
     """Insert an observation in the db
 
     Args:
         full_json(dict): a dictionnary mapping variable names to
-            carateristics of your model
+            carateristics of object. This dictionnary must have the
+            mod_data_id key.
 
     Returns:
         the id of the inserted object in the db"""
-    models = get_models()
     filter_db = dict()
     filter_db['mod_data_id'] = full_json['mod_data_id']
-    doc_id = models.find_one(filter_db)
+    doc_id = collection.find_one(filter_db)
     if doc_id is not None:
         doc_id = doc_id['_id']
     if upsert is True:
-        inserted = models.find_one_and_update(filter_db, {'$set': full_json},
-                                              upsert=upsert)
+        inserted = collection.find_one_and_update(
+            filter_db, {'$set': full_json}, upsert=upsert)
     else:
-        inserted = models.insert_one(full_json).inserted_id
+        inserted = collection.insert_one(full_json).inserted_id
     return inserted
 
 
@@ -61,7 +72,7 @@ def create_db(drop=True):
     client = MongoClient(_host_adress, _host_port)
     modelization = client[_db_name]
     if drop:
-        modelization.drop_collection(_collection_name)
+        modelization.drop_collection(_models_collection)
     models = modelization['models']
     return models.create_index([('mod_data_id', DESCENDING)],
                                unique=True)

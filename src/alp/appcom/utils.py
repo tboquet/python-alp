@@ -207,7 +207,7 @@ def max_v_len(iterable_to_check):
     return max_v
 
 
-def transform_gen(gen_train, data_val):
+def pickle_gen(gen_train, data_val):
     """Check and serialize the validation data object and serialize the
     training data generator.
 

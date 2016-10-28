@@ -18,7 +18,8 @@ _db_engine = 'mongodb'
 _host_adress = 'mongo_m'
 _host_port = 27017
 _db_name = 'modelization'
-_collection_name = 'models'
+_models_collection = 'models'
+_generators_collection = 'generators'
 
 if os.getenv("TEST_MODE") == "ON":  # pragma: no cover
     _host_adress = '127.0.0.1'
@@ -33,14 +34,16 @@ if os.path.exists(_config_path):  # pragma: no cover
     _host_adress = _config.get('host_adress', 'mongo_m')
     _host_port = _config.get('host_port', 27017)
     _db_name = _config.get('db_name', 'modelization')
-    _collection_name = _config.get('collection_name', 'models')
+    _models_collection = _config.get('_models_collection', 'models')
+    _generators_collection = _config.get('_generators_collection', 'models')
 
 # save config file
 _config = {'_db_engine': _db_engine,
            '_host_adress': _host_adress,
            '_host_port': _host_port,
            '_db_name': _db_name,
-           '_collection_name': _collection_name}
+           '_models_collection': _models_collection,
+           '_generators_collection': _generators_collection}
 
 with open(_config_path, 'w') as f:
     f.write(json.dumps(_config, indent=4))

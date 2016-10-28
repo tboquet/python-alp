@@ -28,6 +28,7 @@ import pickle
 import types
 
 import dill
+import keras.backend as K
 import marshal
 import six
 from six.moves import zip as szip
@@ -39,6 +40,14 @@ from ..celapp import app
 
 COMPILED_MODELS = dict()
 TO_SERIALIZE = ['custom_objects']
+
+
+if K.backend() == 'tensorflow':  # pragma: no cover
+    import tensorflow as tf
+    config = tf.ConfigProto(allow_soft_placement=True)
+    config.gpu_options.allow_growth = True
+    session = tf.Session(config=config)
+    K.set_session(session)
 
 
 # general utilities
@@ -273,6 +282,7 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
         the loss (list), the validation loss (list), the number of iterations,
         and the model
         """
+
     if generator:
         from six.moves import reload_module as sreload
         import theano
@@ -371,7 +381,6 @@ def fit(self, backend_name, backend_version, model, data, data_hash, data_val,
 
     returns:
         results similar to what the fit method of keras would return"""
-
     from alp import dbbackend as db
     from datetime import datetime
     import alp.backend.common as cm
@@ -392,19 +401,25 @@ def fit(self, backend_name, backend_version, model, data, data_hash, data_val,
                                             _path_h5)
 
     # update the full json
-    full_json = {'backend_name': backend_name,
-                 'backend_version': backend_version,
-                 'model_arch': model_c['model_arch'],
-                 'datetime': datetime.now(),
-                 'mod_id': hexdi_m,
-                 'data_id': data_hash,
-                 'params_dump': params_dump,
-                 'batch_size': kwargs['batch_size'],
-                 'trained': 0,
-                 'mod_data_id': hexdi_m + data_hash,
-                 'task_id': self.request.id}
+    full_json_model = {'backend_name': backend_name,
+                       'backend_version': backend_version,
+                       'model_arch': model_c['model_arch'],
+                       'datetime': datetime.now(),
+                       'mod_id': hexdi_m,
+                       'data_id': data_hash,
+                       'params_dump': params_dump,
+                       'batch_size': kwargs['batch_size'],
+                       'trained': 0,
+                       'mod_data_id': hexdi_m + data_hash,
+                       'task_id': self.request.id}
 
-    mod_id = db.insert(full_json, upsert=overwrite)
+    mod_id = db.insert(full_json_model, db.get_models(), upsert=overwrite)
+
+    if generator is True:
+        full_json_data = {'mod_data_id': hexdi_m + data_hash,
+                          'data_id': data_hash,
+                          'data': data}
+        db.insert(full_json_data, db.get_generators(), upsert=overwrite)
 
     try:
         results, res_dict = cm.train_pipe(train, save_params, model, data,

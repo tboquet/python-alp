@@ -104,9 +104,15 @@ def make_all_hash(model_c, batch_size, data_hash, _path_h5):
 
 
 def open_dataset_gen(generator):
+    """Open a fuel dataset given a fuel pipeline
+
+    This function is recursive and search for the data_set attribute."""
     if hasattr(generator, 'data_stream'):
         data_stream = generator.data_stream
-        data_stream.dataset.open()
+        if hasattr(data_stream, 'dataset'):
+            data_stream.dataset.open()
+        else:  # pragma: no cover
+            open_dataset_gen(data_stream)
     elif hasattr(generator, 'dataset'):
         generator.dataset.open()
     else:
@@ -155,7 +161,7 @@ def transform_gen(gen_train, mod_name):
                         list_outputs = True
                     else:
                         outputs_dict[name[7:]] = arr
-                elif 'index' in name:
+                elif 'index' in name:  # pragma: no cover
                     pass
                 else:  # pragma: no cover
                     raise("Not input nor output, please check your generator")
