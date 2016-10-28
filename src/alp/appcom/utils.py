@@ -232,3 +232,16 @@ def check_gen(iterable):
     is_gen += 'fuel' in repr(iterable[-1])
 
     return is_gen
+
+
+def get_nb_chunks(generator):
+    if hasattr(generator, 'iteration_scheme'):
+        if generator.iteration_scheme is not None:
+            batch_size = generator.iteration_scheme.batch_size
+            nb_examples = len(generator.iteration_scheme.indices)
+            return nb_examples // batch_size
+        else:
+            if hasattr(generator, 'data_stream'):
+                return get_nb_chunks(generator.data_stream)
+            else:
+                raise Exception('No data stream in the generator')

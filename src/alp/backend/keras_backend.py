@@ -369,7 +369,7 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
 @app.task(bind=True, default_retry_delay=60 * 10, max_retries=3,
           rate_limit='120/m', queue='keras')
 def fit(self, backend_name, backend_version, model, data, data_hash, data_val,
-        generator=False, *args, **kwargs):
+        size_gen, generator=False, *args, **kwargs):
     """a function to train models given a datagenerator,a serialized model,
 
     args:
