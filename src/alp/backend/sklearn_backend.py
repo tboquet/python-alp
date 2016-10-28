@@ -4,10 +4,10 @@ Adaptor for the sklearn backend
 """
 
 import copy
-
+import pickle
 import h5py
 import numpy as np
-import pickle
+
 from six.moves import zip as szip
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
@@ -24,8 +24,9 @@ from sklearn.linear_model import Ridge
 
 from ..appcom import _path_h5
 from ..appcom.utils import check_gen
-from ..celapp import app
 from ..backend import common as cm
+from ..celapp import app
+
 
 SUPPORTED = [LogisticRegression, LinearRegression, Ridge, Lasso,
              Lars, LassoLars, OrthogonalMatchingPursuit, BayesianRidge,
