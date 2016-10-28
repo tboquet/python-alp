@@ -265,7 +265,6 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
     for d, dv in szip(data, data_val):
 
         if fit_gen_val:
-            print(dv)
             X_val, y_val = dv
         else:
             X_val, y_val = dv['X'], dv['y']

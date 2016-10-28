@@ -89,6 +89,7 @@ def dump_data(graph=False):
                                              '/data_generator')
     return file_path, scale, shift, i_names, o_names
 
+
 file_path, scale, shift, i_names, o_names = dump_data()
 file_path_g, scale_g, shift_g, i_names_g, o_names_g = dump_data(graph=True)
 
