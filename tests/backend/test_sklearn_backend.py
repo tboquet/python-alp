@@ -205,15 +205,15 @@ class TestExperiment:
 
         data, data_val, is_classif, model, expe = get_model_data_expe
 
-        for val in [1, data_val_use]:
+        for val_gen in [True, False]:
             gen_train, data_train, data_stream_train = make_gen(is_classif, train=True)
-            if val == 1:
+            if val_gen:
                 gen_test, data_test, data_stream_test = make_gen(is_classif, train=False)
 
             expe.fit_gen_async([gen], [val])
 
             close_gens(gen_train, data_train, data_stream_train)
-            if val == 1:
+            if val_gen:
                 close_gens( gen_test, data_test, data_stream_test)
 
         assert expe.data_id is not None
