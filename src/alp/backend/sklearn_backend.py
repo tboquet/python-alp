@@ -275,7 +275,7 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
             if fit_gen_val:
                 X_val, y_val = dv
             else:
-                X_val, y_val = dv['X'], dv['y']
+                y_val = dv['y']
 
             if generator:
                 X, y = d
