@@ -76,7 +76,7 @@ data_R, data_val_R = generate_data(False)
 data_C, data_val_C = generate_data(True)
 
 file_path_R, scale_R, shift_R, i_names_R, o_names_R = dump_data(data_R, data_val_R, False)
-file_path_C, scale_C, shift_C, i_names_C, o_names_C = dump_data(data_C, data_val_RC, True)
+file_path_C, scale_C, shift_C, i_names_C, o_names_C = dump_data(data_C, data_val_C, True)
 
 
 def make_gen(classif=False, train=True):
