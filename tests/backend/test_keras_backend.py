@@ -75,7 +75,7 @@ def dump_data(graph=False):
     inputs = [np.concatenate([data['X'], data_val['X']])]
     outputs = [np.concatenate([data['y'], data_val['y']])]
 
-    file_name = 'test_data'
+    file_name = 'test_data_keras'
     scale = 1.0 / inputs[0].std(axis=0)
     shift = - scale * inputs[0].mean(axis=0)
     if graph:

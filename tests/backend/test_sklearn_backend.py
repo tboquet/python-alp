@@ -61,7 +61,7 @@ def dump_data(data, data_val, classif=False):
     inputs = [np.concatenate([data['X'], data_val['X']])]
     outputs = [np.concatenate([data['y'], data_val['y']])]
 
-    file_name = 'test_data'
+    file_name = 'test_data' + suffix
     scale = 1.0 / inputs[0].std(axis=0)
     shift = - scale * inputs[0].mean(axis=0)
 
