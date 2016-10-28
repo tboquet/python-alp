@@ -111,6 +111,7 @@ def make_gen(graph=False):
                                        which_sources=(names_select[-1],))
     return stand_stream_train, train_set, data_stream_train
 
+
 def return_custom():
     import keras.backend as K
     from keras.engine import Layer
@@ -325,7 +326,8 @@ class TestExperiment:
         for mod in [None, model]:
             expe.fit_async([data], [data_val], model=mod, nb_epoch=2,
                            batch_size=batch_size, metrics=metrics,
-                           custom_objects=cust_objects, overwrite=True)
+                           custom_objects=cust_objects, overwrite=True,
+                           verbose=2)
 
         if K.backend() == 'tensorflow':
             K.clear_session()
