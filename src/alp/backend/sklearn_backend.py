@@ -32,9 +32,18 @@ SUPPORTED = [LogisticRegression, LinearRegression, Ridge, Lasso,
              ARDRegression, LinearDiscriminantAnalysis,
              QuadraticDiscriminantAnalysis, KernelRidge]
 
+
+def getname(model, call=True):
+    if call:
+        m = model()
+    else:
+        m = model
+    return(str(type(m))[8:][:-2])
+
+
 keyval = dict()
 for m in SUPPORTED:
-    keyval[str(type(m()))[8:][:-2]] = m()
+    keyval[getname(m)] = m()
 
 
 COMPILED_MODELS = dict()
@@ -42,6 +51,7 @@ TO_SERIALIZE = ['custom_objects']
 
 
 # general utilities
+
 
 def get_backend():
     import sklearn as SK
