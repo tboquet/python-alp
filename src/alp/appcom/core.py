@@ -20,6 +20,7 @@ from .utils import init_backend
 from .utils import pickle_gen
 from .utils import switch_backend
 from .utils import get_nb_chunks
+from six.moves import zip as szip
 
 
 class Experiment(object):
@@ -272,21 +273,37 @@ class Experiment(object):
 
         kwargs = self._check_serialize(kwargs)
 
-        if generator:
-            nb_data_chunks = get_nb_chunks(data)
-            nb_data_val_chunks = get_nb_chunks(data_val)
-            equal = nb_data_chunks == nb_val_data_chunk
-            val_one = nb_data_val_chunks == 1
+        gen_setup  = []
 
-            assert equal or val_one, (
-                'You must provide equal sized generators '
-                'or  a validation generator with one batch')
+        if generator:
+            nb_data_chunks = [get_nb_chunks(d) for d in data]
+            nb_data_val_chunks = [get_nb_chunks(dv) for dv in data_val]
+            for d_c, dv_c in szip(nb_data_chunks, nb_data_val_chunks):
+                is_val_one = dv_c == 1
+                is_train_one = dv == 1
+
+                # many to one
+                if d_c > dv_c and is_val_one:
+                    gen_setup.append(1)
+
+                # one to many
+                elif d_c < dv_c and is_train_one:
+                    gen_setup.append(2)
+
+                # equal
+                elif d_c == dv_c:
+                    gen_setup.append(3)
+
+                else:
+                    Exception('Nb batches in train generator and validation'
+                              ' generator not compatible')
+
             data_hash = cm.create_gen_hash(data)
             data, data_val = pickle_gen(data, data_val)
         else:
             data_hash = cm.create_data_hash(data)
 
-        return data, data_val, data_hash, equal
+        return data, data_val, data_hash, gen_setup
 
     def _prepare_fit(self, model, data, data_val,
                      generator=False, delay=False,

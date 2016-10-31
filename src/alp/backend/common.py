@@ -179,8 +179,8 @@ def transform_gen(gen_train, mod_name):
             yield data_out
 
 
-def train_pipe(train_f, save_f, model, data, data_val, generator, params_dump,
-               data_hash, hexdi_m,
+def train_pipe(train_f, save_f, model, data, data_val, generator, size_gen,
+               params_dump, data_hash, hexdi_m,
                *args, **kwargs):
     """Common function to train models for all backends
 
@@ -188,7 +188,7 @@ def train_pipe(train_f, save_f, model, data, data_val, generator, params_dump,
         train_f(function): the train function to use
         save_f(function): the """
     results, model = train_f(model['model_arch'], data,
-                             data_val,
+                             data_val, size_gen,
                              generator=generator,
                              *args, **kwargs)
     res_dict = {
