@@ -13,14 +13,14 @@ period of time.
 import copy
 import sys
 
+from six.moves import zip as szip
 from ..appcom.utils import background
 from ..backend import common as cm
 from ..dbbackend import get_models
+from .utils import get_nb_chunks
 from .utils import init_backend
 from .utils import pickle_gen
 from .utils import switch_backend
-from .utils import get_nb_chunks
-from six.moves import zip as szip
 
 
 class Experiment(object):
@@ -283,20 +283,21 @@ class Experiment(object):
                 is_train_one = d_c == 1
 
                 # many to one
-                if d_c > dv_c and is_val_one:
-                    gen_setup.append(1)
+                if dv_c is not None:
+                    if d_c > dv_c and is_val_one:
+                        gen_setup.append(1)
 
-                # one to many
-                elif d_c < dv_c and is_train_one:
-                    gen_setup.append(2)
+                    # one to many
+                    elif d_c < dv_c and is_train_one:
+                        gen_setup.append(2)
 
-                # equal
-                elif d_c == dv_c:
-                    gen_setup.append(3)
+                    # equal
+                    elif d_c == dv_c:
+                        gen_setup.append(3)
 
-                else:
-                    Exception('Nb batches in train generator and validation'
-                              ' generator not compatible')
+                    else:
+                        Exception('Nb batches in train generator and'
+                                  'validation generator not compatible')
 
             data_hash = cm.create_gen_hash(data)
             data, data_val = pickle_gen(data, data_val)
