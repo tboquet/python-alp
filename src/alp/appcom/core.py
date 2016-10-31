@@ -273,14 +273,14 @@ class Experiment(object):
 
         kwargs = self._check_serialize(kwargs)
 
-        gen_setup  = []
+        gen_setup = []
 
         if generator:
             nb_data_chunks = [get_nb_chunks(d) for d in data]
             nb_data_val_chunks = [get_nb_chunks(dv) for dv in data_val]
             for d_c, dv_c in szip(nb_data_chunks, nb_data_val_chunks):
                 is_val_one = dv_c == 1
-                is_train_one = dv == 1
+                is_train_one = d_c == 1
 
                 # many to one
                 if d_c > dv_c and is_val_one:
