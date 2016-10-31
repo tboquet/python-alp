@@ -282,8 +282,8 @@ class Experiment(object):
                 is_val_one = dv_c == 1
                 is_train_one = d_c == 1
 
-                # many to one
                 if dv_c is not None:
+                    # many to one
                     if d_c > dv_c and is_val_one:
                         gen_setup.append(1)
 
