@@ -231,12 +231,12 @@ def get_generators(request):
         gen_t, data_t, d_stream_t = make_gen(False, nb_train)
         gen, data, d_stream = make_gen(False, nb_val)
 
-    elif request.param == 'equal':
+    elif request.param == 'val 1':
         nb_train, nb_val = 4, 4
         gen_t, data_t, d_stream_t = make_gen(False, nb_train)
         gen, data, d_stream = make_gen(False, nb_val)
 
-    elif request.param == 'equal':
+    elif request.param == 'many to many':
         nb_train, nb_val = 128, 128
         gen_t, data_t, d_stream_t = make_gen(False, nb_train)
         gen, data, d_stream = make_gen(False, nb_val)
