@@ -93,7 +93,7 @@ file_path, scale, shift, i_names, o_names = dump_data()
 file_path_g, scale_g, shift_g, i_names_g, o_names_g = dump_data(graph=True)
 
 
-def make_gen(graph=False):
+def make_gen(graph=False, examples=4):
     file_path_f = file_path
     names_select = i_names
     if graph:
@@ -102,7 +102,7 @@ def make_gen(graph=False):
     train_set = H5PYDataset(file_path_f,
                             which_sets=('train', 'test'))
 
-    scheme = SequentialScheme(examples=128, batch_size=batch_size)
+    scheme = SequentialScheme(examples=examples, batch_size=batch_size)
 
     data_stream_train = DataStream(dataset=train_set, iteration_scheme=scheme)
 
@@ -216,6 +216,32 @@ def prepare_model(get_model, get_loss_metric, custom):
                   metrics=metrics,
                   custom_objects=cust_objects)
     return model, metrics, cust_objects
+
+
+@pytest.fixture(scope='module',
+                params=['one to many', 'many to one', 'many to many', 'val 1'])
+def get_generators(request):
+    if request.param == 'one to many':
+        nb_train, nb_val = 4, 48
+        gen_t, data_t, d_stream_t = make_gen(False, nb_train)
+        gen, data, d_stream = make_gen(False, nb_val)
+
+    elif request.param == 'many to one':
+        nb_train, nb_val = 48, 4
+        gen_t, data_t, d_stream_t = make_gen(False, nb_train)
+        gen, data, d_stream = make_gen(False, nb_val)
+
+    elif request.param == 'val 1':
+        nb_train, nb_val = 4, 4
+        gen_t, data_t, d_stream_t = make_gen(False, nb_train)
+        gen, data, d_stream = make_gen(False, nb_val)
+
+    elif request.param == 'many to many':
+        nb_train, nb_val = 48, 48
+        gen_t, data_t, d_stream_t = make_gen(False, nb_train)
+        gen, data, d_stream = make_gen(False, nb_val)
+
+    return gen_t, data_t, d_stream_t, gen, data, d_stream, (nb_train, nb_val)
 
 
 @pytest.fixture
@@ -400,6 +426,26 @@ class TestExperiment:
 
         print(self)
 
+    def test_experiment_generator_setups(self, get_generators):
+        gen_t, data_t, d_stream_t, gen, data, d_stream, nb = get_generators
+        nb_train, nb_val = nb
+        test_model = model()
+
+        test_model.compile(loss='binary_crossentropy',
+                           optimizer='rmsprop')
+        expe = Experiment(test_model)
+        expe.fit_gen([gen_t], [gen], nb_epoch=2,
+                            samples_per_epoch=nb_train,
+                            nb_val_samples=nb_val,
+                            verbose=2, overwrite=True)
+        close_gens(gen_t, data_t, d_stream_t)
+        close_gens(gen, data, d_stream)
+
+        if K.backend() == 'tensorflow':
+            K.clear_session()
+
+        print(self)
+
     def test_experiment_predict(self, get_model, get_loss_metric):
 
         model, metrics, cust_objects = prepare_model(get_model(),
@@ -463,8 +509,9 @@ class TestBackendFunctions:
         model_dict['model_arch'] = to_dict_w_opt(model)
 
         res = KTB.train(copy.deepcopy(model_dict['model_arch']), [data],
-                        [data_val])
-        res = KTB.fit(NAME, VERSION, model_dict, [data], 'test', [data_val])
+                        [data_val], [])
+        res = KTB.fit(NAME, VERSION, model_dict, [data], 'test', [data_val],
+                      [])
 
         assert len(res) == 4
 

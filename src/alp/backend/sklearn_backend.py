@@ -215,7 +215,7 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
     return model
 
 
-def train(model, data, data_val, generator=False, *args, **kwargs):
+def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
     """Fit a model given parameters and a serialized model
 
     Args:
@@ -276,7 +276,7 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
 @app.task(bind=True, default_retry_delay=60 * 10, max_retries=3,
           rate_limit='120/m', queue='sklearn')
 def fit(self, backend_name, backend_version, model, data, data_hash,
-        data_val, generator=False, *args, **kwargs):
+        data_val, size_gen, generator=False, *args, **kwargs):
     """A function that takes a model and data (with validation),
         then applies the 'train' method if possible.
         The parameters are updated in case of success.
@@ -330,8 +330,9 @@ def fit(self, backend_name, backend_version, model, data, data_hash,
     try:
         results, res_dict = cm.train_pipe(train, save_params, model,
                                           data, data_val,
-                                          generator, params_dump,
-                                          data_hash, hexdi_m,
+                                          generator, size_gen,
+                                          params_dump, data_hash,
+                                          hexdi_m,
                                           *args, **kwargs)
 
         db.update({"_id": mod_id}, {'$set': res_dict})
