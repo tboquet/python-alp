@@ -218,15 +218,21 @@ def prepare_model(get_model, get_loss_metric, custom):
     return model, metrics, cust_objects
 
 
-@pytest.fixture(scope='module', params=['one to many', 'many to one', 'equal'])
+@pytest.fixture(scope='module',
+                params=['one to many', 'many to one', 'many to many', 'val 1'])
 def get_generators(request):
     if request.param == 'one to many':
-        nb_train, nb_val = 128, 64
+        nb_train, nb_val = 128, 32
         gen_t, data_t, d_stream_t = make_gen(False, nb_train)
         gen, data, d_stream = make_gen(False, nb_val)
 
     elif request.param == 'many to one':
-        nb_train, nb_val = 64, 128
+        nb_train, nb_val = 32, 128
+        gen_t, data_t, d_stream_t = make_gen(False, nb_train)
+        gen, data, d_stream = make_gen(False, nb_val)
+
+    elif request.param == 'equal':
+        nb_train, nb_val = 4, 4
         gen_t, data_t, d_stream_t = make_gen(False, nb_train)
         gen, data, d_stream = make_gen(False, nb_val)
 
