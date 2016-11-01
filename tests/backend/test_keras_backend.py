@@ -222,12 +222,12 @@ def prepare_model(get_model, get_loss_metric, custom):
                 params=['one to many', 'many to one', 'many to many', 'val 1'])
 def get_generators(request):
     if request.param == 'one to many':
-        nb_train, nb_val = 128, 32
+        nb_train, nb_val = 4, 48
         gen_t, data_t, d_stream_t = make_gen(False, nb_train)
         gen, data, d_stream = make_gen(False, nb_val)
 
     elif request.param == 'many to one':
-        nb_train, nb_val = 32, 128
+        nb_train, nb_val = 48, 4
         gen_t, data_t, d_stream_t = make_gen(False, nb_train)
         gen, data, d_stream = make_gen(False, nb_val)
 
@@ -237,7 +237,7 @@ def get_generators(request):
         gen, data, d_stream = make_gen(False, nb_val)
 
     elif request.param == 'many to many':
-        nb_train, nb_val = 128, 128
+        nb_train, nb_val = 48, 48
         gen_t, data_t, d_stream_t = make_gen(False, nb_train)
         gen, data, d_stream = make_gen(False, nb_val)
 
