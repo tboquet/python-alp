@@ -5,7 +5,13 @@ import numpy as np
 import pytest
 import sklearn
 
+from fuel.datasets.hdf5 import H5PYDataset
+from fuel.schemes import SequentialScheme
+from fuel.streams import DataStream
+from fuel.transformers import ScaleAndShift
+
 from six.moves import zip as szip
+
 from sklearn import cross_validation as cv
 from sklearn import datasets
 
@@ -22,7 +28,6 @@ CLASSIF = ['sklearn.linear_model.logistic.LogisticRegression',
            'sklearn.discriminant_analysis.QuadraticDiscriminantAnalysis']
 
 
-
 def close_gens(gen, data, data_stream):
     gen.close()
     data.close(None)
@@ -36,7 +41,7 @@ def generate_data(classif=False):
         Xs = datas.data
         Ys = datas.target
     else:
-        Xs = np.linspace(0, 149).reshape(1, -1).T
+        Xs = np.linspace(0, 150).reshape(1, -1).T
         Ys = (Xs * np.sin(Xs)).ravel()
 
     data["X"], data_val["X"], data["y"], data_val["y"] = cv.train_test_split(
@@ -49,7 +54,7 @@ def dump_data(data, data_val, classif=False):
     '''
         The sklearn version differs from the keras version
             in the following points:
-        - no import of np
+        - no local import of np
         - no graph model
         - validation cut at index 130
         - classification or regression data will dump different files
@@ -75,39 +80,48 @@ def dump_data(data, data_val, classif=False):
 data_R, data_val_R = generate_data(False)
 data_C, data_val_C = generate_data(True)
 
-file_path_R, scale_R, shift_R, i_names_R, o_names_R = dump_data(data_R, data_val_R, False)
-file_path_C, scale_C, shift_C, i_names_C, o_names_C = dump_data(data_C, data_val_C, True)
+file_path_R, scale_R, shift_R, i_names_R, o_names_R = dump_data(
+    data_R, data_val_R, False)
+file_path_C, scale_C, shift_C, i_names_C, o_names_C = dump_data(
+    data_C, data_val_C, True)
 
 
-def make_gen(classif=False, train=True):
+def make_gen(Nchunks=True, classif=False, train=True):
     '''
+        Nchunks==True : 10 chunks in the generator
+        Nchunks == False : 1 chunk in the generator
         Makes the distinction between classification/regression
         Makes the distinction between test/train
     '''
 
     file_path_f = file_path_R
-    names_select = i_names_R
     shift_f = shift_R
     scale_f = scale_R
     if classif:
         file_path_f = file_path_C
-        names_select = i_names_C
         shift_f = shift_C
         scale_f = scale_C
 
-      
-    t_scheme = SequentialScheme(examples=130, batch_size=10)
+    if Nchunks:
+        batch_size = 13
+    else:
+        batch_size = 130
+    t_scheme = SequentialScheme(examples=130, batch_size=batch_size)
     t_source = 'train'
-    if train == False:
+    if not train:
+        if Nchunks:
+            batch_size = 2
+        else:
+            batch_size = 20
         t_source = 'test'
-        t_scheme = SequentialScheme(examples=20, batch_size=10)
+        t_scheme = SequentialScheme(examples=20, batch_size=batch_size)
 
     t_set = H5PYDataset(file_path_f, which_sets=[t_source])
     data_stream_t = DataStream(dataset=t_set, iteration_scheme=t_scheme)
-    
-    stand_stream_t = ScaleAndShift(data_stream=data_stream_test,
-                                           scale=scale_f, shift=shift_f,
-                                           which_sources=t_source)
+
+    stand_stream_t = ScaleAndShift(data_stream=data_stream_t,
+                                   scale=scale_f, shift=shift_f,
+                                   which_sources=t_source)
 
     return stand_stream_t, t_set, data_stream_t
 
@@ -179,48 +193,133 @@ class TestExperiment:
         assert(np.allclose(alp_pred, sklearn_pred))
         print(self)
 
-    def test_experiment_fit_gen(self, get_model_data_expe):
-
+    def test_experiment_fit_gen_nogenval(self, get_model_data_expe):
+        '''
+            Main case: gen on train, data on val
+            Subcases:
+                - 10 chunks on train B
+                - 1 chunk on train B
+        '''
         data, data_val, is_classif, model, expe = get_model_data_expe
 
-        for val in [1, data_val_use]:
-            gen_train, data_train, data_stream_train = make_gen(is_classif, train=True)
-            if val == 1:
-                gen_test, data_test, data_stream_test = make_gen(is_classif, train=False)
+        for Nchunks_gen, expected_value in szip([True, False], [10, 1]):
+            gen_train, data_train, data_stream_train = make_gen(
+                Nchunks_gen, is_classif, train=True)
 
-            expe.fit_gen([gen], [val])
+            expe.fit_gen([gen_train], [data_val])
+
+            assert len(expe.results.metrics[
+                       'mean_absolute_error']) == expected_value
+            assert len(expe.results.metrics['val_mean_absolute_error']) == 1
+            assert expe.data_id is not None
+            assert expe.mod_id is not None
+            assert expe.params_dump is not None
+            assert expe
 
             close_gens(gen_train, data_train, data_stream_train)
-            if val == 1:
-                close_gens( gen_test, data_test, data_stream_test)
 
-        assert expe.data_id is not None
-        assert expe.mod_id is not None
-        assert expe.params_dump is not None
+        print(self)
+
+    def test_experiment_fit_gen_withgenval(self, get_model_data_expe):
+        '''
+            Main case: gen on train, gen on val
+            Subcases:
+                - 10 chunks on train / 10 chunks on val C1
+                - 10 chunks on train / 1 chunk on val C2
+                - 1 chunk on train / 10 chunks on val C3
+        '''
+        data, data_val, is_classif, model, expe = get_model_data_expe
+
+        for Nchunks_gen, Nchunks_val in szip([True, True, False],
+                                             [True, False, True]):
+            gen_train, data_train, data_stream_train = make_gen(
+                Nchunks_gen, is_classif, train=True)
+            gen_test, data_test, data_stream_test = make_gen(
+                Nchunks_val, is_classif, train=False)
+
+            expe.fit_gen([gen_train], [data_val])
+
+            expected_value_gen = 10
+            if not Nchunks_gen:
+                expected_value_gen = 1
+
+            assert len(expe.results.metrics[
+                       'mean_absolute_error']) == expected_value_gen
+            assert len(expe.results.metrics[
+                       'val_mean_absolute_error']) == 10
+            assert expe.data_id is not None
+            assert expe.mod_id is not None
+            assert expe.params_dump is not None
+            assert expe
+
+            close_gens(gen_train, data_train, data_stream_train)
+
+        print(self)
+
+    def test_experiment_fit_gen_async_nogenval(self, get_model_data_expe):
+        '''
+            Main case: gen on train, data on val
+            Subcases:
+                - 10 chunks on train
+                - 1 chunk on train
+        '''
+        data, data_val, is_classif, model, expe = get_model_data_expe
+
+        for Nchunks_gen, expected_value in szip([True, False], [10, 1]):
+            gen_train, data_train, data_stream_train = make_gen(
+                Nchunks_gen, is_classif, train=True)
+
+            expe.fit_gen_async([gen_train], [data_val])
+
+            assert len(expe.results.metrics[
+                       'mean_absolute_error']) == expected_value
+            assert len(expe.results.metrics['val_mean_absolute_error']) == 1
+            assert expe.data_id is not None
+            assert expe.mod_id is not None
+            assert expe.params_dump is not None
+            assert expe
+
+            close_gens(gen_train, data_train, data_stream_train)
+
+        print(self)
+
+    def test_experiment_fit_gen_async_withgenval(self, get_model_data_expe):
+        '''
+            Main case: gen on train, gen on val
+            Subcases:
+                - 10 chunks on train / 10 chunks on val
+                - 10 chunks on train / 1 chunk on val
+                - 1 chunk on train / 10 chunks on val
+        '''
+        data, data_val, is_classif, model, expe = get_model_data_expe
+
+        for Nchunks_gen, Nchunks_val in szip([True, True, False],
+                                             [True, False, True]):
+            gen_train, data_train, data_stream_train = make_gen(
+                Nchunks_gen, is_classif, train=True)
+            gen_test, data_test, data_stream_test = make_gen(
+                Nchunks_val, is_classif, train=False)
+
+            expe.fit_gen_async([gen_train], [data_val])
+
+            expected_value_gen = 10
+            if not Nchunks_gen:
+                expected_value_gen = 1
+
+            assert len(expe.results.metrics[
+                       'mean_absolute_error']) == expected_value_gen
+            assert len(expe.results.metrics[
+                       'val_mean_absolute_error']) == 10
+            assert expe.data_id is not None
+            assert expe.mod_id is not None
+            assert expe.params_dump is not None
+            assert expe
+
+            close_gens(gen_train, data_train, data_stream_train)
 
         print(self)
 
 
-    def test_experiment_fit_gen_async(self, get_model_data_expe):
-
-        data, data_val, is_classif, model, expe = get_model_data_expe
-
-        for val_gen in [True, False]:
-            gen_train, data_train, data_stream_train = make_gen(is_classif, train=True)
-            if val_gen:
-                gen_test, data_test, data_stream_test = make_gen(is_classif, train=False)
-
-            expe.fit_gen_async([gen], [val])
-
-            close_gens(gen_train, data_train, data_stream_train)
-            if val_gen:
-                close_gens( gen_test, data_test, data_stream_test)
-
-        assert expe.data_id is not None
-        assert expe.mod_id is not None
-        assert expe.params_dump is not None
-
-        print(self)
 def test_utils():
     objects = [list(),
                [1, 2],

@@ -8,6 +8,7 @@ import pickle
 import h5py
 import numpy as np
 
+from six import next as snext
 from six.moves import zip as szip
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
@@ -24,7 +25,6 @@ from sklearn.linear_model import Ridge
 
 from ..appcom import _path_h5
 from ..appcom.utils import check_gen
-from ..backend import common as cm
 from ..celapp import app
 
 
@@ -211,9 +211,14 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
 
     Args:
         model(dict): a serialized sklearn model
-        data(list): a list of dict mapping inputs and outputs to lists or
+        data(list): - a list of dict mapping inputs and outputs to lists or
             dictionnaries mapping the inputs names to np.arrays
-        data_val(list): same structure than `data` but for validation
+                XOR -a list of fuel generators
+        data_val(list): same structure than `data` but for validation.
+
+        it is possible to feed generators for data and plain data for data_val.
+        it is not possible the other way around.
+
 
     Returns:
         the loss (list), the validation loss (list), the number of iterations,
@@ -235,6 +240,7 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
     for metric in metrics:
         results['metrics'][metric.__name__] = []
         results['metrics']['val_' + metric.__name__] = []
+
     # Load custom_objects and metrics
     if 'custom_objects' in kwargs:  # pragma: no cover
         custom_objects = kwargs.pop('custom_objects')
@@ -248,53 +254,99 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
 
     if generator:
         data = [pickle.loads(d) for d in data]
-        data = [cm.transform_gen(d, 'Sklearn') for d in data]
 
     val_gen = check_gen(data_val)
-
     if val_gen:
         if generator:
             data_val = [pickle.loads(dv) for dv in data_val]
-            data_val = [cm.transform_gen(dv, 'Sklearn') for dv in data_val]
             fit_gen_val = True
         else:
             raise Exception("You should also pass a generator for the training"
                             " data.")
 
     # Fit the model
-    for d, dv in szip(data, data_val):
+    # and validates it
 
-        if fit_gen_val:
-            X_val, y_val = dv
-        else:
-            X_val, y_val = dv['X'], dv['y']
+    for d, dv in szip(data, data_val):  # loop over the data/generators
+        # not treating the case "not generator and fit_gen_val"
+        #    since it is catched above
 
-        if generator:
-            X, y = d
-        else:
+        # case A : dict for data and data_val
+        if not generator and not fit_gen_val:
+
             X, y = d['X'], d['y']
+            X_val, y_val = dv['X'], dv['y']
+            model.fit(X, y, *args, **kwargs)
+            predondata.append(model.predict(X))
+            predonval.append(model.predict(X_val))
+            for metric in metrics:
+                results['metrics'][metric.__name__].append(
+                    metric(y, predondata[-1]))
+                results['metrics']['val_' + metric.__name__].append(
+                    metric(y_val, predonval[-1]))
 
-        model.fit(X, y, *args, **kwargs)
-        predondata.append(model.predict(d['X']))
-        predonval.append(model.predict(dv['X']))
+        # case B : generator for data and dict for data_val
+        elif generator and not fit_gen_val:
+            for batch_data in d.get_epoch_iterator():
+                X, y = batch_data
+                model.fit(X, y, *args, **kwargs)
+                predondata.append(model.predict(X))
+                for metric in metrics:
+                    results['metrics'][metric.__name__].append(
+                        metric(y, predondata[-1]))
 
-    # Validates the model
-    # So far, only the mae is supported.
-    for metric in metrics:
-        for d, dv, pda, pva in szip(data, data_val, predondata, predonval):
-            if fit_gen_val:
-                X_val, y_val = dv
-            else:
-                y_val = dv['y']
+            X_val, y_val = dv['X'], dv['y']
+            predonval.append(model.predict(X_val))
+            for metric in metrics:
+                results['metrics']['val_' + metric.__name__].append(
+                    metric(y_val, predonval[-1]))
 
-            if generator:
-                X, y = d
-            else:
-                X, y = d['X'], d['y']
-            results['metrics'][metric.__name__].append(metric(y, pda))
-            results['metrics']['val_' + metric.__name__].append(metric(y_val,
-                                                                       pva))
+        # case C : generator for data and for data_val
+        elif generator and fit_gen_val:
 
+            # case C1 : same numbers of chunks, many to many
+            for batch_data, batch_val in szip(d.get_epoch_iterator(),
+                                              dv.get_epoch_iterator()):
+                X, y = batch_data
+                X_val, y_val = batch_val
+                model.fit(X, y, *args, **kwargs)
+                predondata.append(model.predict(X))
+                predonval.append(model.predict(X_val))
+                for metric in metrics:
+                    results['metrics'][metric.__name__].append(
+                        metric(y, predondata[-1]))
+                    results['metrics']['val_' + metric.__name__].append(
+                        metric(y_val, predonval[-1]))
+
+            # case C2 : N chunks in gen, 1 chunk in val, many to one
+            X_val, y_val = snext(dv.get_epoch_iterator())
+            for batch_data in d.get_epoch_iterator():
+                X, y = batch_data
+                model.fit(X, y, *args, **kwargs)
+                predondata.append(model.predict(X))
+                predonval.append(model.predict(X_val))
+                for metric in metrics:
+                    results['metrics'][metric.__name__].append(
+                        metric(y, predondata[-1]))
+                    results['metrics']['val_' + metric.__name__].append(
+                        metric(y_val, predonval[-1]))
+
+            # case C3 : 1 chunk in gen, N chunks in val, one to many
+            X, y = snext(d.get_epoch_iterator())
+            model.fit(X, y, *args, **kwargs)
+            predondata.append(model.predict(X))
+            for metric in metrics:
+                results['metrics'][metric.__name__].append(
+                    metric(y, predondata[-1]))
+
+            for batch_val in dv.get_epoch_iterator():
+                X_val, y_val = batch_val
+                predonval.append(model.predict(X_val))
+                for metric in metrics:
+                    results['metrics']['val_' + metric.__name__].append(
+                        metric(y_val, predonval[-1]))
+
+    # for compatibility with keras backend
     results['metrics']['iter'] = np.nan
 
     return results, model
