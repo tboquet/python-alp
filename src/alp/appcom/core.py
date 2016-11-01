@@ -295,7 +295,7 @@ class Experiment(object):
                     elif d_c == dv_c:
                         gen_setup.append(3)
 
-                    else:
+                    else:  # pragma no cover
                         Exception('Nb batches in train generator and'
                                   'validation generator not compatible')
 
