@@ -28,7 +28,6 @@ import pickle
 import types
 
 import dill
-import keras.backend as K
 import marshal
 import six
 from six.moves import zip as szip
@@ -40,14 +39,6 @@ from ..celapp import app
 
 COMPILED_MODELS = dict()
 TO_SERIALIZE = ['custom_objects']
-
-
-if K.backend() == 'tensorflow':  # pragma: no cover
-    import tensorflow as tf
-    config = tf.ConfigProto(allow_soft_placement=True)
-    config.gpu_options.allow_growth = True
-    session = tf.Session(config=config)
-    K.set_session(session)
 
 
 # general utilities
@@ -269,7 +260,7 @@ def build_predict_func(mod):
     return K.function(tensors, mod.outputs, updates=mod.state_updates)
 
 
-def train(model, data, data_val, generator=False, *args, **kwargs):
+def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
     """Fit a model given hyperparameters and a serialized model
 
     Args:
@@ -317,6 +308,9 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
         if generator:
             data_val = [pickle.loads(dv) for dv in data_val]
             data_val = [cm.transform_gen(dv, mod_name) for dv in data_val]
+            for i, check in enumerate(size_gen):
+                if check is 1:
+                    data_val[i] = next(data_val[i])
             fit_gen_val = True
         else:
             raise Exception("You should also pass a generator for the training"
@@ -369,7 +363,7 @@ def train(model, data, data_val, generator=False, *args, **kwargs):
 @app.task(bind=True, default_retry_delay=60 * 10, max_retries=3,
           rate_limit='120/m', queue='keras')
 def fit(self, backend_name, backend_version, model, data, data_hash, data_val,
-        generator=False, *args, **kwargs):
+        size_gen, generator=False, *args, **kwargs):
     """a function to train models given a datagenerator,a serialized model,
 
     args:
@@ -423,8 +417,8 @@ def fit(self, backend_name, backend_version, model, data, data_hash, data_val,
 
     try:
         results, res_dict = cm.train_pipe(train, save_params, model, data,
-                                          data_val, generator, params_dump,
-                                          data_hash, hexdi_m,
+                                          data_val, generator, size_gen,
+                                          params_dump, data_hash, hexdi_m,
                                           *args, **kwargs)
 
         db.update({"_id": mod_id}, {'$set': res_dict})
