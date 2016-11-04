@@ -14,14 +14,14 @@ To launch all the required containers so that the base config file works launch:
         --name=rabbitmq_sched -p 8080:15672 -p 5672:5672\
         --restart=always rabbitmq:3-management
 
-    docker run -d `curl -s http://localhost:3476/v1.0/docker/cli?dev=0\&vol=nvidia_driver` \
+    NV_GPU=0 nvidia-docker run -d \
         -v /path/to/your/notebooks:/notebooks -v /.theano:/root/.theano \
         -v /path/to/models/parameters/parameters_h5:/parameters_h5 \
         -v /path/to/data_generator:/data_generator --link mongo_models:mongo_m \
         --link mongo_results:mongo_r --link rabbitmq_sched:rabbitmq \
-        --name ipy_controler_th -p 444:8888 --restart always tboquet/the7hc5controleralp
+        --name ipy_controler_th -p 444:8888 --restart always tboquet/full7hc5controleralp
 
-    docker run -d `curl -s http://localhost:3476/v1.0/docker/cli?dev=0\&vol=nvidia_driver` \
+    NV_GPU=0 nvidia-docker run -d \
         -v /path/to/models/parameters/parameters_h5:/parameters_h5 -v /.theano:/root/.theano \
         --link=mongo_models:mongo_m --link=rabbitmq_sched:rabbitmq --link=mongo_results:mongo_r \
         --name=the_worker_a --restart=always -h keras1 tboquet/the7hc5workeralpk
@@ -29,7 +29,7 @@ To launch all the required containers so that the base config file works launch:
     docker run -d -v /path/to/models/parameters/parameters_h5:/parameters_h5 -v /.theano:/root/.theano \
         -v /path/to/data_generator:/data_generator \
         --link=mongo_models:mongo_m --link=rabbitmq_sched:rabbitmq --link=mongo_results:mongo_r \
-        --name=worker_b --restart=always -h sklearn1 tboquet/the7hc5workeralpsk
+        --name=worker_b --restart=always -h sklearn1 tboquet/full7hc5workeralpsk
 
 
 To learn more about how docker containers work, you could take a look at `Dockers's documentation`_.
@@ -71,6 +71,44 @@ The architecture could be resumed as:
 
 .. image:: _static/architecture.svg
             :width: 700
+
+
+Add a controler
+###############
+
+If you want to add a Jupter Notebook to send models to the system, you have to choose an available port number and a new name to use::
+
+    NV_GPU=0 nvidia-docker run -d \
+        -v /path/to/your/notebooks:/notebooks -v /.theano:/root/.theano \
+        -v /path/to/models/parameters/parameters_h5:/parameters_h5 \
+        -v /path/to/data_generator:/data_generator --link mongo_models:mongo_m \
+        --link mongo_results:mongo_r --link rabbitmq_sched:rabbitmq \
+        --name new_name -p new_port:8888 --restart always tboquet/full7hc5controleralp
+
+The controler should be available on the port `new_port` of the host.
+
+
+Add a worker
+############
+
+To launch an additionnal worker that will consume in the `keras` queue you can use::
+
+    NV_GPU=0 nvidia-docker run -d \
+        -v /path/to/your/notebooks:/notebooks -v /.theano:/root/.theano \
+        -v /path/to/models/parameters/parameters_h5:/parameters_h5 \
+        -v /path/to/data_generator:/data_generator --link mongo_models:mongo_m \
+        --link mongo_results:mongo_r --link rabbitmq_sched:rabbitmq \
+        --name new_name -p new_port:8888 --restart always tboquet/full7hc5workeralpk
+
+
+To launch an additionnal worker that will consume in the `sklearn` queue you can use::
+
+    NV_GPU=0 nvidia-docker run -d \
+        -v /path/to/your/notebooks:/notebooks -v /.theano:/root/.theano \
+        -v /path/to/models/parameters/parameters_h5:/parameters_h5 \
+        -v /path/to/data_generator:/data_generator --link mongo_models:mongo_m \
+        --link mongo_results:mongo_r --link rabbitmq_sched:rabbitmq \
+        --name new_name -p new_port:8888 --restart always tboquet/full7hc5workeralpsk
 
 
 .. _flower: http://flower.readthedocs.io/en/latest/
