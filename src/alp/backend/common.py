@@ -98,6 +98,8 @@ def create_param_dump(_path_h5, hexdi_m, hexdi_d):
 
 
 def make_all_hash(model_c, batch_size, data_hash, _path_h5):
+    """Generate a hash for the model and the name of the file where
+    the parameters are dumped"""
     hexdi_m = create_model_hash(model_c, batch_size)
     params_dump = create_param_dump(_path_h5, hexdi_m, data_hash)
     return hexdi_m, params_dump

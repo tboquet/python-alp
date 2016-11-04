@@ -227,6 +227,14 @@ def pickle_gen(gen_train, data_val):
 
 
 def check_gen(iterable):
+    """Check if the last object of the iterable is an iterator
+
+    Args:
+        iterable(list): a list containing data.
+
+    Returns:
+        True if the last object is a generator, False otherwise.
+        """
     is_gen = (hasattr(iterable[-1], 'next') or
               hasattr(iterable[-1], '__next__'))
     is_gen += 'fuel' in repr(iterable[-1])
@@ -235,6 +243,13 @@ def check_gen(iterable):
 
 
 def get_nb_chunks(generator):
+    """Get the number of chunks that yields a generator
+
+    Args:
+        generator: a Fuel generator
+
+    Returns:
+        number of chunks (int)"""
     if hasattr(generator, 'iteration_scheme'):
         if generator.iteration_scheme is not None:
             batch_size = generator.iteration_scheme.batch_size

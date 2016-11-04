@@ -46,7 +46,7 @@ description = 'Schedule and save your machine learning experiments'
 
 html_static_path = ['_static']
 html_theme_options = {
-    'logo': 'last_bouquetin.png',
+    'logo': 'last_bouquetin.svg',
     'logo_name': 'true',
     'description': description,
     'github_button': 'false'
