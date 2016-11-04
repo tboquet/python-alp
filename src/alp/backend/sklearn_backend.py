@@ -55,11 +55,6 @@ TO_SERIALIZE = ['custom_objects']
 
 # general utilities
 
-def get_backend():
-    import sklearn as SK
-    return SK
-
-
 def save_params(model, filepath):
     """ Dumps the attributes of the (generally fitted) model
         in a h5 file.
@@ -332,7 +327,7 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
                         metric(y_val, predonval[-1]))
 
         # case C : generator for data and for data_val
-        elif generator and fit_gen_val:
+        else:
             # case C1: N chunks in gen, 1 chunk in val, many to one
             if s_gen == 1:
                 X_val, y_val = snext(dv.get_epoch_iterator())
