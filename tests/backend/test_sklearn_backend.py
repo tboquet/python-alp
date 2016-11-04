@@ -256,6 +256,7 @@ class TestExperiment:
 
         print(self)
 
+    # TODO: new travis_container
     # def test_experiment_fit_gen_async_nogenval(self, get_model_data_expe):
     #     '''
     #         Main case: gen on train, data on val

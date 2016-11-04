@@ -55,12 +55,9 @@ TO_SERIALIZE = ['custom_objects']
 
 # general utilities
 
-
 def get_backend():
     import sklearn as SK
     return SK
-
-# def recflattenlist(mylist):
 
 
 def save_params(model, filepath):
@@ -76,7 +73,7 @@ def save_params(model, filepath):
     dict_params = dict()
     for k, v in attr.items():
         if k[-1:] == '_':
-            dict_params[k] = v  # typeconversion(v)
+            dict_params[k] = v
 
     f = h5py.File(filepath, 'w')
     for k, v in dict_params.items():
@@ -136,8 +133,6 @@ def load_params(model, filepath):
                 else:
                     out = v[()]
             setattr(model, k, out)
-        else:
-            pass
 
     f.flush()
     f.close()
@@ -157,7 +152,7 @@ def typeconversion(v):
         a jsonable object, which type depends on the type of v
     """
 
-    if isinstance(v, np.ndarray):  # pragma no cover
+    if isinstance(v, np.ndarray):  # pragma: no cover
         return v.tolist()
 
     elif isinstance(v, list):
@@ -311,7 +306,6 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
         #    since it is catched above
         # case A : dict for data and data_val
         if not generator and not fit_gen_val:
-            print("CaseA")
             X, y = d['X'], d['y']
             X_val, y_val = dv['X'], dv['y']
             model.fit(X, y, *args, **kwargs)
@@ -325,7 +319,6 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
 
         # case B : generator for data and dict for data_val
         elif generator and not fit_gen_val:
-            print("CaseB")
             X_val, y_val = dv['X'], dv['y']
             for batch_data in d.get_epoch_iterator():
                 X, y = batch_data
@@ -342,7 +335,6 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
         elif generator and fit_gen_val:
             # case C1: N chunks in gen, 1 chunk in val, many to one
             if s_gen == 1:
-                print("CaseC1")
                 X_val, y_val = snext(dv.get_epoch_iterator())
                 for batch_data in d.get_epoch_iterator():
                     X, y = batch_data
@@ -357,7 +349,6 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
 
             # case C2 : 1 chunk in gen, N chunks in val, one to many
             elif s_gen == 2:
-                print("CaseC2")
                 X, y = snext(d.get_epoch_iterator())
                 model.fit(X, y, *args, **kwargs)
                 predondata.append(model.predict(X))
@@ -374,7 +365,6 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
 
             # case C3 : same numbers of chunks, many to many
             elif s_gen == 3:
-                print("CaseC3")
                 for batch_data, batch_val in szip(d.get_epoch_iterator(),
                                                   dv.get_epoch_iterator()):
                     X, y = batch_data
