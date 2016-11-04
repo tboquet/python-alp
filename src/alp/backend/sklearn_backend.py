@@ -7,6 +7,7 @@ import copy
 import pickle
 import h5py
 import numpy as np
+import re
 
 from six import next as snext
 from six.moves import zip as szip
@@ -58,6 +59,8 @@ def get_backend():
     import sklearn as SK
     return SK
 
+# def recflattenlist(mylist):
+
 
 def save_params(model, filepath):
     """ Dumps the attributes of the (generally fitted) model
@@ -72,12 +75,18 @@ def save_params(model, filepath):
     dict_params = dict()
     for k, v in attr.items():
         if k[-1:] == '_':
-            dict_params[k] = typeconversion(v)
+            dict_params[k] = v  # typeconversion(v)
 
     f = h5py.File(filepath, 'w')
     for k, v in dict_params.items():
         if v is not None:
-            f[k] = v
+            if type(v) is list:
+                for i, val in enumerate(v):
+                    kadd = "tolist" + str(i) + k
+                    f[kadd] = val
+            else:
+                f[k] = v
+
         # so far seen only in Ridge when solver is not sag or lsqr.
 
     f.flush()
@@ -95,13 +104,39 @@ def load_params(model, filepath):
     """
 
     f = h5py.File(filepath, 'r')
+    listed_params = dict()
+
+    # first loop to get the parameters that are "unlisted"
     for k, v in f.items():
-        with v.astype(v.dtype):
-            if v.shape is not ():
-                out = v[:]
+        if k[:6] == "tolist":
+            listkeywithoutdigit = str(re.sub("\d+", "", k[6:]))
+            digits = int(re.search(r'\d+', k[6:]).group())
+            if listkeywithoutdigit not in listed_params.keys():
+                listed_params[listkeywithoutdigit] = {digits: v}
             else:
-                out = v[()]
+                listed_params[listkeywithoutdigit][digits] = v
+
+    for k, v in listed_params.items():
+        lenlist = max(listed_params[k]) + 1
+        stored = [None] * lenlist
+        for i in range(lenlist):
+            with listed_params[k][i].astype(listed_params[k][i].dtype):
+                if listed_params[k][i].shape is not ():
+                    stored[i] = listed_params[k][i][:]
+                else:
+                    out = listed_params[k][i][()]
+        setattr(model, k, stored)
+
+    for k, v in f.items():
+        if k[:6] != "tolist":
+            with v.astype(v.dtype):
+                if v.shape is not ():
+                    out = v[:]
+                else:
+                    out = v[()]
             setattr(model, k, out)
+        else:
+            pass
 
     f.flush()
     f.close()
@@ -121,7 +156,7 @@ def typeconversion(v):
         a jsonable object, which type depends on the type of v
     """
 
-    if isinstance(v, np.ndarray):
+    if isinstance(v, np.ndarray):  # pragma no cover
         return v.tolist()
 
     elif isinstance(v, list):
@@ -256,24 +291,26 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
         data = [pickle.loads(d) for d in data]
 
     val_gen = check_gen(data_val)
-    if val_gen:
+
+    if val_gen > 0:
         if generator:
             data_val = [pickle.loads(dv) for dv in data_val]
             fit_gen_val = True
         else:
             raise Exception("You should also pass a generator for the training"
                             " data.")
-
     # Fit the model
     # and validates it
 
-    for d, dv in szip(data, data_val):  # loop over the data/generators
+    if len(size_gen) == 0:
+        size_gen = [0] * len(data)
+    # loop over the data/generators
+    for d, dv, s_gen in szip(data, data_val, size_gen):
         # not treating the case "not generator and fit_gen_val"
         #    since it is catched above
-
         # case A : dict for data and data_val
         if not generator and not fit_gen_val:
-
+            print("CaseA")
             X, y = d['X'], d['y']
             X_val, y_val = dv['X'], dv['y']
             model.fit(X, y, *args, **kwargs)
@@ -287,68 +324,75 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
 
         # case B : generator for data and dict for data_val
         elif generator and not fit_gen_val:
+            print("CaseB")
+            X_val, y_val = dv['X'], dv['y']
             for batch_data in d.get_epoch_iterator():
                 X, y = batch_data
                 model.fit(X, y, *args, **kwargs)
                 predondata.append(model.predict(X))
+                predonval.append(model.predict(X_val))
                 for metric in metrics:
                     results['metrics'][metric.__name__].append(
                         metric(y, predondata[-1]))
-
-            X_val, y_val = dv['X'], dv['y']
-            predonval.append(model.predict(X_val))
-            for metric in metrics:
-                results['metrics']['val_' + metric.__name__].append(
-                    metric(y_val, predonval[-1]))
+                    results['metrics']['val_' + metric.__name__].append(
+                        metric(y_val, predonval[-1]))
 
         # case C : generator for data and for data_val
         elif generator and fit_gen_val:
+            # case C1: N chunks in gen, 1 chunk in val, many to one
+            if s_gen == 1:
+                print("CaseC1")
+                X_val, y_val = snext(dv.get_epoch_iterator())
+                for batch_data in d.get_epoch_iterator():
+                    X, y = batch_data
+                    model.fit(X, y, *args, **kwargs)
+                    predondata.append(model.predict(X))
+                    predonval.append(model.predict(X_val))
+                    for metric in metrics:
+                        results['metrics'][metric.__name__].append(
+                            metric(y, predondata[-1]))
+                        results['metrics']['val_' + metric.__name__].append(
+                            metric(y_val, predonval[-1]))
 
-            # case C1 : same numbers of chunks, many to many
-            for batch_data, batch_val in szip(d.get_epoch_iterator(),
-                                              dv.get_epoch_iterator()):
-                X, y = batch_data
-                X_val, y_val = batch_val
+            # case C2 : 1 chunk in gen, N chunks in val, one to many
+            elif s_gen == 2:
+                print("CaseC2")
+                X, y = snext(d.get_epoch_iterator())
                 model.fit(X, y, *args, **kwargs)
                 predondata.append(model.predict(X))
-                predonval.append(model.predict(X_val))
                 for metric in metrics:
                     results['metrics'][metric.__name__].append(
                         metric(y, predondata[-1]))
-                    results['metrics']['val_' + metric.__name__].append(
-                        metric(y_val, predonval[-1]))
 
-            # case C2 : N chunks in gen, 1 chunk in val, many to one
-            X_val, y_val = snext(dv.get_epoch_iterator())
-            for batch_data in d.get_epoch_iterator():
-                X, y = batch_data
-                model.fit(X, y, *args, **kwargs)
-                predondata.append(model.predict(X))
-                predonval.append(model.predict(X_val))
-                for metric in metrics:
-                    results['metrics'][metric.__name__].append(
-                        metric(y, predondata[-1]))
-                    results['metrics']['val_' + metric.__name__].append(
-                        metric(y_val, predonval[-1]))
+                for batch_val in dv.get_epoch_iterator():
+                    X_val, y_val = batch_val
+                    predonval.append(model.predict(X_val))
+                    for metric in metrics:
+                        results['metrics']['val_' + metric.__name__].append(
+                            metric(y_val, predonval[-1]))
 
-            # case C3 : 1 chunk in gen, N chunks in val, one to many
-            X, y = snext(d.get_epoch_iterator())
-            model.fit(X, y, *args, **kwargs)
-            predondata.append(model.predict(X))
-            for metric in metrics:
-                results['metrics'][metric.__name__].append(
-                    metric(y, predondata[-1]))
+            # case C3 : same numbers of chunks, many to many
+            elif s_gen == 3:
+                print("CaseC3")
+                for batch_data, batch_val in szip(d.get_epoch_iterator(),
+                                                  dv.get_epoch_iterator()):
+                    X, y = batch_data
+                    X_val, y_val = batch_val
+                    model.fit(X, y, *args, **kwargs)
+                    predondata.append(model.predict(X))
+                    predonval.append(model.predict(X_val))
+                    for metric in metrics:
+                        results['metrics'][metric.__name__].append(
+                            metric(y, predondata[-1]))
+                        results['metrics']['val_' + metric.__name__].append(
+                            metric(y_val, predonval[-1]))
 
-            for batch_val in dv.get_epoch_iterator():
-                X_val, y_val = batch_val
-                predonval.append(model.predict(X_val))
-                for metric in metrics:
-                    results['metrics']['val_' + metric.__name__].append(
-                        metric(y_val, predonval[-1]))
+            else:  # pragma: no cover
+                raise Exception(
+                    'Incoherent generator size for train and validation')
 
     # for compatibility with keras backend
     results['metrics']['iter'] = np.nan
-
     return results, model
 
 
@@ -401,8 +445,7 @@ def fit(self, backend_name, backend_version, model, data, data_hash,
     if generator is True:  # pragma: no cover
         full_json_data = {'mod_data_id': hexdi_m + data_hash,
                           'data_id': data_hash,
-                          'data': data,
-                          'data_val': data_val}
+                          'data': data}
 
         db.insert(full_json_data, db.get_generators(), upsert=overwrite)
 

@@ -334,6 +334,7 @@ class Experiment(object):
                 size_gen=size_gen,
                 generator=generator,
                 *args, **kwargs)
+
         return self._handle_results(res, delay)
 
     def _handle_results(self, res, delay):
