@@ -55,6 +55,10 @@ TO_SERIALIZE = ['custom_objects']
 
 # general utilities
 
+def get_backend():
+    import sklearn as SK
+    return SK
+
 def save_params(model, filepath):
     """ Dumps the attributes of the (generally fitted) model
         in a h5 file.
