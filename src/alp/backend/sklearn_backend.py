@@ -5,9 +5,10 @@ Adaptor for the sklearn backend
 
 import copy
 import pickle
+import re
+
 import h5py
 import numpy as np
-import re
 
 from six import next as snext
 from six.moves import zip as szip
