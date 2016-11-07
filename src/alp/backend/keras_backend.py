@@ -24,7 +24,12 @@ in memory compiled function, this function is used instead.
 """
 
 import inspect
-import cPickle as pickle
+
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+
 import types
 
 import dill
