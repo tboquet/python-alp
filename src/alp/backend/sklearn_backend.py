@@ -4,16 +4,12 @@ Adaptor for the sklearn backend
 """
 
 import copy
-import pickle
-import re
 
 import h5py
 import numpy as np
-
-from six import next as snext
-from six.moves import zip as szip
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from sklearn.gaussian_process import GaussianProcess
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model import ARDRegression
 from sklearn.linear_model import BayesianRidge
@@ -25,15 +21,15 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import OrthogonalMatchingPursuit
 from sklearn.linear_model import Ridge
 
-from ..appcom import _path_h5
-from ..appcom.utils import check_gen
-from ..celapp import app
 
+from ..appcom import _path_h5
+from ..celapp import app
 
 SUPPORTED = [LogisticRegression, LinearRegression, Ridge, Lasso,
              Lars, LassoLars, OrthogonalMatchingPursuit, BayesianRidge,
              ARDRegression, LinearDiscriminantAnalysis,
-             QuadraticDiscriminantAnalysis, KernelRidge]
+             QuadraticDiscriminantAnalysis, KernelRidge,
+             GaussianProcess]
 
 
 def getname(model, call=True):
@@ -51,9 +47,19 @@ for m in SUPPORTED:
 
 COMPILED_MODELS = dict()
 TO_SERIALIZE = ['custom_objects']
-
+params_GP = ['X', 'y', 'X_mean', 'y_mean',
+                  'X_std', 'y_std', 'beta', 'gamma',
+                  'beta0']
+TO_DUMP = {
+    'sklearn.gaussian_process.gaussian_process.GaussianProcess': params_GP}
 
 # general utilities
+
+
+def get_backend():
+    import sklearn as SK
+    return SK
+
 
 def save_params(model, filepath):
     """ Dumps the attributes of the (generally fitted) model
@@ -66,21 +72,22 @@ def save_params(model, filepath):
 
     attr = model.__dict__
     dict_params = dict()
+    additional_keys = []
+    model_name = getname(model, False)
+    if model_name in TO_DUMP:
+        for key_to_dump in TO_DUMP[model_name]:
+            additional_keys.append(key_to_dump)
+
     for k, v in attr.items():
-        if k[-1:] == '_':
-            dict_params[k] = v
+        if k[-1:] == '_' or k in additional_keys:
+            dict_params[k] = typeconversion(v)
 
     f = h5py.File(filepath, 'w')
     for k, v in dict_params.items():
         if v is not None:
-            if type(v) is list:
-                for i, val in enumerate(v):
-                    kadd = "tolist" + str(i) + k
-                    f[kadd] = val
-            else:
-                f[k] = v
-
-        # so far seen only in Ridge when solver is not sag or lsqr.
+            f[k] = v
+        # so far the None case has been seen
+        # only in Ridge when solver is not sag or lsqr.
 
     f.flush()
     f.close()
@@ -97,36 +104,12 @@ def load_params(model, filepath):
     """
 
     f = h5py.File(filepath, 'r')
-    listed_params = dict()
-
-    # first loop to get the parameters that are "unlisted"
     for k, v in f.items():
-        if k[:6] == "tolist":
-            listkeywithoutdigit = str(re.sub("\d+", "", k[6:]))
-            digits = int(re.search(r'\d+', k[6:]).group())
-            if listkeywithoutdigit not in listed_params.keys():
-                listed_params[listkeywithoutdigit] = {digits: v}
+        with v.astype(v.dtype):
+            if v.shape is not ():
+                out = v[:]
             else:
-                listed_params[listkeywithoutdigit][digits] = v
-
-    for k, v in listed_params.items():
-        lenlist = max(listed_params[k]) + 1
-        stored = [None] * lenlist
-        for i in range(lenlist):
-            with listed_params[k][i].astype(listed_params[k][i].dtype):
-                if listed_params[k][i].shape is not ():
-                    stored[i] = listed_params[k][i][:]
-                else:
-                    out = listed_params[k][i][()]
-        setattr(model, k, stored)
-
-    for k, v in f.items():
-        if k[:6] != "tolist":
-            with v.astype(v.dtype):
-                if v.shape is not ():
-                    out = v[:]
-                else:
-                    out = v[()]
+                out = v[()]
             setattr(model, k, out)
 
     f.flush()
@@ -147,7 +130,7 @@ def typeconversion(v):
         a jsonable object, which type depends on the type of v
     """
 
-    if isinstance(v, np.ndarray):  # pragma: no cover
+    if isinstance(v, np.ndarray):
         return v.tolist()
 
     elif isinstance(v, list):
@@ -237,14 +220,9 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
 
     Args:
         model(dict): a serialized sklearn model
-        data(list): - a list of dict mapping inputs and outputs to lists or
+        data(list): a list of dict mapping inputs and outputs to lists or
             dictionnaries mapping the inputs names to np.arrays
-                XOR -a list of fuel generators
-        data_val(list): same structure than `data` but for validation.
-
-        it is possible to feed generators for data and plain data for data_val.
-        it is not possible the other way around.
-
+        data_val(list): same structure than `data` but for validation
 
     Returns:
         the loss (list), the validation loss (list), the number of iterations,
@@ -260,13 +238,11 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
     custom_objects = None
     predondata = []
     predonval = []
-    fit_gen_val = False
 
     metrics.append(mean_absolute_error)
     for metric in metrics:
         results['metrics'][metric.__name__] = []
         results['metrics']['val_' + metric.__name__] = []
-
     # Load custom_objects and metrics
     if 'custom_objects' in kwargs:  # pragma: no cover
         custom_objects = kwargs.pop('custom_objects')
@@ -278,107 +254,22 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
     # Load model
     model = model_from_dict_w_opt(model, custom_objects=custom_objects)
 
-    if generator:
-        data = [pickle.loads(d) for d in data]
-
-    val_gen = check_gen(data_val)
-
-    if val_gen > 0:
-        if generator:
-            data_val = [pickle.loads(dv) for dv in data_val]
-            fit_gen_val = True
-        else:
-            raise Exception("You should also pass a generator for the training"
-                            " data.")
     # Fit the model
-    # and validates it
+    for d, dv in zip(data, data_val):
+        model.fit(d['X'], d['y'], *args, **kwargs)
+        predondata.append(model.predict(d['X']))
+        predonval.append(model.predict(dv['X']))
 
-    if len(size_gen) == 0:
-        size_gen = [0] * len(data)
-    # loop over the data/generators
-    for d, dv, s_gen in szip(data, data_val, size_gen):
-        # not treating the case "not generator and fit_gen_val"
-        #    since it is catched above
-        # case A : dict for data and data_val
-        if not generator and not fit_gen_val:
-            X, y = d['X'], d['y']
-            X_val, y_val = dv['X'], dv['y']
-            model.fit(X, y, *args, **kwargs)
-            predondata.append(model.predict(X))
-            predonval.append(model.predict(X_val))
-            for metric in metrics:
-                results['metrics'][metric.__name__].append(
-                    metric(y, predondata[-1]))
-                results['metrics']['val_' + metric.__name__].append(
-                    metric(y_val, predonval[-1]))
+    # Validates the model
+    # So far, only the mae is supported.
+    for metric in metrics:
+        for d, dv, pda, pva in zip(data, data_val, predondata, predonval):
+            results['metrics'][metric.__name__].append(metric(d['y'], pda))
+            results['metrics']['val_' + metric.__name__].append(metric(dv['y'],
+                                                                       pva))
 
-        # case B : generator for data and dict for data_val
-        elif generator and not fit_gen_val:
-            X_val, y_val = dv['X'], dv['y']
-            for batch_data in d.get_epoch_iterator():
-                X, y = batch_data
-                model.fit(X, y, *args, **kwargs)
-                predondata.append(model.predict(X))
-                predonval.append(model.predict(X_val))
-                for metric in metrics:
-                    results['metrics'][metric.__name__].append(
-                        metric(y, predondata[-1]))
-                    results['metrics']['val_' + metric.__name__].append(
-                        metric(y_val, predonval[-1]))
-
-        # case C : generator for data and for data_val
-        else:
-            # case C1: N chunks in gen, 1 chunk in val, many to one
-            if s_gen == 1:
-                X_val, y_val = snext(dv.get_epoch_iterator())
-                for batch_data in d.get_epoch_iterator():
-                    X, y = batch_data
-                    model.fit(X, y, *args, **kwargs)
-                    predondata.append(model.predict(X))
-                    predonval.append(model.predict(X_val))
-                    for metric in metrics:
-                        results['metrics'][metric.__name__].append(
-                            metric(y, predondata[-1]))
-                        results['metrics']['val_' + metric.__name__].append(
-                            metric(y_val, predonval[-1]))
-
-            # case C2 : 1 chunk in gen, N chunks in val, one to many
-            elif s_gen == 2:
-                X, y = snext(d.get_epoch_iterator())
-                model.fit(X, y, *args, **kwargs)
-                predondata.append(model.predict(X))
-                for metric in metrics:
-                    results['metrics'][metric.__name__].append(
-                        metric(y, predondata[-1]))
-
-                for batch_val in dv.get_epoch_iterator():
-                    X_val, y_val = batch_val
-                    predonval.append(model.predict(X_val))
-                    for metric in metrics:
-                        results['metrics']['val_' + metric.__name__].append(
-                            metric(y_val, predonval[-1]))
-
-            # case C3 : same numbers of chunks, many to many
-            elif s_gen == 3:
-                for batch_data, batch_val in szip(d.get_epoch_iterator(),
-                                                  dv.get_epoch_iterator()):
-                    X, y = batch_data
-                    X_val, y_val = batch_val
-                    model.fit(X, y, *args, **kwargs)
-                    predondata.append(model.predict(X))
-                    predonval.append(model.predict(X_val))
-                    for metric in metrics:
-                        results['metrics'][metric.__name__].append(
-                            metric(y, predondata[-1]))
-                        results['metrics']['val_' + metric.__name__].append(
-                            metric(y_val, predonval[-1]))
-
-            else:  # pragma: no cover
-                raise Exception(
-                    'Incoherent generator size for train and validation')
-
-    # for compatibility with keras backend
     results['metrics']['iter'] = np.nan
+
     return results, model
 
 
@@ -431,7 +322,8 @@ def fit(self, backend_name, backend_version, model, data, data_hash,
     if generator is True:  # pragma: no cover
         full_json_data = {'mod_data_id': hexdi_m + data_hash,
                           'data_id': data_hash,
-                          'data': data}
+                          'data': data,
+                          'data_val': data_val}
 
         db.insert(full_json_data, db.get_generators(), upsert=overwrite)
 
