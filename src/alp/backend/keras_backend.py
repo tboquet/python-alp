@@ -29,8 +29,8 @@ import types
 
 import dill
 import marshal
-from numpy import nan as npnan
 import six
+from numpy import nan as npnan
 from six.moves import zip as szip
 
 from ..appcom import _path_h5
