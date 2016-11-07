@@ -27,8 +27,6 @@ import inspect
 import pickle
 import types
 
-import dill
-import marshal
 import six
 from six.moves import zip as szip
 
@@ -63,11 +61,11 @@ def serialize(cust_obj):
     ser_func = dict()
     if isinstance(cust_obj, types.FunctionType):
         func_code = six.get_function_code(cust_obj)
-        func_code_d = marshal.dumps(func_code).decode('raw_unicode_escape')
+        func_code_d = pickle.dumps(func_code).decode('raw_unicode_escape')
         ser_func['func_code_d'] = func_code_d
-        ser_func['name_d'] = marshal.dumps(cust_obj.__name__)
-        ser_func['args_d'] = marshal.dumps(six.get_function_defaults(cust_obj))
-        ser_func['clos_d'] = dill.dumps(six.get_function_closure(cust_obj))
+        ser_func['name_d'] = pickle.dumps(cust_obj.__name__)
+        ser_func['args_d'] = pickle.dumps(six.get_function_defaults(cust_obj))
+        ser_func['clos_d'] = pickle.dumps(six.get_function_closure(cust_obj))
         ser_func['type_obj'] = 'func'
     else:
         if hasattr(cust_obj, '__module__'):  # pragma: no cover
@@ -76,8 +74,7 @@ def serialize(cust_obj):
         ser_func['args_d'] = None
         ser_func['clos_d'] = None
         ser_func['type_obj'] = 'class'
-        ser_func['func_code_d'] = dill.dumps(cust_obj).decode(
-            'raw_unicode_escape')
+        ser_func['func_code_d'] = pickle.dumps(cust_obj)
     return ser_func
 
 
@@ -94,13 +91,13 @@ def deserialize(name_d, func_code_d, args_d, clos_d, type_obj):
     Returns:
         a deserialized object"""
     if type_obj == 'func':
-        name = marshal.loads(name_d)
-        code = marshal.loads(func_code_d.encode('raw_unicode_escape'))
-        args = marshal.loads(args_d)
-        clos = dill.loads(clos_d)
+        name = pickle.loads(name_d)
+        code = pickle.loads(func_code_d.encode('raw_unicode_escape'))
+        args = pickle.loads(args_d)
+        clos = pickle.loads(clos_d)
         loaded_obj = types.FunctionType(code, globals(), name, args, clos)
     else:  # pragma: no cover
-        loaded_obj = dill.loads(func_code_d.encode('raw_unicode_escape'))
+        loaded_obj = pickle.loads(func_code_d)
     return loaded_obj
 
 
