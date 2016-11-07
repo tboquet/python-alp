@@ -29,6 +29,7 @@ import types
 
 import dill
 import marshal
+from numpy import nan as npnan
 import six
 from six.moves import zip as szip
 
@@ -46,6 +47,13 @@ TO_SERIALIZE = ['custom_objects']
 def get_backend():
     import keras as CB
     return CB
+
+
+def check_validation(dv):
+    validation = True
+    if dv is None:
+        validation = False
+    return(validation)
 
 
 def save_params(model, filepath):
@@ -294,7 +302,7 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
     metrics_names = model.metrics_names
     for metric in metrics_names:
         results['metrics'][metric] = []
-        results['metrics']['val_' + metric] = []
+        results['metrics'][suf + metric] = []
     mod_name = model.__class__.__name__
 
     if generator:
@@ -302,9 +310,12 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
         data = [cm.transform_gen(d, mod_name) for d in data]
         kwargs.pop('batch_size')
 
-    val_gen = check_gen(data_val)
+    if data_val is not None:
+        val_gen = check_gen(data_val)
+    else:
+        val_gen = 0
 
-    if val_gen:
+    if val_gen > 0:
         if generator:
             data_val = [pickle.loads(dv) for dv in data_val]
             data_val = [cm.transform_gen(dv, mod_name) for dv in data_val]
@@ -319,6 +330,7 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
     # fit the model according to the input/output type
     if mod_name is "Graph":
         for d, dv in szip(data, data_val):
+            validation = check_validation(dv)
             if generator:
                 h = model.fit_generator(generator=d,
                                         validation_data=dv,
@@ -331,13 +343,19 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
                               **kwargs)
             for metric in metrics_names:
                 results['metrics'][metric] += h.history[metric]
-                results['metrics']['val_' + metric] += h.history[metric]
+                if validation:
+                    results['metrics'][suf + metric] += h.history[suf + metric]
+                else:
+                    results['metrics'][suf + metric] += [npnan] * \
+                        len(h.history[metric])
         results['metrics']['iter'] = h.epoch[-1] * len(data)
 
     elif mod_name is "Sequential" or mod_name is "Model":
         for d, dv in szip(data, data_val):
+            validation = check_validation(dv)
             if not fit_gen_val:
-                dv = (dv['X'], dv['y'])
+                if dv is not None:
+                    dv = (dv['X'], dv['y'])
             if generator:
                 h = model.fit_generator(generator=d,
                                         validation_data=dv,
@@ -352,7 +370,12 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
                               **kwargs)
             for metric in metrics_names:
                 results['metrics'][metric] += h.history[metric]
-                results['metrics'][suf + metric] += h.history[suf + metric]
+                if validation:
+                    results['metrics'][
+                        suf + metric] += h.history[suf + metric]
+                else:
+                    results['metrics'][suf + metric] += [npnan] * \
+                        len(h.history[metric])
         results['metrics']['iter'] = h.epoch[-1] * len(data)
     else:
         raise NotImplementedError("This type of model"

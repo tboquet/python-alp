@@ -131,6 +131,7 @@ for m in SKB.SUPPORTED:
     keyval[getname(m)] = m()
 
 
+#@pytest.fixture(scope='module', params=['sklearn.kernel_ridge.KernelRidge'])
 @pytest.fixture(scope='module', params=list(keyval.keys()))
 def get_model_data_expe(request):
     model = keyval[request.param]
@@ -201,14 +202,18 @@ class TestExperiment:
 
             for data_val_loc in [None, data_val]:
                 expe.fit_gen([gen_train], [data_val_loc], overwrite=True)
+
                 assert len(expe.full_res['metrics'][
                            'mean_absolute_error']) == expected_value
+                assert len(expe.full_res['metrics'][
+                    'val_mean_absolute_error']) == expected_value
+
                 if data_val_loc is not None:
-                    assert len(expe.full_res['metrics'][
-                               'val_mean_absolute_error']) == expected_value
+                    assert None not in expe.full_res['metrics'][
+                        'val_mean_absolute_error']
                 else:
-                    assert len(expe.full_res['metrics'][
-                               'val_mean_absolute_error']) == 0
+                    assert all(v is None for v in expe.full_res[
+                               'metrics']['val_mean_absolute_error'])
 
             assert expe.data_id is not None
             assert expe.mod_id is not None
