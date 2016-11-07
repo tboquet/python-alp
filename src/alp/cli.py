@@ -15,10 +15,15 @@ Why does this file exist, and why not put this in __main__?
   Also see (1) from http://click.pocoo.org/5/setuptools/#setuptools-integration
 """
 import sys
+import click
 
 
+@cli.group()
 def main(argv=sys.argv):
     """
+    The alp command provide you with a number of options to manage alp services
+
+
     Args:
         argv (list): List of arguments
 
@@ -30,3 +35,25 @@ def main(argv=sys.argv):
 
     print(argv)
     return 0
+
+@cli.command()
+@click.argument('action', type=click.STRING, required=True,
+                help="Action to take")
+def service(action):
+    """Subcommand to take action on services"""
+    if service == 'start':
+        pass
+    elif service == 'stop':
+        pass
+    elif service == 'restart':
+        pass
+
+@cli.command()
+@click.argument('action', type=click.STRING, required=True)
+def service(action):
+    if service == 'start':
+        pass
+    elif service == 'stop':
+        pass
+    elif service == 'restart':
+        pass
