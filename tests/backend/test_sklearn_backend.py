@@ -131,7 +131,6 @@ for m in SKB.SUPPORTED:
     keyval[getname(m)] = m()
 
 
-#@pytest.fixture(scope='module', params=['sklearn.kernel_ridge.KernelRidge'])
 @pytest.fixture(scope='module', params=list(keyval.keys()))
 def get_model_data_expe(request):
     model = keyval[request.param]
