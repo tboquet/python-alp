@@ -158,7 +158,8 @@ class TestExperiment:
         data, data_val, _, model, expe = get_model_data_expe
 
         for mod in [None, model]:
-            expe.fit([data], [data_val], model=mod, overwrite=True)
+            for data_val_loc in [None, data_val]:
+                expe.fit([data], [data_val_loc], model=mod, overwrite=True)
 
         expe.backend_name = 'another_backend'
         expe.load_model()
@@ -167,14 +168,6 @@ class TestExperiment:
         assert expe.data_id is not None
         assert expe.mod_id is not None
         assert expe.params_dump is not None
-        print(self)
-
-    def test_experiment_fit_async(self, get_model_data_expe):
-        data, data_val, _, model, expe = get_model_data_expe
-
-        for mod in [None, model]:
-            expe.fit_async([data], [data_val], model=mod, overwrite=True)
-
         print(self)
 
     def test_experiment_predict(self, get_model_data_expe):
@@ -194,10 +187,11 @@ class TestExperiment:
 
     def test_experiment_fit_gen_nogenval(self, get_model_data_expe):
         '''
-            Main case: gen on train, data on val
+            Main case: generator on train
+
             Subcases:
-                - 10 chunks on train B
-                - 1 chunk on train B
+                - 10 chunks on train B with and without val
+                - 1 chunk on train B with and without val
         '''
         data, data_val, is_classif, model, expe = get_model_data_expe
 
@@ -205,12 +199,17 @@ class TestExperiment:
             gen_train, data_train, data_stream_train = make_gen(
                 Nchunks_gen, is_classif, train=True)
 
-            expe.fit_gen([gen_train], [data_val], overwrite=True)
+            for data_val_loc in [None, data_val]:
+                expe.fit_gen([gen_train], [data_val_loc], overwrite=True)
+                assert len(expe.full_res['metrics'][
+                           'mean_absolute_error']) == expected_value
+                if data_val_loc is not None:
+                    assert len(expe.full_res['metrics'][
+                               'val_mean_absolute_error']) == expected_value
+                else:
+                    assert len(expe.full_res['metrics'][
+                               'val_mean_absolute_error']) == 0
 
-            assert len(expe.full_res['metrics'][
-                       'mean_absolute_error']) == expected_value
-            assert len(expe.full_res['metrics'][
-                       'val_mean_absolute_error']) == expected_value
             assert expe.data_id is not None
             assert expe.mod_id is not None
             assert expe.params_dump is not None
@@ -256,7 +255,18 @@ class TestExperiment:
 
         print(self)
 
-    # TODO: new travis_container
+    # TODO: new travis_container to test the async cases
+
+        # def test_experiment_fit_async(self, get_model_data_expe):
+        # data, data_val, _, model, expe = get_model_data_expe
+
+        # for mod in [None, model]:
+        #     for data_val_loc in [None, data_val]:
+        #         expe.fit_async([data], [data_val_loc],
+        #                        model=mod, overwrite=True)
+    # TODO: check consistency of results
+        # print(self)
+
     # def test_experiment_fit_gen_async_nogenval(self, get_model_data_expe):
     #     '''
     #         Main case: gen on train, data on val

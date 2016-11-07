@@ -286,7 +286,10 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
     if generator:
         data = [pickle.loads(d) for d in data]
 
-    val_gen = check_gen(data_val)
+    if data_val is not None:
+        val_gen = check_gen(data_val)
+    else:
+        val_gen = 0
 
     if val_gen > 0:
         if generator:
@@ -302,34 +305,47 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
         size_gen = [0] * len(data)
     # loop over the data/generators
     for d, dv, s_gen in szip(data, data_val, size_gen):
+        # check if we have a data_val object.
+        # if not, no evaluation of the metrics on val.
+        if dv is None:
+            validation = False
+        else:
+            validation = True
+
         # not treating the case "not generator and fit_gen_val"
         #    since it is catched above
         # case A : dict for data and data_val
         if not generator and not fit_gen_val:
             X, y = d['X'], d['y']
-            X_val, y_val = dv['X'], dv['y']
             model.fit(X, y, *args, **kwargs)
             predondata.append(model.predict(X))
-            predonval.append(model.predict(X_val))
             for metric in metrics:
                 results['metrics'][metric.__name__].append(
                     metric(y, predondata[-1]))
-                results['metrics']['val_' + metric.__name__].append(
-                    metric(y_val, predonval[-1]))
+            if validation:
+                X_val, y_val = dv['X'], dv['y']
+                predonval.append(model.predict(X_val))
+                for metric in metrics:
+                    results['metrics']['val_' + metric.__name__].append(
+                        metric(y_val, predonval[-1]))
 
-        # case B : generator for data and dict for data_val
+        # case B : generator for data and no generator for data_val
+        # could be dict or None
         elif generator and not fit_gen_val:
-            X_val, y_val = dv['X'], dv['y']
+            if validation:
+                X_val, y_val = dv['X'], dv['y']
             for batch_data in d.get_epoch_iterator():
                 X, y = batch_data
                 model.fit(X, y, *args, **kwargs)
                 predondata.append(model.predict(X))
-                predonval.append(model.predict(X_val))
+                if validation:
+                    predonval.append(model.predict(X_val))
                 for metric in metrics:
                     results['metrics'][metric.__name__].append(
                         metric(y, predondata[-1]))
-                    results['metrics']['val_' + metric.__name__].append(
-                        metric(y_val, predonval[-1]))
+                    if validation:
+                        results['metrics']['val_' + metric.__name__].append(
+                            metric(y_val, predonval[-1]))
 
         # case C : generator for data and for data_val
         else:
