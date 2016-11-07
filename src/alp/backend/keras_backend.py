@@ -308,7 +308,7 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
     mod_name = model.__class__.__name__
 
     if generator:
-        data = [pickle.loads(d) for d in data]
+        data = [pickle.loads(d.encode('raw_unicode_escape')) for d in data]
         data = [cm.transform_gen(d, mod_name) for d in data]
         kwargs.pop('batch_size')
 
@@ -316,7 +316,8 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
 
     if val_gen:
         if generator:
-            data_val = [pickle.loads(dv) for dv in data_val]
+            data_val = [pickle.loads(dv.decode('raw_unicode_escape'))
+                        for dv in data_val]
             data_val = [cm.transform_gen(dv, mod_name) for dv in data_val]
             for i, check in enumerate(size_gen):
                 if check is 1:

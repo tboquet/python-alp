@@ -217,12 +217,14 @@ def pickle_gen(gen_train, data_val):
 
     Returns:
         normalized datasets"""
-    gen_train = [pickle.dumps(g) for g in gen_train]
+    gen_train = [pickle.dumps(g).decode('raw_unicode_escape')
+                 for g in gen_train]
 
     val_gen = check_gen(data_val)
 
     if val_gen:
-        data_val = [pickle.dumps(g) for g in data_val]
+        data_val = [pickle.dumps(g).decode('raw_unicode_escape')
+                    for g in data_val]
     return gen_train, data_val
 
 
