@@ -24,7 +24,7 @@ in memory compiled function, this function is used instead.
 """
 
 import inspect
-import pickle
+import cPickle as pickle
 import types
 
 import dill
@@ -67,7 +67,8 @@ def serialize(cust_obj):
         ser_func['func_code_d'] = func_code_d
         ser_func['name_d'] = pickle.dumps(cust_obj.__name__)
         ser_func['args_d'] = pickle.dumps(six.get_function_defaults(cust_obj))
-        ser_func['clos_d'] = pickle.dumps(six.get_function_closure(cust_obj))
+        clos = dill.dumps(six.get_function_closure(cust_obj))
+        ser_func['clos_d'] = pickle.dumps(clos)
         ser_func['type_obj'] = 'func'
     else:
         if hasattr(cust_obj, '__module__'):  # pragma: no cover
@@ -98,11 +99,12 @@ def deserialize(name_d, func_code_d, args_d, clos_d, type_obj):
         code = pickle.loads(func_code_d.encode('raw_unicode_escape'))
         code = dill.loads(code)
         args = pickle.loads(args_d)
-        clos = pickle.loads(clos_d)
+        clos = dill.loads(clos_d)
+        clos = pickle.loads(clos)
         loaded_obj = types.FunctionType(code, globals(), name, args, clos)
     else:  # pragma: no cover
         loaded_obj = dill.loads(func_code_d)
-        loaded_obj = pickle.loads(loaded_obj.encode('raw_univode_escape'))
+        loaded_obj = pickle.loads(loaded_obj)
     return loaded_obj
 
 
