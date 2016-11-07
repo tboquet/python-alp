@@ -316,7 +316,7 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
 
     if val_gen:
         if generator:
-            data_val = [pickle.loads(dv.decode('raw_unicode_escape'))
+            data_val = [pickle.loads(dv.encode('raw_unicode_escape'))
                         for dv in data_val]
             data_val = [cm.transform_gen(dv, mod_name) for dv in data_val]
             for i, check in enumerate(size_gen):
