@@ -27,6 +27,7 @@ import inspect
 import pickle
 import types
 
+import dill
 import six
 from six.moves import zip as szip
 

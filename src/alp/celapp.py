@@ -9,4 +9,4 @@ app = Celery(broker=apc._broker,
 
 app.conf.update(task_serializer='pickle',
                 result_serializer='json',
-                accept_content=['pickle'])
+                accept_content=['pickle', 'json'])
