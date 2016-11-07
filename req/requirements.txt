@@ -3,5 +3,5 @@ numpy
 pymongo
 -e git+git://github.com/Theano/Theano.git#egg=package
 git+git://github.com/fchollet/keras.git
-celery
+celery=3.1.25
 dill
