@@ -62,8 +62,8 @@ You can also launch monitoring containers:
     docker run -d -p 5555:5555 -v ~/scheduler/proj:/sched \
           --link rabbitmq_sched:rabbitmq --name=flower_monitor --restart=always tboquet/anaceflo
 
-    docker run -d --link mongo_results:mongo -p 8081:8081 --name=mongo_r_monitor --restart=always knickers/mongo-express
-    docker run -d --link mongo_models:mongo -p 8082:8081 --name=mongo_m_monitor --restart=always knickers/mongo-express
+    docker run -d --link mongo_results:mongo -p 8081:8081 --name=mongo_r_monitor --restart=always mongo-express
+    docker run -d --link mongo_models:mongo -p 8082:8081 --name=mongo_m_monitor --restart=always mongo-express
 
 The first container runs flower_, a simple application to monitor the broker, the last two containers serve web applications for each of the mongodb containers we launched earlier.
 

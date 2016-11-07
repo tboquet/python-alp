@@ -24,11 +24,10 @@ in memory compiled function, this function is used instead.
 """
 
 import inspect
-import pickle
+
 import types
 
 import dill
-import marshal
 import six
 from six.moves import zip as szip
 
@@ -36,6 +35,13 @@ from ..appcom import _path_h5
 from ..appcom.utils import check_gen
 from ..backend import common as cm
 from ..celapp import app
+
+
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+
 
 COMPILED_MODELS = dict()
 TO_SERIALIZE = ['custom_objects']
@@ -62,12 +68,17 @@ def serialize(cust_obj):
         a dict of the serialized components of the object"""
     ser_func = dict()
     if isinstance(cust_obj, types.FunctionType):
+
         func_code = six.get_function_code(cust_obj)
-        func_code_d = marshal.dumps(func_code).decode('raw_unicode_escape')
+        func_code_d = dill.dumps(func_code).decode('raw_unicode_escape')
         ser_func['func_code_d'] = func_code_d
-        ser_func['name_d'] = marshal.dumps(cust_obj.__name__)
-        ser_func['args_d'] = marshal.dumps(six.get_function_defaults(cust_obj))
-        ser_func['clos_d'] = dill.dumps(six.get_function_closure(cust_obj))
+        ser_func['name_d'] = pickle.dumps(
+            cust_obj.__name__).decode('raw_unicode_escape')
+        ser_func['args_d'] = pickle.dumps(
+            six.get_function_defaults(cust_obj)).decode('raw_unicode_escape')
+        clos = dill.dumps(
+            six.get_function_closure(cust_obj)).decode('raw_unicode_escape')
+        ser_func['clos_d'] = clos
         ser_func['type_obj'] = 'func'
     else:
         if hasattr(cust_obj, '__module__'):  # pragma: no cover
@@ -76,8 +87,8 @@ def serialize(cust_obj):
         ser_func['args_d'] = None
         ser_func['clos_d'] = None
         ser_func['type_obj'] = 'class'
-        ser_func['func_code_d'] = dill.dumps(cust_obj).decode(
-            'raw_unicode_escape')
+        loaded = dill.dumps(cust_obj).decode('raw_unicode_escape')
+        ser_func['func_code_d'] = loaded
     return ser_func
 
 
@@ -94,10 +105,10 @@ def deserialize(name_d, func_code_d, args_d, clos_d, type_obj):
     Returns:
         a deserialized object"""
     if type_obj == 'func':
-        name = marshal.loads(name_d)
-        code = marshal.loads(func_code_d.encode('raw_unicode_escape'))
-        args = marshal.loads(args_d)
-        clos = dill.loads(clos_d)
+        name = pickle.loads(name_d.encode('raw_unicode_escape'))
+        code = dill.loads(func_code_d.encode('raw_unicode_escape'))
+        args = pickle.loads(args_d.encode('raw_unicode_escape'))
+        clos = dill.loads(clos_d.encode('raw_unicode_escape'))
         loaded_obj = types.FunctionType(code, globals(), name, args, clos)
     else:  # pragma: no cover
         loaded_obj = dill.loads(func_code_d.encode('raw_unicode_escape'))
@@ -298,7 +309,7 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
     mod_name = model.__class__.__name__
 
     if generator:
-        data = [pickle.loads(d) for d in data]
+        data = [pickle.loads(d.encode('raw_unicode_escape')) for d in data]
         data = [cm.transform_gen(d, mod_name) for d in data]
         kwargs.pop('batch_size')
 
@@ -306,7 +317,8 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
 
     if val_gen:
         if generator:
-            data_val = [pickle.loads(dv) for dv in data_val]
+            data_val = [pickle.loads(dv.encode('raw_unicode_escape'))
+                        for dv in data_val]
             data_val = [cm.transform_gen(dv, mod_name) for dv in data_val]
             for i, check in enumerate(size_gen):
                 if check is 1:
