@@ -288,7 +288,7 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
     if generator:
         data = [pickle.loads(d.encode('raw_unicode_escape')) for d in data]
 
-    if not data_val:
+    if all(v is None for v in data_val):
         val_gen = 0
     else:
         val_gen = check_gen(data_val)

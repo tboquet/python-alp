@@ -29,7 +29,7 @@ import types
 
 import dill
 import six
-from numpy import nan as npnan
+import numpy as np
 from six.moves import zip as szip
 
 from ..appcom import _path_h5
@@ -358,7 +358,7 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
                 if validation:
                     results['metrics'][suf + metric] += h.history[suf + metric]
                 else:
-                    results['metrics'][suf + metric] += [npnan] * \
+                    results['metrics'][suf + metric] += [np.nan] * \
                         len(h.history[metric])
         results['metrics']['iter'] = h.epoch[-1] * len(data)
 
@@ -386,7 +386,7 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
                     results['metrics'][
                         suf + metric] += h.history[suf + metric]
                 else:
-                    results['metrics'][suf + metric] += [npnan] * \
+                    results['metrics'][suf + metric] += [np.nan] * \
                         len(h.history[metric])
         results['metrics']['iter'] = h.epoch[-1] * len(data)
     else:
