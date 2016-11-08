@@ -259,86 +259,100 @@ class TestExperiment:
 
         print(self)
 
-    # TODO: new travis_container to test the async cases
+    def test_experiment_fit_async(self, get_model_data_expe):
+        data, data_val, _, model, expe = get_model_data_expe
 
-        # def test_experiment_fit_async(self, get_model_data_expe):
-        # data, data_val, _, model, expe = get_model_data_expe
+        for mod in [None, model]:
+            for data_val_loc in [None, data_val]:
+                expe.fit_async([data], [data_val_loc],
+                               model=mod, overwrite=True)
 
-        # for mod in [None, model]:
-        #     for data_val_loc in [None, data_val]:
-        #         expe.fit_async([data], [data_val_loc],
-        #                        model=mod, overwrite=True)
-    # TODO: check consistency of results
-        # print(self)
+                assert expe.data_id is not None
+                assert expe.mod_id is not None
+                assert expe.params_dump is not None
+                assert expe
 
-    # def test_experiment_fit_gen_async_nogenval(self, get_model_data_expe):
-    #     '''
-    #         Main case: gen on train, data on val
-    #         Subcases:
-    #             10 chunks on train
-    #             1 chunk on train
-    #     '''
-    #     data, data_val, is_classif, model, expe = get_model_data_expe
+        # TODO: check consistency of results
+        print(self)
 
-    #     for Nchunks_gen, expected_value in szip([True, False], [10, 1]):
-    #         gen_train, data_train, data_stream_train = make_gen(
-    #             Nchunks_gen, is_classif, train=True)
+    def test_experiment_fit_gen_async_nogenval(self, get_model_data_expe):
+        '''
+            Main case: gen on train, data on val
+            Subcases:
+                10 chunks on train
+                1 chunk on train
+        '''
+        data, data_val, is_classif, model, expe = get_model_data_expe
 
-    #         res, thread = expe.fit_gen_async(
-    #             [gen_train], [data_val], overwrite=True)
-    #         thread.join()
+        for Nchunks_gen, expected_value in szip([True, False], [10, 1]):
+            gen_train, data_train, data_stream_train = make_gen(
+                Nchunks_gen, is_classif, train=True)
 
-    #         assert len(expe.full_res['metrics'][
-    #                    'mean_absolute_error']) == expected_value
-    #         assert len(expe.full_res['metrics'][
-    #                    'val_mean_absolute_error']) == expected_value
-    #         assert expe.data_id is not None
-    #         assert expe.mod_id is not None
-    #         assert expe.params_dump is not None
-    #         assert expe
+            for data_val_loc in [None, data_val]:
 
-    #         close_gens(gen_train, data_train, data_stream_train)
+                _, thread = expe.fit_gen_async(
+                    [gen_train], [data_val_loc], overwrite=True)
+                thread.join()
 
-    #     print(self)
+                assert len(expe.full_res['metrics'][
+                           'mean_absolute_error']) == expected_value
+                assert len(expe.full_res['metrics'][
+                    'val_mean_absolute_error']) == expected_value
 
-    # def test_experiment_fit_gen_async_withgenval(self, get_model_data_expe):
-    #     '''
-    #         Main case: gen on train, gen on val
-    #         Subcases:
-    #             10 chunks on train / 10 chunks on val
-    #             10 chunks on train / 1 chunk on val
-    #             1 chunk on train / 10 chunks on val
-    #     '''
-    #     data, data_val, is_classif, model, expe = get_model_data_expe
+                if data_val_loc is not None:
+                    assert None not in expe.full_res['metrics'][
+                        'val_mean_absolute_error']
+                else:
+                    assert all(v is None for v in expe.full_res[
+                               'metrics']['val_mean_absolute_error'])
 
-    #     for Nchunks_gen, Nchunks_val in szip([True, True, False],
-    #                                          [True, False, True]):
+                assert expe.data_id is not None
+                assert expe.mod_id is not None
+                assert expe.params_dump is not None
+                assert expe
 
-    #         gen_train, data_train, data_stream_train = make_gen(
-    #             Nchunks_gen, is_classif, train=True)
-    #         gen_test, data_test, data_stream_test = make_gen(
-    #             Nchunks_val, is_classif, train=False)
+            close_gens(gen_train, data_train, data_stream_train)
 
-    #         res, thread = expe.fit_gen_async(
-    #             [gen_train], [gen_test], overwrite=True)
-    #         thread.join()
+        print(self)
 
-    #         expected_value_gen = 10
-    #         if not Nchunks_gen:
-    #             expected_value_gen = 1
+    def test_experiment_fit_gen_async_withgenval(self, get_model_data_expe):
+        '''
+            Main case: gen on train, gen on val
+            Subcases:
+                10 chunks on train / 10 chunks on val
+                10 chunks on train / 1 chunk on val
+                1 chunk on train / 10 chunks on val
+        '''
+        data, data_val, is_classif, model, expe = get_model_data_expe
 
-    #         assert len(expe.full_res['metrics'][
-    #                    'mean_absolute_error']) == expected_value_gen
-    #         assert len(expe.full_res['metrics'][
-    #                    'val_mean_absolute_error']) == 10
-    #         assert expe.data_id is not None
-    #         assert expe.mod_id is not None
-    #         assert expe.params_dump is not None
-    #         assert expe
+        for Nchunks_gen, Nchunks_val in szip([True, True, False],
+                                             [True, False, True]):
 
-    #         close_gens(gen_train, data_train, data_stream_train)
+            gen_train, data_train, data_stream_train = make_gen(
+                Nchunks_gen, is_classif, train=True)
+            gen_test, data_test, data_stream_test = make_gen(
+                Nchunks_val, is_classif, train=False)
 
-    #     print(self)
+            _, thread = expe.fit_gen_async(
+                [gen_train], [gen_test], overwrite=True)
+            thread.join()
+
+            expected_value_gen = 10
+            if not Nchunks_gen:
+                expected_value_gen = 1
+
+            assert len(expe.full_res['metrics'][
+                       'mean_absolute_error']) == expected_value_gen
+            assert len(expe.full_res['metrics'][
+                       'val_mean_absolute_error']) == 10
+            assert expe.data_id is not None
+            assert expe.mod_id is not None
+            assert expe.params_dump is not None
+            assert expe
+
+            close_gens(gen_train, data_train, data_stream_train)
+
+        print(self)
 
 
 def test_utils():
