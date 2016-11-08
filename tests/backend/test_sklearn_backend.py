@@ -49,7 +49,7 @@ def get_model_data_expe(request):
 
     data, data_val = data_R, data_val_R
     if getname(model, False) in CLASSIF:
-            data, data_val = data_C, data_val_C
+        data, data_val = data_C, data_val_C
 
     return data, data_val, model, expe
 
@@ -80,7 +80,6 @@ class TestExperiment:
         assert expe.params_dump is not None
         print(self)
 
-
     def test_experiment_predict(self, get_model_data_expe):
         data, data_val, model, expe = get_model_data_expe
         model._test_ = 'test'
@@ -95,7 +94,6 @@ class TestExperiment:
         sklearn_pred = model.predict(data['X'])
         assert(np.allclose(alp_pred, sklearn_pred))
         print(self)
-
 
     def test_experiment_fit_gen_nogenval(self, get_model_data_expe):
         '''
