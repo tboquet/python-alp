@@ -133,15 +133,7 @@ First we need to get some data. The iris dataset is what we want.
                     iris.data, iris.target, test_size=0.2, random_state=0)
 
 
-    data, data_val = dict(), dict()
-
-    data["X"] = X_train
-    data["y"] = y_train
-
-    data_val["X"] = X_test
-    data_val["y"] = y_test
-
-Definining a model in scikit-learn is simple. Please note that by default, the 'multi-class' parameter is set to OvR, that is to say one classifier per class. On the iris dataset, it means 3 classifiers.
+Definining a model in scikit-learn is super-duper simple. Please note that by default, the 'multi-class' parameter is set to OvR, that is to say one classifier per class. On the iris dataset, it means 3 classifiers.
 
 .. code-block:: python
 

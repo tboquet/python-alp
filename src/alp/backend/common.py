@@ -189,7 +189,6 @@ def train_pipe(train_f, save_f, model, data, data_val, generator, size_gen,
     Args:
         train_f(function): the train function to use
         save_f(function): the """
-
     results, model = train_f(model['model_arch'], data,
                              data_val, size_gen,
                              generator=generator,
