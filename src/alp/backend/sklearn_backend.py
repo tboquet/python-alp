@@ -47,6 +47,8 @@ keyval = dict()
 for m in SUPPORTED:
     keyval[getname(m)] = m()
 
+COMPILED_MODELS = dict()
+TO_SERIALIZE = ['custom_objects']
 
 # general utilities
 
