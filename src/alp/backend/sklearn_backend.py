@@ -4,12 +4,15 @@ Adaptor for the sklearn backend
 """
 
 import copy
-
+import pickle
+import re
 import h5py
 import numpy as np
+
+from six import next as snext
+from six.moves import zip as szip
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
-from sklearn.gaussian_process import GaussianProcess
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model import ARDRegression
 from sklearn.linear_model import BayesianRidge
@@ -23,13 +26,13 @@ from sklearn.linear_model import Ridge
 
 
 from ..appcom import _path_h5
+from ..appcom.utils import check_gen
 from ..celapp import app
 
 SUPPORTED = [LogisticRegression, LinearRegression, Ridge, Lasso,
              Lars, LassoLars, OrthogonalMatchingPursuit, BayesianRidge,
              ARDRegression, LinearDiscriminantAnalysis,
-             QuadraticDiscriminantAnalysis, KernelRidge,
-             GaussianProcess]
+             QuadraticDiscriminantAnalysis, KernelRidge]
 
 
 def getname(model, call=True):
@@ -44,14 +47,6 @@ keyval = dict()
 for m in SUPPORTED:
     keyval[getname(m)] = m()
 
-
-COMPILED_MODELS = dict()
-TO_SERIALIZE = ['custom_objects']
-params_GP = ['X', 'y', 'X_mean', 'y_mean',
-                  'X_std', 'y_std', 'beta', 'gamma',
-                  'beta0']
-TO_DUMP = {
-    'sklearn.gaussian_process.gaussian_process.GaussianProcess': params_GP}
 
 # general utilities
 
@@ -72,20 +67,20 @@ def save_params(model, filepath):
 
     attr = model.__dict__
     dict_params = dict()
-    additional_keys = []
-    model_name = getname(model, False)
-    if model_name in TO_DUMP:
-        for key_to_dump in TO_DUMP[model_name]:
-            additional_keys.append(key_to_dump)
 
     for k, v in attr.items():
-        if k[-1:] == '_' or k in additional_keys:
-            dict_params[k] = typeconversion(v)
+        if k[-1:] == '_':
+            dict_params[k] = v
 
     f = h5py.File(filepath, 'w')
     for k, v in dict_params.items():
         if v is not None:
-            f[k] = v
+            if type(v) is list:
+                for i, val in enumerate(v):
+                    kadd = "tolist" + str(i) + k
+                    f[kadd] = val
+            else:
+                f[k] = v
         # so far the None case has been seen
         # only in Ridge when solver is not sag or lsqr.
 
@@ -104,11 +99,40 @@ def load_params(model, filepath):
     """
 
     f = h5py.File(filepath, 'r')
+    listed_params = dict()
+
+    # first loop on f to get the parameters that are "unlisted"
     for k, v in f.items():
-        with v.astype(v.dtype):
-            if v.shape is not ():
-                out = v[:]
+        if k[:6] == "tolist":
+            listkeywithoutdigit = str(re.sub("\d+", "", k[6:]))
+            digits = int(re.search(r'\d+', k[6:]).group())
+            if listkeywithoutdigit not in listed_params.keys():
+                listed_params[listkeywithoutdigit] = {digits: v}
             else:
+                listed_params[listkeywithoutdigit][digits] = v
+
+    # loop on listed_params that fills the temporary lists and set them in the
+    # model
+    for k, v in listed_params.items():
+        lenlist = max(listed_params[k]) + 1
+        stored = [None] * lenlist
+        for i in range(lenlist):
+            with listed_params[k][i].astype(listed_params[k][i].dtype):
+                if listed_params[k][i].shape is not ():
+                    stored[i] = listed_params[k][i][:]
+                else:
+                    out = listed_params[k][i][()]
+        setattr(model, k, stored)
+
+    # second loop on f.
+    # TODO : merge the 2 loops on f.
+    for k, v in f.items():
+        if k[:6] != "tolist":
+            with v.astype(v.dtype):
+                if v.shape is not ():
+                    out = v[:]
+                else:
+                    out = v[()]
                 out = v[()]
             setattr(model, k, out)
 
@@ -130,7 +154,7 @@ def typeconversion(v):
         a jsonable object, which type depends on the type of v
     """
 
-    if isinstance(v, np.ndarray):
+    if isinstance(v, np.ndarray): # pragma: no cover
         return v.tolist()
 
     elif isinstance(v, list):
@@ -222,7 +246,11 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
         model(dict): a serialized sklearn model
         data(list): a list of dict mapping inputs and outputs to lists or
             dictionnaries mapping the inputs names to np.arrays
-        data_val(list): same structure than `data` but for validation
+            XOR -a list of fuel generators
+        data_val(list): same structure than `data` but for validation.
+
+        it is possible to feed generators for data and plain data for data_val.
+        it is not possible the other way around.
 
     Returns:
         the loss (list), the validation loss (list), the number of iterations,
@@ -238,6 +266,7 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
     custom_objects = None
     predondata = []
     predonval = []
+    fit_gen_val = False
 
     metrics.append(mean_absolute_error)
     for metric in metrics:
@@ -373,14 +402,11 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
                         results['metrics']['val_' + metric.__name__].append(
                             metric(y_val, predonval[-1]))
 
-    # Validates the model
-    # So far, only the mae is supported.
-    for metric in metrics:
-        for d, dv, pda, pva in zip(data, data_val, predondata, predonval):
-            results['metrics'][metric.__name__].append(metric(d['y'], pda))
-            results['metrics']['val_' + metric.__name__].append(metric(dv['y'],
-                                                                       pva))
+            else:  # pragma: no cover
+                raise Exception(
+                    'Incoherent generator size for train and validation')
 
+    # for compatibility with keras backend
     results['metrics']['iter'] = np.nan
 
     return results, model
@@ -435,8 +461,7 @@ def fit(self, backend_name, backend_version, model, data, data_hash,
     if generator is True:  # pragma: no cover
         full_json_data = {'mod_data_id': hexdi_m + data_hash,
                           'data_id': data_hash,
-                          'data': data,
-                          'data_val': data_val}
+                          'data': data}
 
         db.insert(full_json_data, db.get_generators(), upsert=overwrite)
 
