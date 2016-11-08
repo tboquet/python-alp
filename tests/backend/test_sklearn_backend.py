@@ -289,7 +289,10 @@ class TestExperiment:
                 Nchunks_gen, is_classif, train=True)
 
             for data_val_loc in [None, data_val]:
-                expe.fit_gen_async([gen_train], [data_val_loc], overwrite=True)
+
+                res, thread = expe.fit_gen_async(
+                    [gen_train], [data_val_loc], overwrite=True)
+                thread.join()
 
                 assert len(expe.full_res['metrics'][
                            'mean_absolute_error']) == expected_value
