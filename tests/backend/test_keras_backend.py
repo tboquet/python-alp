@@ -43,6 +43,7 @@ test_samples = 128
 NAME = keras.__name__
 VERSION = keras.__version__
 
+
 def close_gens(gen, data, data_stream):
     gen.close()
     data.close(None)
@@ -51,10 +52,10 @@ def close_gens(gen, data, data_stream):
 
 def make_data():
     (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
-                                                nb_test=test_samples,
-                                                input_shape=(input_dim,),
-                                                classification=True,
-                                                nb_class=nb_class)
+                                               nb_test=test_samples,
+                                               input_shape=(input_dim,),
+                                               classification=True,
+                                               nb_class=nb_class)
 
     y_tr = np_utils.to_categorical(y_tr)
     y_te = np_utils.to_categorical(y_te)
@@ -118,6 +119,7 @@ def return_custom():
     class Dropout_cust(Layer):
         '''Applies Dropout to the input.
         '''
+
         def __init__(self, p, **kwargs):
             self.p = p
             if 0. < self.p < 1.:
@@ -161,12 +163,12 @@ def model(custom=False):
 
 
 def graph(custom=False):
-    name='dense1'
+    name = 'dense1'
     model = Graph()
     model.add_input(name='X', input_shape=(input_dim, ))
 
     model.add_node(Dense(nb_hidden, activation="sigmoid"),
-                name='dense1', input='X')
+                   name='dense1', input='X')
     if custom:
         name = 'do'
         model.add_node(return_custom()(0.5), name=name, input='dense1')
@@ -209,7 +211,6 @@ def prepare_model(get_model, get_loss_metric, custom):
         loss = loss()
     elif isinstance(loss, dict):
         loss = {k: v() for k, v in loss.items()}
-
 
     model.compile(loss=loss,
                   optimizer='rmsprop',
@@ -322,9 +323,10 @@ class TestExperiment:
         expe = Experiment(model)
 
         for mod in [None, model]:
-            expe.fit([data], [data_val], model=mod, nb_epoch=2,
-                     batch_size=batch_size, metrics=metrics,
-                     custom_objects=cust_objects, overwrite=True)
+            for data_val_loc in [None, data_val]:
+                expe.fit([data], [data_val_loc], model=mod, nb_epoch=2,
+                         batch_size=batch_size, metrics=metrics,
+                         custom_objects=cust_objects, overwrite=True)
 
         expe.backend_name = 'another_backend'
         expe.load_model()
@@ -339,26 +341,26 @@ class TestExperiment:
 
         print(self)
 
-    def test_experiment_fit_async(self, get_model, get_loss_metric,
-                                  get_custom_l):
-        data, data_val = make_data()
-        model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
-                                                     get_loss_metric,
-                                                     get_custom_l)
+    # def test_experiment_fit_async(self, get_model, get_loss_metric,
+    #                               get_custom_l):
+    #     data, data_val = make_data()
+    #     model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
+    #                                                  get_loss_metric,
+    #                                                  get_custom_l)
 
-        cust_objects['test_list'] = [1, 2]
-        expe = Experiment(model)
+    #     cust_objects['test_list'] = [1, 2]
+    #     expe = Experiment(model)
 
-        for mod in [None, model]:
-            expe.fit_async([data], [data_val], model=mod, nb_epoch=2,
-                           batch_size=batch_size, metrics=metrics,
-                           custom_objects=cust_objects, overwrite=True,
-                           verbose=2)
+    #     for mod in [None, model]:
+    #         expe.fit_async([data], [data_val], model=mod, nb_epoch=2,
+    #                        batch_size=batch_size, metrics=metrics,
+    #                        custom_objects=cust_objects, overwrite=True,
+    #                        verbose=2)
 
-        if K.backend() == 'tensorflow':
-            K.clear_session()
+    #     if K.backend() == 'tensorflow':
+    #         K.clear_session()
 
-        print(self)
+    #     print(self)
 
     def test_experiment_fit_gen(self, get_model, get_loss_metric,
                                 get_custom_l):
@@ -395,36 +397,36 @@ class TestExperiment:
 
         print(self)
 
-    def test_experiment_fit_gen_async(self, get_model, get_loss_metric,
-                                      get_custom_l):
-        model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
-                                                     get_loss_metric,
-                                                     get_custom_l)
+    # def test_experiment_fit_gen_async(self, get_model, get_loss_metric,
+    #                                   get_custom_l):
+    #     model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
+    #                                                  get_loss_metric,
+    #                                                  get_custom_l)
 
-        model_name = model.__class__.__name__
-        is_graph = model_name.lower() == 'graph'
-        _, data_val_use = make_data()
-        expe = Experiment(model)
+    #     model_name = model.__class__.__name__
+    #     is_graph = model_name.lower() == 'graph'
+    #     _, data_val_use = make_data()
+    #     expe = Experiment(model)
 
-        for val in [1, data_val_use]:
-            gen, data, data_stream = make_gen(is_graph)
-            if val == 1:
-                val, data_2, data_stream_2 = make_gen(is_graph)
-            expe.fit_gen_async([gen], [val], nb_epoch=2,
-                                model=model,
-                                metrics=metrics,
-                                custom_objects=cust_objects,
-                                samples_per_epoch=64,
-                                nb_val_samples=128,
-                                verbose=2, overwrite=True)
-            close_gens(gen, data, data_stream)
-            if val == 1:
-                close_gens(val, data_2, data_stream_2)
+    #     for val in [1, data_val_use]:
+    #         gen, data, data_stream = make_gen(is_graph)
+    #         if val == 1:
+    #             val, data_2, data_stream_2 = make_gen(is_graph)
+    #         expe.fit_gen_async([gen], [val], nb_epoch=2,
+    #                             model=model,
+    #                             metrics=metrics,
+    #                             custom_objects=cust_objects,
+    #                             samples_per_epoch=64,
+    #                             nb_val_samples=128,
+    #                             verbose=2, overwrite=True)
+    #         close_gens(gen, data, data_stream)
+    #         if val == 1:
+    #             close_gens(val, data_2, data_stream_2)
 
-        if K.backend() == 'tensorflow':
-            K.clear_session()
+    #     if K.backend() == 'tensorflow':
+    #         K.clear_session()
 
-        print(self)
+    #     print(self)
 
     def test_experiment_generator_setups(self, get_generators):
         gen_t, data_t, d_stream_t, gen, data, d_stream, nb = get_generators
@@ -435,9 +437,9 @@ class TestExperiment:
                            optimizer='rmsprop')
         expe = Experiment(test_model)
         expe.fit_gen([gen_t], [gen], nb_epoch=2,
-                            samples_per_epoch=nb_train,
-                            nb_val_samples=nb_val,
-                            verbose=2, overwrite=True)
+                     samples_per_epoch=nb_train,
+                     nb_val_samples=nb_val,
+                     verbose=2, overwrite=True)
         close_gens(gen_t, data_t, d_stream_t)
         close_gens(gen, data, d_stream)
 
@@ -476,8 +478,8 @@ class TestBackendFunctions:
         X_tr = np.ones((train_samples, input_dim))
         model = get_model()
         model.compile(loss='categorical_crossentropy',
-                    optimizer='rmsprop',
-                    metrics=['accuracy'])
+                      optimizer='rmsprop',
+                      metrics=['accuracy'])
 
         model_name = model.__class__.__name__
 
@@ -502,8 +504,8 @@ class TestBackendFunctions:
 
         model = get_model()
         model.compile(loss='categorical_crossentropy',
-                    optimizer='rmsprop',
-                    metrics=['accuracy'])
+                      optimizer='rmsprop',
+                      metrics=['accuracy'])
 
         model_dict = dict()
         model_dict['model_arch'] = to_dict_w_opt(model)
@@ -565,7 +567,7 @@ def test_utils():
     data.close(None)
     data_stream.close()
     for i in range(1, 20):
-        utls.window(list(range(i*2)), i)
+        utls.window(list(range(i * 2)), i)
 
 
 if __name__ == "__main__":
