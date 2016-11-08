@@ -333,7 +333,7 @@ class TestExperiment:
             gen_test, data_test, data_stream_test = make_gen(
                 Nchunks_val, is_classif, train=False)
 
-            res, thread = expe.fit_gen_async(
+            _, thread = expe.fit_gen_async(
                 [gen_train], [gen_test], overwrite=True)
             thread.join()
 
