@@ -161,13 +161,13 @@ class TestExperiment:
             for data_val_loc in [None, data_val]:
                 expe.fit([data], [data_val_loc], model=mod, overwrite=True)
 
-        expe.backend_name = 'another_backend'
-        expe.load_model()
-        expe.load_model(expe.mod_id, expe.data_id)
+                expe.backend_name = 'another_backend'
+                expe.load_model()
+                expe.load_model(expe.mod_id, expe.data_id)
 
-        assert expe.data_id is not None
-        assert expe.mod_id is not None
-        assert expe.params_dump is not None
+                assert expe.data_id is not None
+                assert expe.mod_id is not None
+                assert expe.params_dump is not None
         print(self)
 
     def test_experiment_predict(self, get_model_data_expe):
