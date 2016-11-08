@@ -290,7 +290,7 @@ class TestExperiment:
 
             for data_val_loc in [None, data_val]:
 
-                res, thread = expe.fit_gen_async(
+                _, thread = expe.fit_gen_async(
                     [gen_train], [data_val_loc], overwrite=True)
                 thread.join()
 
