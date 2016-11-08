@@ -322,10 +322,10 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
         data = [cm.transform_gen(d, mod_name) for d in data]
         kwargs.pop('batch_size')
 
-    if data_val is not None:
-        val_gen = check_gen(data_val)
-    else:
+    if all(v is None for v in data_val):
         val_gen = 0
+    else:
+        val_gen = check_gen(data_val)
 
     if val_gen > 0:
         if generator:
