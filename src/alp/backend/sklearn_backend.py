@@ -156,7 +156,7 @@ def typeconversion(v):
         a jsonable object, which type depends on the type of v
     """
 
-    if isinstance(v, np.ndarray): # pragma: no cover
+    if isinstance(v, np.ndarray):  # pragma: no cover
         return v.tolist()
 
     elif isinstance(v, list):
