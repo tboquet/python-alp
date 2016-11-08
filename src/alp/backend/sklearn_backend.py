@@ -336,18 +336,14 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
         # case B : generator for data and no generator for data_val
         # could be dict or None
         elif generator and not fit_gen_val:
-            print("caseB")
             if validation:
                 X_val, y_val = dv['X'], dv['y']
-            else:
-                print("noval")
             for batch_data in d.get_epoch_iterator():
                 X, y = batch_data
                 model.fit(X, y, *args, **kwargs)
                 predondata.append(model.predict(X))
                 if validation:
                     predonval.append(model.predict(X_val))  # ?
-
                 for metric in metrics:
                     results['metrics'][metric.__name__].append(
                         metric(y, predondata[-1]))
