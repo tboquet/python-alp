@@ -41,7 +41,7 @@ def generate_data(classif=False):
         Xs = datas.data
         Ys = datas.target
     else:
-        Xs = np.linspace(0, 12.3, num=150, endpoint=False).reshape(1, 1).T
+        Xs = np.linspace(0, 12.3, num=150, endpoint=False).reshape(1, -1).T
         Ys = (Xs * np.sin(Xs)).ravel()
 
     data["X"], data_val["X"], data["y"], data_val["y"] = cv.train_test_split(

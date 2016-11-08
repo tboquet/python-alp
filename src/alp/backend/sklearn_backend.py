@@ -286,7 +286,7 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
     model = model_from_dict_w_opt(model, custom_objects=custom_objects)
 
     if generator:
-        data = [pickle.loads(d) for d in data]
+        data = [pickle.loads(d.encode('raw_unicode_escape')) for d in data]
 
     if data_val is not None:
         val_gen = check_gen(data_val)
@@ -295,7 +295,7 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
 
     if val_gen > 0:
         if generator:
-            data_val = [pickle.loads(dv) for dv in data_val]
+            data_val = [pickle.loads(dv.encode('raw_unicode_escape')) for dv in data_val]
             fit_gen_val = True
         else:
             raise Exception("You should also pass a generator for the training"
