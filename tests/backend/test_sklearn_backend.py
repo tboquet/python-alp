@@ -131,7 +131,6 @@ for m in SKB.SUPPORTED:
 
 
 @pytest.fixture(scope='module', params=list(keyval.keys()))
-#@pytest.fixture(scope='module', params=['sklearn.discriminant_analysis.QuadraticDiscriminantAnalysis'])
 def get_model_data_expe(request):
     model = keyval[request.param]
     expe = Experiment(model)
@@ -200,7 +199,7 @@ class TestExperiment:
             gen_train, data_train, data_stream_train = make_gen(
                 Nchunks_gen, is_classif, train=True)
 
-            for data_val_loc in [None,data_val]:
+            for data_val_loc in [None, data_val]:
                 expe.fit_gen([gen_train], [data_val_loc], overwrite=True)
 
                 assert len(expe.full_res['metrics'][

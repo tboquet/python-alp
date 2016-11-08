@@ -28,8 +28,9 @@ import inspect
 import types
 
 import dill
-import six
 import numpy as np
+import six
+
 from six.moves import zip as szip
 
 from ..appcom import _path_h5
