@@ -147,7 +147,7 @@ def to_dict_w_opt(model, metrics=None):
         config['optimizer'] = model.optimizer.get_config()
         config['optimizer']['name'] = model.optimizer.__class__.__name__
         config['metrics'] = []
-        config['ser_metrics'] = dict()
+        config['ser_metrics'] = []
     if hasattr(model, 'loss'):
         name_out = [l.name for l in model.output_layers]
         if isinstance(model.loss, dict):
@@ -167,7 +167,7 @@ def to_dict_w_opt(model, metrics=None):
             if isinstance(m, six.string_types):
                 config['metrics'].append(m)
             else:
-                config['ser_metrics'][m.__name__] = serialize(m)
+                config['ser_metrics'].append(m.__name__)
     return config
 
 
@@ -202,8 +202,12 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
 
     if 'optimizer' in model_dict:
         metrics = model_dict.get("metrics", [])
-        ser_metrics = model_dict.get("ser_metrics", dict())
-        metrics += [deserialize(**m) for k, m in ser_metrics.items()]
+        ser_metrics = model_dict.get("ser_metrics", [])
+        for k in custom_objects:
+            if inspect.isfunction(custom_objects[k]):
+                function_name = custom_objects[k].__name__
+                if k in ser_metrics or function_name in ser_metrics:
+                    metrics.append(custom_objects[k])
         model_name = model_dict['config'].get('class_name')
         # if it has an optimizer, the model is assumed to be compiled
         loss = model_dict.get('loss')
