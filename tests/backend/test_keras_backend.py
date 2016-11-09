@@ -341,26 +341,26 @@ class TestExperiment:
 
         print(self)
 
-    # def test_experiment_fit_async(self, get_model, get_loss_metric,
-    #                               get_custom_l):
-    #     data, data_val = make_data()
-    #     model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
-    #                                                  get_loss_metric,
-    #                                                  get_custom_l)
+    def test_experiment_fit_async(self, get_model, get_loss_metric,
+                                  get_custom_l):
+        data, data_val = make_data()
+        model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
+                                                     get_loss_metric,
+                                                     get_custom_l)
 
-    #     cust_objects['test_list'] = [1, 2]
-    #     expe = Experiment(model)
+        cust_objects['test_list'] = [1, 2]
+        expe = Experiment(model)
 
-    #     for mod in [None, model]:
-    #         expe.fit_async([data], [data_val], model=mod, nb_epoch=2,
-    #                        batch_size=batch_size, metrics=metrics,
-    #                        custom_objects=cust_objects, overwrite=True,
-    #                        verbose=2)
+        for mod in [None, model]:
+            expe.fit_async([data], [data_val], model=mod, nb_epoch=2,
+                           batch_size=batch_size, metrics=metrics,
+                           custom_objects=cust_objects, overwrite=True,
+                           verbose=2)
 
-    #     if K.backend() == 'tensorflow':
-    #         K.clear_session()
+        if K.backend() == 'tensorflow':
+            K.clear_session()
 
-    #     print(self)
+        print(self)
 
     def test_experiment_fit_gen(self, get_model, get_loss_metric,
                                 get_custom_l):
@@ -397,36 +397,36 @@ class TestExperiment:
 
         print(self)
 
-    # def test_experiment_fit_gen_async(self, get_model, get_loss_metric,
-    #                                   get_custom_l):
-    #     model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
-    #                                                  get_loss_metric,
-    #                                                  get_custom_l)
+    def test_experiment_fit_gen_async(self, get_model, get_loss_metric,
+                                      get_custom_l):
+        model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
+                                                     get_loss_metric,
+                                                     get_custom_l)
 
-    #     model_name = model.__class__.__name__
-    #     is_graph = model_name.lower() == 'graph'
-    #     _, data_val_use = make_data()
-    #     expe = Experiment(model)
+        model_name = model.__class__.__name__
+        is_graph = model_name.lower() == 'graph'
+        _, data_val_use = make_data()
+        expe = Experiment(model)
 
-    #     for val in [1, data_val_use]:
-    #         gen, data, data_stream = make_gen(is_graph)
-    #         if val == 1:
-    #             val, data_2, data_stream_2 = make_gen(is_graph)
-    #         expe.fit_gen_async([gen], [val], nb_epoch=2,
-    #                             model=model,
-    #                             metrics=metrics,
-    #                             custom_objects=cust_objects,
-    #                             samples_per_epoch=64,
-    #                             nb_val_samples=128,
-    #                             verbose=2, overwrite=True)
-    #         close_gens(gen, data, data_stream)
-    #         if val == 1:
-    #             close_gens(val, data_2, data_stream_2)
+        for val in [1, data_val_use]:
+            gen, data, data_stream = make_gen(is_graph)
+            if val == 1:
+                val, data_2, data_stream_2 = make_gen(is_graph)
+            expe.fit_gen_async([gen], [val], nb_epoch=2,
+                                model=model,
+                                metrics=metrics,
+                                custom_objects=cust_objects,
+                                samples_per_epoch=64,
+                                nb_val_samples=128,
+                                verbose=2, overwrite=True)
+            close_gens(gen, data, data_stream)
+            if val == 1:
+                close_gens(val, data_2, data_stream_2)
 
-    #     if K.backend() == 'tensorflow':
-    #         K.clear_session()
+        if K.backend() == 'tensorflow':
+            K.clear_session()
 
-    #     print(self)
+        print(self)
 
     def test_experiment_generator_setups(self, get_generators):
         gen_t, data_t, d_stream_t, gen, data, d_stream, nb = get_generators
