@@ -357,9 +357,7 @@ class TestExperiment:
                                batch_size=batch_size, metrics=metrics,
                                custom_objects=cust_objects, overwrite=True,
                                verbose=2)
-                assert expe.data_id is not None
-                assert expe.mod_id is not None
-                assert expe.params_dump is not None
+
         if K.backend() == 'tensorflow':
             K.clear_session()
 
