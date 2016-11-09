@@ -24,9 +24,9 @@ from .appcom import _alp_dir
 
 def parse_cont(container, action, volumes=None, links=None):
     container_command = []
-    if 'NV_GPU' in containers[container]:
+    if 'NV_GPU' in container:
         container_command.append('NV_GPU={}'.format(
-            containers[container]['NV_GPU']))
+            container['NV_GPU']))
         container_command.append('nvidia-docker')
     else:
         container_command.append('docker')
@@ -35,20 +35,22 @@ def parse_cont(container, action, volumes=None, links=None):
     if action == 'run':
         container_command.append(container['mode'])
         if 'volumes' in container:
-            container_command += ['-v', v]
+            for v in container['volumes']:
+                container_command += ['-v', v]
         if volumes is not None:
             container_command.append(volumes)
         if links is not None:
             container_command.append(links)
         if 'ports' in container:
-            container_command += ['-p', p]
+            for p in container['ports']:
+                container_command += ['-p', p]
         if 'options' in container:
             for option in container['options']:
                 container_command.append(option)
         container_command += ['--name', container['name']]
 
         container_command.append(
-            containers[container]['container_name'])
+            container['container_name'])
     else:
         container_command.append(container['name'])
     return container_command
@@ -61,10 +63,10 @@ def build_commands(config, action):
     workers = config['workers']
     controlers = config['controlers']
 
-    base_volumes = ['-v {}'.format(volume)
-                    for volume in config['base_volumes']]
+    # base_volumes = ['-v {}'.format(volume)
+    #                 for volume in config['base_volumes']]
     links = []
-    links.append('--link={}'.format(models_gen_db['name']))
+    links.append('--link={}'.format(model_gen_db['name']))
     links.append('--link={}'.format(broker['name']))
 
     # broker
@@ -75,9 +77,9 @@ def build_commands(config, action):
     m_g_db_command = parse_cont(model_gen_db, action)
 
     # workers
-    workers_commands = [parse_cont(worker, action, base_volumes, links)
+    workers_commands = [parse_cont(worker, action, links=links)
                         for worker in workers]
-    controlers_commands = [parse_cont(controler, action, base_columes, links)
+    controlers_commands = [parse_cont(controler, action, links=links)
                            for controler in controlers]
     all_commands = [broker_command] + [r_db_command] + [m_g_db_command]
     all_commands += workers_commands
@@ -86,13 +88,14 @@ def build_commands(config, action):
 
 
 def action_config(config, action):
-    commands = build_commands(config)
-    for command in commands:
-        p = subprocess.Popen(command,
-                             stdout=subprocess.PIPE)
-        output, err = p.communicate()
-        p.kill()
-        click.echo('Alp output: {}'.format(output))
+    commands = build_commands(config, action)
+    click.echo(commands)
+    # for command in commands:
+    #     p = subprocess.Popen(command,
+    #                          stdout=subprocess.PIPE)
+    #     output, err = p.communicate()
+    #     p.kill()
+    #     click.echo('Alp output: {}'.format(output))
 
 
 @click.group()
@@ -118,14 +121,14 @@ def main(argv=sys.argv):
 @main.command()
 @click.argument('action', type=click.STRING, required=True)
 @click.argument('config', type=click.Path(exists=True), required=True)
-def service(action):
+def service(action, config):
     """Subcommand to take action on services"""
     _config_path = config
     if config == '-':
         _config_path = os.path.expanduser(os.path.join(_alp_dir,
                                                        'containers.json'))
-
-    config = json.loads(config)
+    with open(config) as data_file:
+        config = json.load(data_file)
     if action == 'start':
         results = action_config(config, 'run')
     elif action == 'stop':
