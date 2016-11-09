@@ -211,8 +211,8 @@ class TestExperiment:
                     assert None not in expe.full_res['metrics'][
                         'val_mean_absolute_error']
                 else:
-                    assert all(v is None for v in expe.full_res[
-                               'metrics']['val_mean_absolute_error'])
+                    assert np.all([np.isnan(v) for v in expe.full_res[
+                        'metrics']['val_mean_absolute_error']])
 
             assert expe.data_id is not None
             assert expe.mod_id is not None
@@ -303,8 +303,8 @@ class TestExperiment:
                     assert None not in expe.full_res['metrics'][
                         'val_mean_absolute_error']
                 else:
-                    assert all(v is None for v in expe.full_res[
-                               'metrics']['val_mean_absolute_error'])
+                    assert np.all([np.isnan(v) for v in expe.full_res[
+                        'metrics']['val_mean_absolute_error']])
 
                 assert expe.data_id is not None
                 assert expe.mod_id is not None
