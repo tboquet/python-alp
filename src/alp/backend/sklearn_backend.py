@@ -333,7 +333,7 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
             else:
                 for metric in metrics:
                     results['metrics']['val_' + metric.__name__].append(
-                        None)
+                        np.nan)
 
         # case B : generator for data and no generator for data_val
         # could be dict or None
@@ -355,7 +355,7 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
                             metric(y_val, predonval[-1]))
                     else:
                         results['metrics'][
-                            'val_' + metric.__name__].append(None)
+                            'val_' + metric.__name__].append(np.nan)
 
         # case C : generator for data and for data_val
         else:
