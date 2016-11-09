@@ -352,11 +352,14 @@ class TestExperiment:
         expe = Experiment(model)
 
         for mod in [None, model]:
-            expe.fit_async([data], [data_val], model=mod, nb_epoch=2,
-                           batch_size=batch_size, metrics=metrics,
-                           custom_objects=cust_objects, overwrite=True,
-                           verbose=2)
-
+            for data_val_loc in [None, data_val]:
+                expe.fit_async([data], [data_val_loc], model=mod, nb_epoch=2,
+                               batch_size=batch_size, metrics=metrics,
+                               custom_objects=cust_objects, overwrite=True,
+                               verbose=2)
+                assert expe.data_id is not None
+                assert expe.mod_id is not None
+                assert expe.params_dump is not None
         if K.backend() == 'tensorflow':
             K.clear_session()
 
@@ -388,9 +391,6 @@ class TestExperiment:
             close_gens(gen, data, data_stream)
             if val == 1:
                 close_gens(val, data_2, data_stream_2)
-        assert expe.data_id is not None
-        assert expe.mod_id is not None
-        assert expe.params_dump is not None
 
         if K.backend() == 'tensorflow':
             K.clear_session()
@@ -408,7 +408,7 @@ class TestExperiment:
         _, data_val_use = make_data()
         expe = Experiment(model)
 
-        for val in [1, data_val_use]:
+        for val in [None, 1, data_val_use]:
             gen, data, data_stream = make_gen(is_graph)
             if val == 1:
                 val, data_2, data_stream_2 = make_gen(is_graph)
