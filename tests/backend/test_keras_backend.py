@@ -368,6 +368,7 @@ class TestExperiment:
                                            custom_objects=cust_objects,
                                            overwrite=True,
                                            verbose=2)
+
                 thread.join()
 
                 for k in expe.full_res['metrics']:
