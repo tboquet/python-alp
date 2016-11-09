@@ -5,6 +5,7 @@ import copy
 import inspect
 import keras
 import keras.backend as K
+import numpy as np
 import pytest
 import six
 
@@ -136,6 +137,7 @@ def return_custom():
             config = {'p': self.p}
             base_config = super(Dropout_cust, self).get_config()
             return dict(list(base_config.items()) + list(config.items()))
+
     return Dropout_cust
 
 
@@ -188,7 +190,11 @@ def prepare_model(get_model, get_loss_metric, custom):
 
     cust_objects = dict()
 
-    metrics = [metric]
+    if isinstance(metric, six.string_types):
+        metrics = [metric]
+    else:
+        cust_objects[metric.__name__] = metric
+        metrics = [metric()]
 
     if not isinstance(loss, six.string_types):
         cust_objects['cat_cross'] = loss
@@ -259,13 +265,14 @@ def get_loss():
 
 @pytest.fixture
 def get_metric():
-    import keras.backend as K
-    @imports({"K": K})
-    def cosine_proximity(y_true, y_pred):
-        y_true = K.l2_normalize(y_true, axis=-1)
-        y_pred = K.l2_normalize(y_pred, axis=-1)
-        return -K.mean(y_true * y_pred)
-    return cosine_proximity
+    def return_metric():
+        import keras.backend as K
+        def cosine_proximity(y_true, y_pred):
+            y_true = K.l2_normalize(y_true, axis=-1)
+            y_pred = K.l2_normalize(y_pred, axis=-1)
+            return -K.mean(y_true * y_pred)
+        return cosine_proximity
+    return return_metric
 
 
 @pytest.fixture(scope='module', params=['sequential', 'model', 'graph'])
@@ -351,12 +358,32 @@ class TestExperiment:
         cust_objects['test_list'] = [1, 2]
         expe = Experiment(model)
 
+        expected_value = 2
         for mod in [None, model]:
             for data_val_loc in [None, data_val]:
-                expe.fit_async([data], [data_val_loc], model=mod, nb_epoch=2,
-                               batch_size=batch_size, metrics=metrics,
-                               custom_objects=cust_objects, overwrite=True,
-                               verbose=2)
+                _, thread = expe.fit_async([data], [data_val_loc],
+                                           model=mod, nb_epoch=2,
+                                           batch_size=batch_size,
+                                           metrics=metrics,
+                                           custom_objects=cust_objects,
+                                           overwrite=True,
+                                           verbose=2)
+                thread.join()
+
+                for k in expe.full_res['metrics']:
+                    if 'iter' not in k:
+                        assert len(
+                            expe.full_res['metrics'][k]) == expected_value
+
+                if data_val_loc is not None:
+                    for k in expe.full_res['metrics']:
+                        if 'val' in k and 'iter' not in k:
+                            assert None not in expe.full_res['metrics'][k]
+                else:
+                    for k in expe.full_res['metrics']:
+                        if 'val' in k and 'iter' not in k:
+                            assert all([np.isnan(v)
+                                        for v in expe.full_res['metrics'][k]])
 
         if K.backend() == 'tensorflow':
             K.clear_session()
@@ -406,17 +433,26 @@ class TestExperiment:
         _, data_val_use = make_data()
         expe = Experiment(model)
 
+        expected_value = 2
         for val in [None, 1, data_val_use]:
             gen, data, data_stream = make_gen(is_graph)
             if val == 1:
                 val, data_2, data_stream_2 = make_gen(is_graph)
-            expe.fit_gen_async([gen], [val], nb_epoch=2,
-                               model=model,
-                               metrics=metrics,
-                               custom_objects=cust_objects,
-                               samples_per_epoch=64,
-                               nb_val_samples=128,
-                               verbose=2, overwrite=True)
+            _, thread = expe.fit_gen_async([gen], [val], nb_epoch=2,
+                                           model=model,
+                                           metrics=metrics,
+                                           custom_objects=cust_objects,
+                                           samples_per_epoch=64,
+                                           nb_val_samples=128,
+                                           verbose=2, overwrite=True)
+
+            thread.join()
+
+            for k in expe.full_res['metrics']:
+                if 'iter' not in k:
+                    assert len(
+                        expe.full_res['metrics'][k]) == expected_value
+
             close_gens(gen, data, data_stream)
             if val == 1:
                 close_gens(val, data_2, data_stream_2)
