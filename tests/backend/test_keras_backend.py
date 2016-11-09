@@ -413,12 +413,12 @@ class TestExperiment:
             if val == 1:
                 val, data_2, data_stream_2 = make_gen(is_graph)
             expe.fit_gen_async([gen], [val], nb_epoch=2,
-                                model=model,
-                                metrics=metrics,
-                                custom_objects=cust_objects,
-                                samples_per_epoch=64,
-                                nb_val_samples=128,
-                                verbose=2, overwrite=True)
+                               model=model,
+                               metrics=metrics,
+                               custom_objects=cust_objects,
+                               samples_per_epoch=64,
+                               nb_val_samples=128,
+                               verbose=2, overwrite=True)
             close_gens(gen, data, data_stream)
             if val == 1:
                 close_gens(val, data_2, data_stream_2)
