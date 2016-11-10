@@ -40,7 +40,7 @@ def parse_cont(container, action, volumes=None, links=None):
         if volumes is not None:
             container_command.append(volumes)
         if links is not None:
-            container_command.append(links)
+            container_command += links
         if 'ports' in container:
             for p in container['ports']:
                 container_command += ['-p', p]
@@ -62,28 +62,44 @@ def build_commands(config, action):
     model_gen_db = config['model_gen_db']
     workers = config['workers']
     controlers = config['controlers']
+    all_commands = []
 
-    # base_volumes = ['-v {}'.format(volume)
-    #                 for volume in config['base_volumes']]
-    links = []
-    links.append('--link={}'.format(model_gen_db['name']))
-    links.append('--link={}'.format(broker['name']))
+    if action == 'run':
+        links = []
+        links.append('--link={}'.format(model_gen_db['name']))
+        links.append('--link={}'.format(broker['name']))
 
-    # broker
-    broker_command = parse_cont(broker, action)
+        # broker
+        broker_command = parse_cont(broker, 'run')
 
-    # database command
-    r_db_command = parse_cont(results_db, action)
-    m_g_db_command = parse_cont(model_gen_db, action)
+        # database command
+        r_db_command = parse_cont(results_db, 'run')
+        m_g_db_command = parse_cont(model_gen_db, 'run')
 
-    # workers
-    workers_commands = [parse_cont(worker, action, links=links)
-                        for worker in workers]
-    controlers_commands = [parse_cont(controler, action, links=links)
-                           for controler in controlers]
-    all_commands = [broker_command] + [r_db_command] + [m_g_db_command]
-    all_commands += workers_commands
-    all_commands += controlers_commands
+        # workers
+        workers_commands = [parse_cont(worker, action, links=links)
+                            for worker in workers]
+        controlers_commands = [parse_cont(controler, action, links=links)
+                            for controler in controlers]
+        all_commands += [broker_command] + [r_db_command] + [m_g_db_command]
+        all_commands += workers_commands
+        all_commands += controlers_commands
+    if action in ['stop', 'restart', 'remove']:
+        names = []
+        names += [broker['name']]
+        names += [results_db['name']]
+        names += [model_gen_db['name']]
+        for cont in workers + controlers:
+            names += [cont['name']]
+
+        all_commands += [['docker', 'stop'] + names]
+
+    if action == 'restart':
+        all_commands += [['docker', 'start'] + names]
+
+    if action == 'remove':
+        all_commands += [['docker', 'rm'] + names]
+
     return all_commands
 
 
@@ -135,7 +151,7 @@ def service(action, config):
         results = action_config(config, 'stop')
     elif action == 'restart':
         results = action_config(config, 'restart')
-    elif action == 'remove':
+    elif action == 'rm':
         results = action_config(config, 'rm')
 
 

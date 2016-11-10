@@ -19,7 +19,7 @@ if not os.path.exists(_alp_dir):  # pragma: no cover
 
 # App config
 _broker = 'amqp://guest:guest@rabbitmq:5672//'
-_backend = 'mongodb://mongo_r:27017'
+_backend = 'mongodb://mongo_results:27017'
 
 # Parameters
 _path_h5 = '/parameters_h5/'
@@ -30,13 +30,13 @@ if os.getenv("TEST_MODE") == "ON":  # pragma: no cover
     _broker = 'amqp://guest:guest@localhost:5672//'
 
 elif os.getenv("WORKER") == "TRUE":  # pragma: no cover
-    _backend = 'mongodb://mongo_r:27017'  # pragma: no cover
+    _backend = 'mongodb://mongo_results:27017'  # pragma: no cover
 _config_path = os.path.expanduser(os.path.join(_alp_dir, 'alpapp.json'))
 
 if os.path.exists(_config_path):  # pragma: no cover
     _config = json.load(open(_config_path))
     _broker = _config.get('_broker', 'amqp://guest:guest@rabbitmq:5672//')
-    _backend = _config.get('_backend', 'mongodb://mongo_r:27017')
+    _backend = _config.get('_backend', 'mongodb://mongo_results:27017')
     _path_h5 = _config.get('_path_h5', '/parameters_h5/')
 
 # save config file
