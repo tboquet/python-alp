@@ -162,6 +162,9 @@ def to_dict_w_opt(model, metrics=None):
         elif isinstance(model.loss, six.string_types):
             config['loss'] = dict(zip(name_out,
                                       [get_function_name(model.loss)]))
+        else:  # pragma: no cover
+            raise TypeError('Loss must be a list a string or a callable.')
+
     if metrics is not None:
         for m in metrics:
             if isinstance(m, six.string_types):
@@ -244,6 +247,9 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
                           sample_weight_mode=sample_weight_mode,
                           loss_weights=loss_weights,
                           metrics=metrics)
+        else:  # pragma: no cover
+            raise Exception('Unknown model, must be in Sequential, '
+                            'Graph or Model')
     return model
 
 
