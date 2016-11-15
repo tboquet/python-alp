@@ -18,6 +18,7 @@ import sys
 import click
 import os
 import json
+import pandas as pd
 import subprocess
 from .appcom import _alp_dir
 from docker import Client
@@ -48,10 +49,24 @@ def a_text(text, result, size=80):
     msg += result.rjust(int(size//2), '.')
     return msg
 
+
+def open_config(config, verbose=False):
+    _config_path = config
+    if config == '-':
+        _config_path = os.path.expanduser(os.path.join(_alp_dir,
+                                                       'containers.json'))
+    if verbose:
+        click.echo(click.style('Openning {}'.format(_config_path), fg='cyan'))
+        click.echo()
+    with open(config) as data_file:
+        config = json.load(data_file)
+    return config
+
+
 def check_container(container, running_containers, dead_containers,
                     ports_in_use, verbose):
     name = container['name']
-    click.echo(click.style('Check {}:'.format(name).center(80, '='),
+    click.echo(click.style('Check {}:'.format(name).center(80, '-'),
                            fg='cyan', bold=True))
     res = True
     not_build = 'not_build' in container
@@ -77,7 +92,8 @@ def check_container(container, running_containers, dead_containers,
 
     port_OK = True
     for port in ports_in_use:
-        msg = a_text('WARNING:', '{}: port already in use'.format(port))
+        msg = a_text('WARNING:[port in use]',
+                     '{}: port already in use'.format(port))
         if 'ports' in container:
             for c_port in container['ports']:
                 if c_port.split(':')[0] == str(port):
@@ -131,10 +147,6 @@ def parse_cont(container, action, volumes=None, links=None):
     return container_command
 
 
-def get_names(config):
-    pass
-
-
 def build(container, links):
     container_ok = check_container(container['name'], running_containers,
                                    dead_containers, verbose)
@@ -144,6 +156,22 @@ def build(container, links):
     else:
         container_command = []
     return container_command, container_ok
+
+
+def get_config_names(config):
+    broker = config['broker']
+    results_db = config['result_db']
+    model_gen_db = config['model_gen_db']
+    workers = config['workers']
+    controlers = config['controlers']
+    names = []
+    names += [broker['name']]
+    names += [results_db['name']]
+    names += [model_gen_db['name']]
+    workers_names = [cont['name'] for cont in workers]
+    controlers_names = [cont['name'] for cont in controlers]
+    names += workers_names + controlers_names
+    return names, workers_names, controlers_names
 
 
 def build_commands(config, action, verbose):
@@ -168,20 +196,19 @@ def build_commands(config, action, verbose):
             if 'PublicPort' in port:
                 ports_in_use.append(port['PublicPort'])
 
-    names = []
-    names += [broker['name']]
-    names += [results_db['name']]
-    names += [model_gen_db['name']]
-    workers_names = [cont['name'] for cont in workers]
-    controlers_names = [cont['name'] for cont in controlers]
-    names += workers_names + controlers_names
+    # names = []
+    # names += [broker['name']]
+    # names += [results_db['name']]
+    # names += [model_gen_db['name']]
+    # workers_names = [cont['name'] for cont in workers]
+    # controlers_names = [cont['name'] for cont in controlers]
+    # names += workers_names + controlers_names
+    names, workers_names, controlers_names = get_config_names(config)
 
-
-    # break_down in functions
     if action == 'run':
 
         click.echo(click.style(
-            'Check config ports'.center(80, '='), fg='cyan'))
+            'Check config ports'.center(80, '='), fg=col_info, bold=True))
         click.echo()
         all_ports = []
         mess = '{} in {}'
@@ -262,6 +289,7 @@ def build_commands(config, action, verbose):
 
         all_commands += workers_commands
         all_commands += controlers_commands
+
         if verbose:
             click.echo(click.style('Global Check'.center(80, '='),
                                    fg=col_info, bold=True))
@@ -297,6 +325,24 @@ def build_commands(config, action, verbose):
     return all_commands
 
 
+def pull_config(config, verbose=False):
+    broker = config['broker']
+    results_db = config['result_db']
+    model_gen_db = config['model_gen_db']
+    workers = config['workers']
+    controlers = config['controlers']
+    for container in [broker] + [results_db] + \
+        [model_gen_db] + workers + controlers:
+        command = ['docker', 'pull', container['container_name']]
+        if verbose:
+            click.echo(click.style(
+                'Running command:', fg=col_info))
+            click.echo('{}\n'.format(' '.join(command)))
+
+        p = subprocess.Popen(' '.join(command), shell=True)
+        output, err = p.communicate()
+        click.echo('')
+
 def action_config(config, action, verbose=False, force=False):
     commands = build_commands(config, action, verbose)
     for command in commands:
@@ -324,11 +370,15 @@ pass_config = click.make_pass_decorator(Conf, ensure=True)
 @pass_config
 def main(conf, verbose):
     """
-    TODO: add verbose mode
     The alp command provide you with a number of options to manage alp services
     """
+    docker_client = Client('unix://var/run/docker.sock')
+    kernel_version = docker_client.info()['ServerVersion']
     click.echo(click.style(banner, fg='cyan', bold=True))
     click.echo(click.style('Version: {}'.format(__version__),
+                           fg='cyan', bold=True))
+    click.echo(click.style('Running with Docker version: {}'.format(
+        kernel_version),
                            fg='cyan', bold=True))
     click.echo(click.style('\n'))
     conf.verbose = verbose
@@ -346,15 +396,7 @@ def service(conf, force, action, config):
     Args:
         action(str): start/stop/restart/rm
         config(str): path to the config file"""
-    _config_path = config
-    if config == '-':
-        _config_path = os.path.expanduser(os.path.join(_alp_dir,
-                                                       'containers.json'))
-    if conf.verbose:
-        click.echo(click.style('Openning {}'.format(_config_path), fg='cyan'))
-        click.echo()
-    with open(config) as data_file:
-        config = json.load(data_file)
+    config = open_config(config, conf.verbose)
     if action == 'start':
         results = action_config(config, 'run', conf.verbose, force=force)
     elif action == 'stop':
@@ -365,44 +407,98 @@ def service(conf, force, action, config):
         results = action_config(config, 'rm', conf.verbose, force=force)
 
 
-# @cli.command()
-# @click.argument('config', type=click.Path(exists=True), required=True)
-# def status(action):
-#     if service == 'start':
-#         pass
-#     elif service == 'stop':
-#         pass
-#     elif service == 'restart':
-#         pass
+@main.command()
+@click.argument('config', type=click.Path(exists=True), required=True)
+@pass_config
+def status(conf, config):
+    config = open_config(config)
+    docker_client = Client('unix://var/run/docker.sock')
+    all_containers = docker_client.containers(all=True)
+    running_containers = []
+    running_ids = dict()
+
+    names, workers_names, controlers_names = get_config_names(config)
+    for container in all_containers:
+        name = container['Names'][0].replace('/', '')
+        if name in names:
+            print_cont = dict()
+            print_cont['name'] = name
+            print_cont['status'] = container['Status']
+            print_cont['image'] = container['Image']
+            print_cont['image_id'] = container['ImageID']
+            running_ids[container['ImageID']] = name
+            print_cont['ports'] = []
+            if 'Ports' in container:
+                for port in container['Ports']:
+                    pub_port = None
+                    priv_port = None
+                    if 'PublicPort' in port:
+                        pub_port = port['PublicPort']
+                    if 'PrivatePort' in port:
+                        priv_port = port['PrivatePort']
+                    if pub_port:
+                        print_cont['ports'] += ['{}:{}'.format(pub_port,
+                                                               priv_port)]
+            running_containers.append(print_cont)
+
+    click.echo(click.style('Running containers'.center(80, '='),
+                           fg=col_info, bold=True))
+    click.echo()
+    for container in running_containers:
+        click.echo(click.style('{}'.format(container['name']).center(80, '-'),
+                               fg=col_info, bold=True))
+        for k in container:
+            if isinstance(container[k], list):
+                container[k] = ' '.join(container[k])
+            if len(container[k]) > 40:
+                cut = len(container[k]) - 40
+                container[k] = container[k][:cut-3] + '...'
+            click.echo(click.style(a_text(k, container[k]),
+                                        fg=col_info))
+        click.echo('\n')
+    images = docker_client.images()
+
+    click.echo(click.style('Images from the config'.center(80, '='),
+                           fg=col_info, bold=True))
+    click.echo()
+    for image in images:
+        if image['Id'] in running_ids:
+            print_im = dict()
+            print_im['name'] = '{}'.format(running_ids[image['Id']])
+            print_im['created'] = pd.to_datetime(image['Created']*1e9)
+            print_im['created'] = print_im['created'].strftime(
+                '%Y-%m-%d %H:%M')
+            print_im['size'] = '{:02f}'.format(image['Size']/1000000000.)
+
+            click.echo(click.style(
+                '{}'.format(print_im['name']).center(80, '-'),
+                                fg=col_info, bold=True))
+            for k in print_im:
+                if isinstance(print_im[k], list):
+                    container[k] = ' '.join(print_im[k])
+                if len(print_im[k]) > 40:
+                    cut = len(print_im[k]) - 40
+                    container[k] = print_im[k][:cut-3] + '...'
+                click.echo(click.style(a_text(k, print_im[k]),
+                                            fg=col_info))
+            click.echo('\n')
 
 
-# @cli.command()
-# @click.argument('config', type=click.Path(exists=True), required=True)
-# def update(action):
-#     if service == 'start':
-#         pass
-#     elif service == 'stop':
-#         pass
-#     elif service == 'restart':
-#         pass
+@main.command()
+@click.option('--force', is_flag=True)
+@click.argument('config', type=click.Path(exists=True), required=True)
+@pass_config
+def update(conf, config, force):
+    config = open_config(config)
+    pull_config(config, conf.verbose)
+    results = action_config(config, 'stop', conf.verbose, force=force)
+    results = action_config(config, 'rm', conf.verbose, force=force)
+    results = action_config(config, 'run', conf.verbose, force=force)
 
 
-# @cli.command()
-# @click.argument('config', type=click.Path(exists=True), required=True)
-# def pull(action):
-#     if service == 'start':
-#         pass
-#     elif service == 'stop':
-#         pass
-#     elif service == 'restart':
-#         pass
-
-# @cli.command()
-# @click.argument('config', type=click.Path(exists=True), required=True)
-# def print(action):
-#     if service == 'start':
-#         pass
-#     elif service == 'stop':
-#         pass
-#     elif service == 'restart':
-#         pass
+@main.command()
+@click.argument('config', type=click.Path(exists=True), required=True)
+@pass_config
+def pull(conf, config):
+    config = open_config(config)
+    pull_config(config, conf.verbose)
