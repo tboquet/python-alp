@@ -1,9 +1,9 @@
 import json
 import os
 import subprocess
+from subprocess import PIPE
 import click
 from docker import Client
-from subprocess import PIPE
 from .appcom import _alp_dir
 
 
