@@ -64,11 +64,7 @@ def main(conf, verbose):
 @click.argument('config', type=click.Path(exists=True), required=True)
 @pass_config
 def service(conf, force, action, config):
-    """Subcommand to take action on services
-
-    Args:
-        action(str): start/stop/restart/rm
-        config(str): path to the config file"""
+    """Subcommand to take action on services"""
     config = open_config(config, conf.verbose)
     if action == 'start':
         results = action_config(config, 'run', conf.verbose, force=force)
@@ -85,6 +81,7 @@ def service(conf, force, action, config):
 @click.argument('config', type=click.Path(exists=True), required=True)
 @pass_config
 def status(conf, config):
+    """Get the status of the running containers"""
     config = open_config(config)
     docker_client = Client('unix://var/run/docker.sock')
     all_containers = docker_client.containers(all=True)
@@ -163,6 +160,7 @@ def status(conf, config):
 @click.argument('config', type=click.Path(exists=True), required=True)
 @pass_config
 def update(conf, config, force):
+    """Pull, stop, remove and rerun all containers"""
     config = open_config(config)
     pull_config(config, conf.verbose)
     results = action_config(config, 'stop', conf.verbose, force=force)
@@ -175,5 +173,6 @@ def update(conf, config, force):
 @click.argument('config', type=click.Path(exists=True), required=True)
 @pass_config
 def pull(conf, config):
+    """Pull containers"""
     config = open_config(config)
     pull_config(config, conf.verbose)
