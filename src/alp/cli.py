@@ -16,13 +16,13 @@ Why does this file exist, and why not put this in __main__?
 """
 import click
 import pandas as pd
-from cli_utils import a_text
-from cli_utils import action_config
-from cli_utils import col_info
-from cli_utils import get_config_names
-from cli_utils import open_config
-from cli_utils import pass_config
-from cli_utils import pull_config
+from .cli_utils import a_text
+from .cli_utils import action_config
+from .cli_utils import col_info
+from .cli_utils import get_config_names
+from .cli_utils import open_config
+from .cli_utils import pass_config
+from .cli_utils import pull_config
 from docker import Client
 
 from . import __version__
