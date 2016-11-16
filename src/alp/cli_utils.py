@@ -38,7 +38,7 @@ def check_container(container, running_containers, dead_containers,
     name = container['name']
     if verbose:
         click.echo(click.style('Check {}:'.format(name).center(80, '-'),
-                            fg=col_info, bold=True))
+                               fg=col_info, bold=True))
     res = True
     not_build = 'not_build' in container
     if name in running_containers and not_build:
@@ -60,7 +60,7 @@ def check_container(container, running_containers, dead_containers,
         color = col_not_ok
     if verbose:
         click.echo(click.style(a_text('Name OK:', '{}'.format(res)),
-                            fg=color))
+                               fg=color))
 
     port_OK = True
     for port in ports_in_use:
@@ -186,7 +186,7 @@ def build_commands(config, action, verbose):
                                         ' is not correct')
         if verbose:
             click.echo(click.style(a_text('Ports config OK:', 'True'),
-                                fg=col_warn))
+                                   fg=col_warn))
             click.echo('\n')
         links = []
         links.append('--link={}'.format(model_gen_db['name']))
@@ -313,7 +313,7 @@ def pull_config(config, verbose=False):
             click.echo(click.style('{}\n'.format(output)))
             click.echo()
         if err is not None:
-           res = False
+            res = False
     return res
 
 
@@ -332,7 +332,7 @@ def action_config(config, action, verbose=False, force=False):
         if verbose:
             click.echo(click.style('{}\n'.format(output)))
         if err is not None:
-           res = False
+            res = False
     return res
 
 
