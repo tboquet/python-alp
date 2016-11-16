@@ -14,41 +14,29 @@ Why does this file exist, and why not put this in __main__?
 
   Also see (1) from http://click.pocoo.org/5/setuptools/#setuptools-integration
 """
-import sys
 import click
-import os
-import json
 import pandas as pd
-import subprocess
-from .appcom import _alp_dir
-from docker import Client
 from cli_utils import a_text
-from cli_utils import build
-from cli_utils import check_container
-from cli_utils import parse_cont
-from cli_utils import get_config_names
-from cli_utils import build_commands
-from cli_utils import pull_config
 from cli_utils import action_config
-from cli_utils import pass_config
+from cli_utils import col_info
+from cli_utils import get_config_names
 from cli_utils import open_config
+from cli_utils import pass_config
+from cli_utils import pull_config
+from docker import Client
+
 from . import __version__
 
 
 banner = """
 
-                         _____________________ 
-                         ___    |__  /___  __ \ 
-                         __  /| |_  / __  /_/ / 
-                         _  ___ |  /___  ____/  
-                         /_/  |_/_____/_/       
- 
-"""
+                         _____________________
+                         ___    |__  /___  __ \_
+                         __  /| |_  / __  /_/ /
+                         _  ___ |  /___  ____/
+                         /_/  |_/_____/_/
 
-col_ok = 'green'
-col_warn = 'yellow'
-col_not_ok = 'red'
-col_info = 'cyan'
+"""
 
 
 @click.group()
@@ -60,12 +48,11 @@ def main(conf, verbose):
     """
     docker_client = Client('unix://var/run/docker.sock')
     kernel_version = docker_client.info()['ServerVersion']
-    click.echo(click.style(banner, fg='cyan', bold=True))
+    click.echo(click.style(banner, fg=col_info, bold=True))
     click.echo(click.style('Version: {}'.format(__version__),
                            fg='cyan', bold=True))
     click.echo(click.style('Running with Docker version: {}'.format(
-        kernel_version),
-                           fg='cyan', bold=True))
+        kernel_version), fg='cyan', bold=True))
     click.echo(click.style('\n'))
     conf.verbose = verbose
     return 0
@@ -91,6 +78,7 @@ def service(conf, force, action, config):
         results = action_config(config, 'restart', conf.verbose, force=force)
     elif action == 'rm':
         results = action_config(config, 'rm', conf.verbose, force=force)
+    return results
 
 
 @main.command()
@@ -138,9 +126,9 @@ def status(conf, config):
                 container[k] = ' '.join(container[k])
             if len(container[k]) > 40:
                 cut = len(container[k]) - 40
-                container[k] = container[k][:cut-3] + '...'
+                container[k] = container[k][:cut - 3] + '...'
             click.echo(click.style(a_text(k, container[k]),
-                                        fg=col_info))
+                                   fg=col_info))
         click.echo('\n')
     images = docker_client.images()
 
@@ -151,22 +139,22 @@ def status(conf, config):
         if image['Id'] in running_ids:
             print_im = dict()
             print_im['name'] = '{}'.format(running_ids[image['Id']])
-            print_im['created'] = pd.to_datetime(image['Created']*1e9)
+            print_im['created'] = pd.to_datetime(image['Created'] * 1e9)
             print_im['created'] = print_im['created'].strftime(
                 '%Y-%m-%d %H:%M')
-            print_im['size'] = '{:02f}'.format(image['Size']/1000000000.)
+            print_im['size'] = '{:.2f}'.format(image['Size'] / 1000000000.)
 
             click.echo(click.style(
                 '{}'.format(print_im['name']).center(80, '-'),
-                                fg=col_info, bold=True))
+                fg=col_info, bold=True))
             for k in print_im:
                 if isinstance(print_im[k], list):
                     container[k] = ' '.join(print_im[k])
                 if len(print_im[k]) > 40:
                     cut = len(print_im[k]) - 40
-                    container[k] = print_im[k][:cut-3] + '...'
+                    container[k] = print_im[k][:cut - 3] + '...'
                 click.echo(click.style(a_text(k, print_im[k]),
-                                            fg=col_info))
+                                       fg=col_info))
             click.echo('\n')
 
 
@@ -180,6 +168,7 @@ def update(conf, config, force):
     results = action_config(config, 'stop', conf.verbose, force=force)
     results = action_config(config, 'rm', conf.verbose, force=force)
     results = action_config(config, 'run', conf.verbose, force=force)
+    return results
 
 
 @main.command()

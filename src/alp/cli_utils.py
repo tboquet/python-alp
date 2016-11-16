@@ -1,17 +1,20 @@
-import click
-import sys
-import click
-import os
 import json
-import pandas as pd
+import os
 import subprocess
-from .appcom import _alp_dir
+import click
 from docker import Client
+from .appcom import _alp_dir
+
+
+col_ok = 'green'
+col_warn = 'yellow'
+col_not_ok = 'red'
+col_info = 'cyan'
 
 
 def a_text(text, result, size=80):
-    msg = text.ljust(int(size//2), '.')
-    msg += result.rjust(int(size//2), '.')
+    msg = text.ljust(int(size // 2), '.')
+    msg += result.rjust(int(size // 2), '.')
     return msg
 
 
@@ -48,7 +51,7 @@ def check_container(container, running_containers, dead_containers,
             a_text('name already taken', ''), fg='yellow'))
         res = False
 
-    if res == True:
+    if res is True:
         color = col_ok
     else:
         color = col_not_ok
@@ -89,7 +92,7 @@ def parse_cont(container, action, volumes=None, links=None):
 
     if action == 'run':
         container_command.append(container['mode'])
-        if not 'not_build' in container:
+        if not not_build:
             if 'volumes' in container:
                 for v in container['volumes']:
                     container_command += ['-v', v]
@@ -110,17 +113,6 @@ def parse_cont(container, action, volumes=None, links=None):
     else:
         container_command.append(container['name'])
     return container_command
-
-
-def build(container, links):
-    container_ok = check_container(container['name'], running_containers,
-                                   dead_containers, verbose)
-    not_build = 'not_build' in container
-    if container_ok and not not_build:
-        container_command = parse_cont(broker, 'run', links=links)
-    else:
-        container_command = []
-    return container_command, container_ok
 
 
 def get_config_names(config):
@@ -259,20 +251,20 @@ def build_commands(config, action, verbose):
             click.echo(click.style('Global Check'.center(80, '='),
                                    fg=col_info, bold=True))
             color_s = col_ok if scheduler_ok else col_not_ok
-            color_rd = col_ok if results_db_ok else col_not
-            color_mgd = col_ok if model_gen_db_ok else col_not
-            color_wk = col_ok if workers_ok else col_not
-            color_ct = col_ok if controlers_ok else col_not
+            color_rd = col_ok if results_db_ok else col_not_ok
+            color_mgd = col_ok if model_gen_db_ok else col_not_ok
+            color_wk = col_ok if workers_ok else col_not_ok
+            color_ct = col_ok if controlers_ok else col_not_ok
             click.echo(click.style(a_text('Scheduler OK:', '{}'.format(
-                    scheduler_ok)), fg=color_s))
+                scheduler_ok)), fg=color_s))
             click.echo(click.style(a_text('Results db OK:', '{}'.format(
-                    results_db_ok)), fg=color_rd))
+                results_db_ok)), fg=color_rd))
             click.echo(click.style(a_text('Models db OK:', '{}'.format(
-                    model_gen_db_ok)), fg=color_mgd))
+                model_gen_db_ok)), fg=color_mgd))
             click.echo(click.style(a_text('Workers OK:', '{}'.format(
-                    workers_ok)), fg=color_wk))
+                workers_ok)), fg=color_wk))
             click.echo(click.style(a_text('Controlers OK:', '{}'.format(
-                    controlers_ok)), fg=color_ct))
+                controlers_ok)), fg=color_ct))
             click.echo('\n')
         if not all([scheduler_ok, results_db_ok, model_gen_db_ok, workers_ok,
                     controlers_ok]):
@@ -296,8 +288,7 @@ def pull_config(config, verbose=False):
     model_gen_db = config['model_gen_db']
     workers = config['workers']
     controlers = config['controlers']
-    for container in [broker] + [results_db] + \
-        [model_gen_db] + workers + controlers:
+    for container in [broker, results_db, model_gen_db] + workers + controlers:
         command = ['docker', 'pull', container['container_name']]
         if verbose:
             click.echo(click.style(
@@ -307,6 +298,7 @@ def pull_config(config, verbose=False):
         p = subprocess.Popen(' '.join(command), shell=True)
         output, err = p.communicate()
         click.echo('')
+
 
 def action_config(config, action, verbose=False, force=False):
     commands = build_commands(config, action, verbose)
@@ -318,6 +310,7 @@ def action_config(config, action, verbose=False, force=False):
 
         p = subprocess.Popen(' '.join(command), shell=True)
         output, err = p.communicate()
+        click.echo(output, err)
         click.echo('')
 
 
