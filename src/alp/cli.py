@@ -163,10 +163,11 @@ def update(conf, config, force):
     """Pull, stop, remove and rerun all containers"""
     config = open_config(config)
     pull_config(config, conf.verbose)
-    results = action_config(config, 'stop', conf.verbose, force=force)
-    results = action_config(config, 'rm', conf.verbose, force=force)
-    results = action_config(config, 'run', conf.verbose, force=force)
-    return results
+    res_stop = action_config(config, 'stop', conf.verbose, force=force)
+    res_rm = action_config(config, 'rm', conf.verbose, force=force)
+    res_run = action_config(config, 'run', conf.verbose, force=force)
+    succeeded = all([res_stop, res_rm, res_run])
+    return succeeded
 
 
 @main.command()
@@ -175,4 +176,5 @@ def update(conf, config, force):
 def pull(conf, config):
     """Pull containers"""
     config = open_config(config)
-    pull_config(config, conf.verbose)
+    res = pull_config(config, conf.verbose)
+    return res

@@ -3,6 +3,7 @@ import os
 import subprocess
 import click
 from docker import Client
+from subprocess import PIPE
 from .appcom import _alp_dir
 
 
@@ -24,7 +25,8 @@ def open_config(config, verbose=False):
         _config_path = os.path.expanduser(os.path.join(_alp_dir,
                                                        'containers.json'))
     if verbose:
-        click.echo(click.style('Openning {}'.format(_config_path), fg='cyan'))
+        click.echo(click.style('Openning {}'.format(_config_path),
+                               fg=col_info))
         click.echo()
     with open(config) as data_file:
         config = json.load(data_file)
@@ -34,8 +36,9 @@ def open_config(config, verbose=False):
 def check_container(container, running_containers, dead_containers,
                     ports_in_use, verbose):
     name = container['name']
-    click.echo(click.style('Check {}:'.format(name).center(80, '-'),
-                           fg='cyan', bold=True))
+    if verbose:
+        click.echo(click.style('Check {}:'.format(name).center(80, '-'),
+                            fg=col_info, bold=True))
     res = True
     not_build = 'not_build' in container
     if name in running_containers and not_build:
@@ -55,8 +58,9 @@ def check_container(container, running_containers, dead_containers,
         color = col_ok
     else:
         color = col_not_ok
-    click.echo(click.style(a_text('Name OK:', '{}'.format(res)),
-                           fg=color))
+    if verbose:
+        click.echo(click.style(a_text('Name OK:', '{}'.format(res)),
+                            fg=color))
 
     port_OK = True
     for port in ports_in_use:
@@ -71,7 +75,8 @@ def check_container(container, running_containers, dead_containers,
 
     msg = a_text('Ports OK:', '{}'.format(port_OK))
     if port_OK:
-        click.echo(click.style(msg, fg=col_ok))
+        if verbose:
+            click.echo(click.style(msg, fg=col_ok))
     else:
         res = False
         click.echo(click.style(msg, fg=col_not_ok))
@@ -153,20 +158,16 @@ def build_commands(config, action, verbose):
             if 'PublicPort' in port:
                 ports_in_use.append(port['PublicPort'])
 
-    # names = []
-    # names += [broker['name']]
-    # names += [results_db['name']]
-    # names += [model_gen_db['name']]
-    # workers_names = [cont['name'] for cont in workers]
-    # controlers_names = [cont['name'] for cont in controlers]
-    # names += workers_names + controlers_names
     names, workers_names, controlers_names = get_config_names(config)
 
     if action == 'run':
-
         click.echo(click.style(
-            'Check config ports'.center(80, '='), fg=col_info, bold=True))
+            'Start containers'.center(80, '='), fg=col_info, bold=True))
         click.echo()
+        if verbose:
+            click.echo(click.style(
+                'Check config ports'.center(80, '-'), fg=col_info, bold=True))
+            click.echo()
         all_ports = []
         mess = '{} in {}'
         for cont in [broker] + [results_db] + [model_gen_db] + workers + controlers:
@@ -183,12 +184,10 @@ def build_commands(config, action, verbose):
                             fg=col_warn))
                         raise Exception('Configuration of the port'
                                         ' is not correct')
-        click.echo(click.style(a_text('Ports config OK:', 'True'),
-                               fg=col_warn))
-        click.echo('\n')
-        click.echo(click.style(
-            'Building {} containers'.format(len(names), fg='cyan')))
-        click.echo('\n')
+        if verbose:
+            click.echo(click.style(a_text('Ports config OK:', 'True'),
+                                fg=col_warn))
+            click.echo('\n')
         links = []
         links.append('--link={}'.format(model_gen_db['name']))
         links.append('--link={}'.format(broker['name']))
@@ -271,18 +270,30 @@ def build_commands(config, action, verbose):
             raise Exception('Containers configuration not ok')
 
     if action in ['stop', 'restart', 'remove']:
+        click.echo(click.style(
+            'Stop running containers'.center(80, '='), fg=col_info, bold=True))
+        click.echo()
         all_commands += [['docker', 'stop'] + names]
 
     if action == 'restart':
+        click.echo(click.style(
+            'Start running containers'.center(80, '='),
+            fg=col_info, bold=True))
+        click.echo()
         all_commands += [['docker', 'start'] + names]
 
     if action == 'rm':
+        click.echo(click.style(
+            'Remove running containers'.center(80, '='),
+            fg=col_info, bold=True))
+        click.echo()
         all_commands += [['docker', 'rm'] + names]
 
     return all_commands
 
 
 def pull_config(config, verbose=False):
+    res = True
     broker = config['broker']
     results_db = config['result_db']
     model_gen_db = config['model_gen_db']
@@ -295,23 +306,34 @@ def pull_config(config, verbose=False):
                 'Running command:', fg=col_info))
             click.echo('{}\n'.format(' '.join(command)))
 
-        p = subprocess.Popen(' '.join(command), shell=True)
+        p = subprocess.Popen(' '.join(command), shell=True, stdout=PIPE,
+                             stderr=PIPE)
         output, err = p.communicate()
-        click.echo('')
+        if verbose:
+            click.echo(click.style('{}\n'.format(output)))
+            click.echo()
+        if err is not None:
+           res = False
+    return res
 
 
 def action_config(config, action, verbose=False, force=False):
+    res = True
     commands = build_commands(config, action, verbose)
     for command in commands:
         if verbose:
             click.echo(click.style(
-                'Running command:', fg='cyan'))
+                'Running command:', fg=col_info))
             click.echo('{}\n'.format(' '.join(command)))
 
-        p = subprocess.Popen(' '.join(command), shell=True)
+        p = subprocess.Popen(' '.join(command), shell=True, stdout=PIPE,
+                             stderr=PIPE)
         output, err = p.communicate()
-        click.echo(output, err)
-        click.echo('')
+        if verbose:
+            click.echo(click.style('{}\n'.format(output)))
+        if err is not None:
+           res = False
+    return res
 
 
 class Conf(object):
