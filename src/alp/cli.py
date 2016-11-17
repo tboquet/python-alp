@@ -1,18 +1,5 @@
 """
-Module that contains the command line app.
-
-Why does this file exist, and why not put this in __main__?
-
-  You might be tempted to import things from __main__ later, but that will cause
-  problems: the code will get executed twice:
-
-  - When you run `python -malp` python will execute
-    ``__main__.py`` as a script. That means there won't be any
-    ``alp.__main__`` in ``sys.modules``.
-  - When you import __main__ it will get executed again (as a module) because
-    there's no ``alp.__main__`` in ``sys.modules``.
-
-  Also see (1) from http://click.pocoo.org/5/setuptools/#setuptools-integration
+CLI to launch ALP services
 """
 import click
 import pandas as pd
@@ -20,22 +7,12 @@ from docker import Client
 from . import __version__
 from .cli_utils import a_text
 from .cli_utils import action_config
+from .cli_utils import banner
 from .cli_utils import col_info
 from .cli_utils import get_config_names
 from .cli_utils import open_config
 from .cli_utils import pass_config
 from .cli_utils import pull_config
-
-
-banner = """
-
-                         _____________________
-                         ___    |__  /___  __ \_
-                         __  /| |_  / __  /_/ /
-                         _  ___ |  /___  ____/
-                         /_/  |_/_____/_/
-
-"""
 
 
 @click.group()

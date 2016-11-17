@@ -13,6 +13,17 @@ col_not_ok = 'red'
 col_info = 'cyan'
 
 
+banner = """
+
+                         _____________________
+                         ___    |__  /___  __ \_
+                         __  /| |_  / __  /_/ /
+                         _  ___ |  /___  ____/
+                         /_/  |_/_____/_/
+
+"""
+
+
 def a_text(text, result, size=80):
     msg = text.ljust(int(size // 2), '.')
     msg += result.rjust(int(size // 2), '.')
