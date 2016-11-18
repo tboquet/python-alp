@@ -276,9 +276,19 @@ def build_commands(config, action, verbose):
             click.echo(click.style(a_text('Controlers OK:', '{}'.format(
                 controlers_ok)), fg=color_ct))
             click.echo('\n')
-        if not all([scheduler_ok, results_db_ok, model_gen_db_ok, workers_ok,
-                    controlers_ok]):
-            raise Exception('Containers configuration not ok')
+        check_dict = {'scheduler': scheduler_ok,
+                      'results_db': results_db_ok,
+                      'model_gen_db': model_gen_db_ok,
+                      'workers': workers_ok,
+                      'controlers': controlers_ok,
+        }
+        msg = ''
+        for k, v in check_dict.items():
+            if v is not True:
+                msg += '{} '.format(k)
+        if not all([scheduler_ok, results_db_ok, model_gen_db_ok,
+                    workers_ok, controlers_ok]):
+            raise Exception('{} configuration not ok'.format(msg))
 
     if action in ['stop', 'restart', 'remove']:
         click.echo(click.style(
