@@ -49,7 +49,7 @@ def check_container(container, running_containers, dead_containers,
                                fg=col_info, bold=True))
     res = True
     not_build = 'not_build' in container
-    if name in running_containers and not_build:
+    if name in running_containers and not_build:  # pragma: no cover
         click.echo(click.style(
             a_text('Already running', '{}'.format(res)), fg=col_ok))
     elif name not in running_containers and not_build:  # pragma: no cover
@@ -71,7 +71,7 @@ def check_container(container, running_containers, dead_containers,
                                fg=color))
 
     port_OK = True
-    for port in ports_in_use:
+    for port in ports_in_use:  # pragma: no cover
         msg = a_text('WARNING:[port in use]',
                      '{}: port already in use'.format(port))
         if 'ports' in container:
@@ -105,7 +105,7 @@ def parse_cont(container, action, volumes=None, links=None):
 
     if action == 'run':
         container_command.append(container['mode'])
-        if not not_build:
+        if not not_build:  # pragma: no cover
             if 'volumes' in container:
                 for v in container['volumes']:
                     container_command += ['-v', v]
@@ -113,7 +113,7 @@ def parse_cont(container, action, volumes=None, links=None):
                 container_command.append(volumes)
             if links is not None:  # pragma: no cover
                 container_command += links
-            if 'ports' in container:
+            if 'ports' in container:  # pragma: no cover
                 for p in container['ports']:
                     container_command += ['-p', p]
             if 'options' in container:  # pragma: no cover
@@ -205,7 +205,7 @@ def build_commands(config, action, verbose):
                            dead_containers, ports_in_use, verbose):
 
             not_build = 'not_build' in broker
-            if not not_build:
+            if not not_build:  # pragma: no cover
                 broker_command = parse_cont(broker, 'run')
                 all_commands += [broker_command]
             scheduler_ok = True
@@ -233,7 +233,7 @@ def build_commands(config, action, verbose):
         # workers
         workers_commands = []
         workers_ok = True
-        for worker in workers:
+        for worker in workers:  # pragma: no cover
             if check_container(worker, running_containers,
                                dead_containers, ports_in_use, verbose):
                 workers_commands.append(parse_cont(worker, 'run', links=links))
@@ -243,12 +243,12 @@ def build_commands(config, action, verbose):
         # controlers
         controlers_commands = []
         controlers_ok = True
-        for controler in controlers:
+        for controler in controlers:  # pragma: no cover
             if check_container(controler, running_containers,
                                dead_containers, ports_in_use, verbose):
                 workers_commands.append(parse_cont(controler, 'run',
                                                    links=links))
-            else:  # pragma: no cover
+            else:
                 controlers_ok = False
 
         all_commands += workers_commands
@@ -330,7 +330,7 @@ def pull_config(config, verbose=False):
         if verbose:
             click.echo(click.style('{}\n'.format(output)))
             click.echo()
-        if err is not None:
+        if err is not None:  # pragma: no cover
             res = False
     return res
 
@@ -349,7 +349,7 @@ def action_config(config, action, verbose=False, force=False):
         output, err = p.communicate()
         if verbose:
             click.echo(click.style('{}\n'.format(output)))
-        if err is not None:
+        if err is not None:  # pragma: no cover
             res = False
     return res
 

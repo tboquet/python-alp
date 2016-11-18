@@ -77,7 +77,7 @@ def status(conf, config):
             print_cont['image_id'] = container['ImageID']
             running_ids[container['ImageID']] = print_cont['image']
             print_cont['ports'] = []
-            if 'Ports' in container:
+            if 'Ports' in container:  # pragma: no cover
                 for port in container['Ports']:
                     pub_port = None
                     priv_port = None
@@ -89,6 +89,10 @@ def status(conf, config):
                         print_cont['ports'] += ['{}:{}'.format(pub_port,
                                                                priv_port)]
             running_containers.append(print_cont)
+        else:  # pragma: no cover
+            click.echo(click.style(
+                a_text('{}', 'not running'.format(
+                    print_cont['name']).center(80, '-')), fg=col_warn))
 
     click.echo(click.style('Running containers'.center(80, '='),
                            fg=col_info, bold=True))
@@ -123,9 +127,9 @@ def status(conf, config):
                 '{}'.format(print_im['name']).center(80, '-'),
                 fg=col_info, bold=True))
             for k in print_im:
-                if isinstance(print_im[k], list):
+                if isinstance(print_im[k], list):  # pragma: no cover
                     container[k] = ' '.join(print_im[k])
-                if len(print_im[k]) > 40:
+                if len(print_im[k]) > 40:  # pragma: no cover
                     cut = len(print_im[k]) - 40
                     container[k] = print_im[k][:cut - 3] + '...'
                 click.echo(click.style(a_text(k, print_im[k]),

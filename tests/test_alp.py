@@ -46,12 +46,17 @@ config_path = init_test_config()
 
 def test_status():
     runner = CliRunner()
+    result = runner.invoke(main, ['status', config_path])
+    assert result.exit_code == 0
     result = runner.invoke(main, ['--verbose', 'status', config_path])
     assert result.exit_code == 0
 
 
 def test_service():
     runner = CliRunner()
+    for cm in ['stop', 'rm', 'start', 'restart']:
+        result = runner.invoke(main, ['service', cm, config_path])
+        assert result.exit_code == 0
     for cm in ['stop', 'rm', 'start', 'restart']:
         result = runner.invoke(main, ['--verbose', 'service', cm, config_path])
         assert result.exit_code == 0
@@ -65,5 +70,7 @@ def test_update():
 
 def test_pull():
     runner = CliRunner()
+    result = runner.invoke(main, ['pull', config_path])
+    assert result.exit_code == 0
     result = runner.invoke(main, ['--verbose', 'pull', config_path])
     assert result.exit_code == 0
