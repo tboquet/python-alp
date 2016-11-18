@@ -32,9 +32,6 @@ def a_text(text, result, size=80):
 
 def open_config(config, verbose=False):
     _config_path = config
-    if config == '-':
-        _config_path = os.path.expanduser(os.path.join(_alp_dir,
-                                                       'containers.json'))
     if verbose:
         click.echo(click.style('Openning {}'.format(_config_path),
                                fg=col_info))
@@ -55,19 +52,19 @@ def check_container(container, running_containers, dead_containers,
     if name in running_containers and not_build:
         click.echo(click.style(
             a_text('Already running', '{}'.format(res)), fg=col_ok))
-    elif name not in running_containers and not_build:
+    elif name not in running_containers and not_build:  # pragma: no cover
         res = False
         color = col_not_ok
         click.echo(click.style(
             a_text('Not running', ''), fg=col_not_ok))
-    elif name in dead_containers:
+    elif name in dead_containers:  # pragma: no cover
         click.echo(click.style(
             a_text('name already taken', ''), fg='yellow'))
         res = False
 
     if res is True:
         color = col_ok
-    else:
+    else:  # pragma: no cover
         color = col_not_ok
     if verbose:
         click.echo(click.style(a_text('Name OK:', '{}'.format(res)),
@@ -79,7 +76,7 @@ def check_container(container, running_containers, dead_containers,
                      '{}: port already in use'.format(port))
         if 'ports' in container:
             for c_port in container['ports']:
-                if c_port.split(':')[0] == str(port):
+                if c_port.split(':')[0] == str(port):  # pragma: no cover
                     if not not_build:
                         click.echo(click.style(msg, fg='yellow'))
                         port_OK = False
@@ -88,7 +85,7 @@ def check_container(container, running_containers, dead_containers,
     if port_OK:
         if verbose:
             click.echo(click.style(msg, fg=col_ok))
-    else:
+    else:  # pragma: no cover
         res = False
         click.echo(click.style(msg, fg=col_not_ok))
     click.echo('\n')
@@ -98,7 +95,7 @@ def check_container(container, running_containers, dead_containers,
 def parse_cont(container, action, volumes=None, links=None):
     container_command = []
     not_build = 'not_build' in container
-    if 'NV_GPU' in container:
+    if 'NV_GPU' in container:  # pragma: no cover
         container_command.append('NV_GPU={}'.format(
             container['NV_GPU']))
         container_command.append('nvidia-docker')
@@ -112,21 +109,21 @@ def parse_cont(container, action, volumes=None, links=None):
             if 'volumes' in container:
                 for v in container['volumes']:
                     container_command += ['-v', v]
-            if volumes is not None:
+            if volumes is not None:  # pragma: no cover
                 container_command.append(volumes)
-            if links is not None:
+            if links is not None:  # pragma: no cover
                 container_command += links
             if 'ports' in container:
                 for p in container['ports']:
                     container_command += ['-p', p]
-            if 'options' in container:
+            if 'options' in container:  # pragma: no cover
                 for option in container['options']:
                     container_command.append(option)
             container_command += ['--name={}'.format(container['name'])]
 
             container_command.append(
                 container['container_name'])
-    else:
+    else:  # pragma: no cover
         container_command.append(container['name'])
     return container_command
 
@@ -188,7 +185,7 @@ def build_commands(config, action, verbose):
                     parsed_port = port.split(':')[0]
                     all_ports.append(parsed_port)
                     count_p = all_ports.count(parsed_port)
-                    if count_p > 1:
+                    if count_p > 1:  # pragma: no cover
                         click.echo(click.style(
                             a_text('WARNING:[port conflict]',
                                    mess.format(parsed_port, c_name)),
@@ -212,7 +209,7 @@ def build_commands(config, action, verbose):
                 broker_command = parse_cont(broker, 'run')
                 all_commands += [broker_command]
             scheduler_ok = True
-        else:
+        else:  # pragma: no cover
             scheduler_ok = False
 
         # database results
@@ -221,7 +218,7 @@ def build_commands(config, action, verbose):
             results_db_command = parse_cont(results_db, 'run')
             all_commands += [results_db_command]
             results_db_ok = True
-        else:
+        else:  # pragma: no cover
             results_db_ok = False
 
         # database models generators
@@ -230,7 +227,7 @@ def build_commands(config, action, verbose):
             model_gen_db_command = parse_cont(model_gen_db, 'run')
             all_commands += [model_gen_db_command]
             model_gen_db_ok = True
-        else:
+        else:  # pragma: no cover
             model_gen_db_ok = False
 
         # workers
@@ -240,7 +237,7 @@ def build_commands(config, action, verbose):
             if check_container(worker, running_containers,
                                dead_containers, ports_in_use, verbose):
                 workers_commands.append(parse_cont(worker, 'run', links=links))
-            else:
+            else:  # pragma: no cover
                 workers_ok = False
 
         # controlers
@@ -251,7 +248,7 @@ def build_commands(config, action, verbose):
                                dead_containers, ports_in_use, verbose):
                 workers_commands.append(parse_cont(controler, 'run',
                                                    links=links))
-            else:
+            else:  # pragma: no cover
                 controlers_ok = False
 
         all_commands += workers_commands
@@ -280,11 +277,11 @@ def build_commands(config, action, verbose):
                       'results_db': results_db_ok,
                       'model_gen_db': model_gen_db_ok,
                       'workers': workers_ok,
-                      'controlers': controlers_ok
-        }
+                      'controlers': controlers_ok}
+        
         msg = ''
         for k, v in check_dict.items():
-            if v is not True:
+            if v is not True:  # pragma: no cover
                 msg += '{} '.format(k)
         if not all([scheduler_ok, results_db_ok, model_gen_db_ok,
                     workers_ok, controlers_ok]):

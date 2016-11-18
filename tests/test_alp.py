@@ -16,21 +16,22 @@ def init_test_config():
             "volumes": ["/opt/data/rabbitmq/dev/log:/dev/log",
                         "/opt/data/rabbitmq:/var/lib/rabbitmq"],
             "ports": ["8081:15672", "5673:5672"],
-            "name": "rabbitmq_sched_test",
+            "name": "rabbitmq_sched",
             "container_name": "rabbitmq:3-management",
             "mode": "-d"
         }
         config['result_db'] = {
             "volumes": ["/opt/data/mongo_data/results:/data/db"],
-            "name": "mongo_results_test",
+            "name": "mongo_results",
             "container_name": "mongo",
             "mode": "-d"
         }
         config['model_gen_db'] = {
             "volumes": ["/opt/data/mongo_data/models:/data/db"],
-            "name": "mongo_models_test",
+            "name": "mongo_models",
             "container_name": "mongo",
-            "mode": "-d"
+            "mode": "-d",
+            "not_build": True
         }
         config['workers'] = []
         config['controlers'] = []
@@ -51,7 +52,7 @@ def test_status():
 
 def test_service():
     runner = CliRunner()
-    for cm in ['start', 'restart', 'stop', 'rm']:
+    for cm in ['stop', 'rm', 'start', 'restart']:
         result = runner.invoke(main, ['--verbose', 'service', cm, config_path])
         assert result.exit_code == 0
 
