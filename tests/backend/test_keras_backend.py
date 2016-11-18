@@ -5,6 +5,7 @@ import copy
 import inspect
 import keras
 import keras.backend as K
+import numpy as np
 import pytest
 import six
 
@@ -43,6 +44,7 @@ test_samples = 128
 NAME = keras.__name__
 VERSION = keras.__version__
 
+
 def close_gens(gen, data, data_stream):
     gen.close()
     data.close(None)
@@ -51,10 +53,10 @@ def close_gens(gen, data, data_stream):
 
 def make_data():
     (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
-                                                nb_test=test_samples,
-                                                input_shape=(input_dim,),
-                                                classification=True,
-                                                nb_class=nb_class)
+                                               nb_test=test_samples,
+                                               input_shape=(input_dim,),
+                                               classification=True,
+                                               nb_class=nb_class)
 
     y_tr = np_utils.to_categorical(y_tr)
     y_te = np_utils.to_categorical(y_te)
@@ -118,6 +120,7 @@ def return_custom():
     class Dropout_cust(Layer):
         '''Applies Dropout to the input.
         '''
+
         def __init__(self, p, **kwargs):
             self.p = p
             if 0. < self.p < 1.:
@@ -134,6 +137,7 @@ def return_custom():
             config = {'p': self.p}
             base_config = super(Dropout_cust, self).get_config()
             return dict(list(base_config.items()) + list(config.items()))
+
     return Dropout_cust
 
 
@@ -161,12 +165,12 @@ def model(custom=False):
 
 
 def graph(custom=False):
-    name='dense1'
+    name = 'dense1'
     model = Graph()
     model.add_input(name='X', input_shape=(input_dim, ))
 
     model.add_node(Dense(nb_hidden, activation="sigmoid"),
-                name='dense1', input='X')
+                   name='dense1', input='X')
     if custom:
         name = 'do'
         model.add_node(return_custom()(0.5), name=name, input='dense1')
@@ -186,7 +190,11 @@ def prepare_model(get_model, get_loss_metric, custom):
 
     cust_objects = dict()
 
-    metrics = [metric]
+    if isinstance(metric, six.string_types):
+        metrics = [metric]
+    else:
+        cust_objects[metric.__name__] = metric
+        metrics = [metric()]
 
     if not isinstance(loss, six.string_types):
         cust_objects['cat_cross'] = loss
@@ -209,7 +217,6 @@ def prepare_model(get_model, get_loss_metric, custom):
         loss = loss()
     elif isinstance(loss, dict):
         loss = {k: v() for k, v in loss.items()}
-
 
     model.compile(loss=loss,
                   optimizer='rmsprop',
@@ -258,13 +265,14 @@ def get_loss():
 
 @pytest.fixture
 def get_metric():
-    import keras.backend as K
-    @imports({"K": K})
-    def cosine_proximity(y_true, y_pred):
-        y_true = K.l2_normalize(y_true, axis=-1)
-        y_pred = K.l2_normalize(y_pred, axis=-1)
-        return -K.mean(y_true * y_pred)
-    return cosine_proximity
+    def return_metric():
+        import keras.backend as K
+        def cosine_proximity(y_true, y_pred):
+            y_true = K.l2_normalize(y_true, axis=-1)
+            y_pred = K.l2_normalize(y_pred, axis=-1)
+            return -K.mean(y_true * y_pred)
+        return cosine_proximity
+    return return_metric
 
 
 @pytest.fixture(scope='module', params=['sequential', 'model', 'graph'])
@@ -322,9 +330,10 @@ class TestExperiment:
         expe = Experiment(model)
 
         for mod in [None, model]:
-            expe.fit([data], [data_val], model=mod, nb_epoch=2,
-                     batch_size=batch_size, metrics=metrics,
-                     custom_objects=cust_objects, overwrite=True)
+            for data_val_loc in [None, data_val]:
+                expe.fit([data], [data_val_loc], model=mod, nb_epoch=2,
+                         batch_size=batch_size, metrics=metrics,
+                         custom_objects=cust_objects, overwrite=True)
 
         expe.backend_name = 'another_backend'
         expe.load_model()
@@ -349,11 +358,33 @@ class TestExperiment:
         cust_objects['test_list'] = [1, 2]
         expe = Experiment(model)
 
+        expected_value = 2
         for mod in [None, model]:
-            expe.fit_async([data], [data_val], model=mod, nb_epoch=2,
-                           batch_size=batch_size, metrics=metrics,
-                           custom_objects=cust_objects, overwrite=True,
-                           verbose=2)
+            for data_val_loc in [None, data_val]:
+                _, thread = expe.fit_async([data], [data_val_loc],
+                                           model=mod, nb_epoch=2,
+                                           batch_size=batch_size,
+                                           metrics=metrics,
+                                           custom_objects=cust_objects,
+                                           overwrite=True,
+                                           verbose=2)
+
+                thread.join()
+
+                for k in expe.full_res['metrics']:
+                    if 'iter' not in k:
+                        assert len(
+                            expe.full_res['metrics'][k]) == expected_value
+
+                if data_val_loc is not None:
+                    for k in expe.full_res['metrics']:
+                        if 'val' in k and 'iter' not in k:
+                            assert None not in expe.full_res['metrics'][k]
+                else:
+                    for k in expe.full_res['metrics']:
+                        if 'val' in k and 'iter' not in k:
+                            assert all([np.isnan(v)
+                                        for v in expe.full_res['metrics'][k]])
 
         if K.backend() == 'tensorflow':
             K.clear_session()
@@ -386,9 +417,6 @@ class TestExperiment:
             close_gens(gen, data, data_stream)
             if val == 1:
                 close_gens(val, data_2, data_stream_2)
-        assert expe.data_id is not None
-        assert expe.mod_id is not None
-        assert expe.params_dump is not None
 
         if K.backend() == 'tensorflow':
             K.clear_session()
@@ -406,17 +434,26 @@ class TestExperiment:
         _, data_val_use = make_data()
         expe = Experiment(model)
 
-        for val in [1, data_val_use]:
+        expected_value = 2
+        for val in [None, 1, data_val_use]:
             gen, data, data_stream = make_gen(is_graph)
             if val == 1:
                 val, data_2, data_stream_2 = make_gen(is_graph)
-            expe.fit_gen_async([gen], [val], nb_epoch=2,
-                                model=model,
-                                metrics=metrics,
-                                custom_objects=cust_objects,
-                                samples_per_epoch=64,
-                                nb_val_samples=128,
-                                verbose=2, overwrite=True)
+            _, thread = expe.fit_gen_async([gen], [val], nb_epoch=2,
+                                           model=model,
+                                           metrics=metrics,
+                                           custom_objects=cust_objects,
+                                           samples_per_epoch=64,
+                                           nb_val_samples=128,
+                                           verbose=2, overwrite=True)
+
+            thread.join()
+
+            for k in expe.full_res['metrics']:
+                if 'iter' not in k:
+                    assert len(
+                        expe.full_res['metrics'][k]) == expected_value
+
             close_gens(gen, data, data_stream)
             if val == 1:
                 close_gens(val, data_2, data_stream_2)
@@ -435,9 +472,9 @@ class TestExperiment:
                            optimizer='rmsprop')
         expe = Experiment(test_model)
         expe.fit_gen([gen_t], [gen], nb_epoch=2,
-                            samples_per_epoch=nb_train,
-                            nb_val_samples=nb_val,
-                            verbose=2, overwrite=True)
+                     samples_per_epoch=nb_train,
+                     nb_val_samples=nb_val,
+                     verbose=2, overwrite=True)
         close_gens(gen_t, data_t, d_stream_t)
         close_gens(gen, data, d_stream)
 
@@ -476,8 +513,8 @@ class TestBackendFunctions:
         X_tr = np.ones((train_samples, input_dim))
         model = get_model()
         model.compile(loss='categorical_crossentropy',
-                    optimizer='rmsprop',
-                    metrics=['accuracy'])
+                      optimizer='rmsprop',
+                      metrics=['accuracy'])
 
         model_name = model.__class__.__name__
 
@@ -502,8 +539,8 @@ class TestBackendFunctions:
 
         model = get_model()
         model.compile(loss='categorical_crossentropy',
-                    optimizer='rmsprop',
-                    metrics=['accuracy'])
+                      optimizer='rmsprop',
+                      metrics=['accuracy'])
 
         model_dict = dict()
         model_dict['model_arch'] = to_dict_w_opt(model)
@@ -565,7 +602,7 @@ def test_utils():
     data.close(None)
     data_stream.close()
     for i in range(1, 20):
-        utls.window(list(range(i*2)), i)
+        utls.window(list(range(i * 2)), i)
 
 
 if __name__ == "__main__":

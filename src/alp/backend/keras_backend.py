@@ -24,18 +24,26 @@ in memory compiled function, this function is used instead.
 """
 
 import inspect
-import pickle
+
 import types
 
 import dill
-import marshal
+import numpy as np
 import six
+
 from six.moves import zip as szip
 
 from ..appcom import _path_h5
 from ..appcom.utils import check_gen
 from ..backend import common as cm
 from ..celapp import app
+
+
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+
 
 COMPILED_MODELS = dict()
 TO_SERIALIZE = ['custom_objects']
@@ -46,6 +54,13 @@ TO_SERIALIZE = ['custom_objects']
 def get_backend():
     import keras as CB
     return CB
+
+
+def check_validation(dv):
+    validation = True
+    if dv is None:
+        validation = False
+    return(validation)
 
 
 def save_params(model, filepath):
@@ -62,12 +77,17 @@ def serialize(cust_obj):
         a dict of the serialized components of the object"""
     ser_func = dict()
     if isinstance(cust_obj, types.FunctionType):
+
         func_code = six.get_function_code(cust_obj)
-        func_code_d = marshal.dumps(func_code).decode('raw_unicode_escape')
+        func_code_d = dill.dumps(func_code).decode('raw_unicode_escape')
         ser_func['func_code_d'] = func_code_d
-        ser_func['name_d'] = marshal.dumps(cust_obj.__name__)
-        ser_func['args_d'] = marshal.dumps(six.get_function_defaults(cust_obj))
-        ser_func['clos_d'] = dill.dumps(six.get_function_closure(cust_obj))
+        ser_func['name_d'] = pickle.dumps(
+            cust_obj.__name__).decode('raw_unicode_escape')
+        ser_func['args_d'] = pickle.dumps(
+            six.get_function_defaults(cust_obj)).decode('raw_unicode_escape')
+        clos = dill.dumps(
+            six.get_function_closure(cust_obj)).decode('raw_unicode_escape')
+        ser_func['clos_d'] = clos
         ser_func['type_obj'] = 'func'
     else:
         if hasattr(cust_obj, '__module__'):  # pragma: no cover
@@ -76,8 +96,8 @@ def serialize(cust_obj):
         ser_func['args_d'] = None
         ser_func['clos_d'] = None
         ser_func['type_obj'] = 'class'
-        ser_func['func_code_d'] = dill.dumps(cust_obj).decode(
-            'raw_unicode_escape')
+        loaded = dill.dumps(cust_obj).decode('raw_unicode_escape')
+        ser_func['func_code_d'] = loaded
     return ser_func
 
 
@@ -94,10 +114,10 @@ def deserialize(name_d, func_code_d, args_d, clos_d, type_obj):
     Returns:
         a deserialized object"""
     if type_obj == 'func':
-        name = marshal.loads(name_d)
-        code = marshal.loads(func_code_d.encode('raw_unicode_escape'))
-        args = marshal.loads(args_d)
-        clos = dill.loads(clos_d)
+        name = pickle.loads(name_d.encode('raw_unicode_escape'))
+        code = dill.loads(func_code_d.encode('raw_unicode_escape'))
+        args = pickle.loads(args_d.encode('raw_unicode_escape'))
+        clos = dill.loads(clos_d.encode('raw_unicode_escape'))
         loaded_obj = types.FunctionType(code, globals(), name, args, clos)
     else:  # pragma: no cover
         loaded_obj = dill.loads(func_code_d.encode('raw_unicode_escape'))
@@ -127,7 +147,7 @@ def to_dict_w_opt(model, metrics=None):
         config['optimizer'] = model.optimizer.get_config()
         config['optimizer']['name'] = model.optimizer.__class__.__name__
         config['metrics'] = []
-        config['ser_metrics'] = dict()
+        config['ser_metrics'] = []
     if hasattr(model, 'loss'):
         name_out = [l.name for l in model.output_layers]
         if isinstance(model.loss, dict):
@@ -142,12 +162,15 @@ def to_dict_w_opt(model, metrics=None):
         elif isinstance(model.loss, six.string_types):
             config['loss'] = dict(zip(name_out,
                                       [get_function_name(model.loss)]))
+        else:  # pragma: no cover
+            raise TypeError('Loss must be a list a string or a callable.')
+
     if metrics is not None:
         for m in metrics:
             if isinstance(m, six.string_types):
                 config['metrics'].append(m)
             else:
-                config['ser_metrics'][m.__name__] = serialize(m)
+                config['ser_metrics'].append(m.__name__)
     return config
 
 
@@ -182,8 +205,12 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
 
     if 'optimizer' in model_dict:
         metrics = model_dict.get("metrics", [])
-        ser_metrics = model_dict.get("ser_metrics", dict())
-        metrics += [deserialize(**m) for k, m in ser_metrics.items()]
+        ser_metrics = model_dict.get("ser_metrics", [])
+        for k in custom_objects:
+            if inspect.isfunction(custom_objects[k]):
+                function_name = custom_objects[k].__name__
+                if k in ser_metrics or function_name in ser_metrics:
+                    metrics.append(custom_objects[k])
         model_name = model_dict['config'].get('class_name')
         # if it has an optimizer, the model is assumed to be compiled
         loss = model_dict.get('loss')
@@ -220,6 +247,9 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
                           sample_weight_mode=sample_weight_mode,
                           loss_weights=loss_weights,
                           metrics=metrics)
+        else:  # pragma: no cover
+            raise Exception('Unknown model, must be in Sequential, '
+                            'Graph or Model')
     return model
 
 
@@ -294,19 +324,23 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
     metrics_names = model.metrics_names
     for metric in metrics_names:
         results['metrics'][metric] = []
-        results['metrics']['val_' + metric] = []
+        results['metrics'][suf + metric] = []
     mod_name = model.__class__.__name__
 
     if generator:
-        data = [pickle.loads(d) for d in data]
+        data = [pickle.loads(d.encode('raw_unicode_escape')) for d in data]
         data = [cm.transform_gen(d, mod_name) for d in data]
         kwargs.pop('batch_size')
 
-    val_gen = check_gen(data_val)
+    if all(v is None for v in data_val):
+        val_gen = 0
+    else:
+        val_gen = check_gen(data_val)
 
-    if val_gen:
+    if val_gen > 0:
         if generator:
-            data_val = [pickle.loads(dv) for dv in data_val]
+            data_val = [pickle.loads(dv.encode('raw_unicode_escape'))
+                        for dv in data_val]
             data_val = [cm.transform_gen(dv, mod_name) for dv in data_val]
             for i, check in enumerate(size_gen):
                 if check is 1:
@@ -319,6 +353,7 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
     # fit the model according to the input/output type
     if mod_name is "Graph":
         for d, dv in szip(data, data_val):
+            validation = check_validation(dv)
             if generator:
                 h = model.fit_generator(generator=d,
                                         validation_data=dv,
@@ -331,13 +366,19 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
                               **kwargs)
             for metric in metrics_names:
                 results['metrics'][metric] += h.history[metric]
-                results['metrics']['val_' + metric] += h.history[metric]
+                if validation:
+                    results['metrics'][suf + metric] += h.history[suf + metric]
+                else:
+                    results['metrics'][suf + metric] += [np.nan] * \
+                        len(h.history[metric])
         results['metrics']['iter'] = h.epoch[-1] * len(data)
 
     elif mod_name is "Sequential" or mod_name is "Model":
         for d, dv in szip(data, data_val):
+            validation = check_validation(dv)
             if not fit_gen_val:
-                dv = (dv['X'], dv['y'])
+                if dv is not None:
+                    dv = (dv['X'], dv['y'])
             if generator:
                 h = model.fit_generator(generator=d,
                                         validation_data=dv,
@@ -352,7 +393,12 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
                               **kwargs)
             for metric in metrics_names:
                 results['metrics'][metric] += h.history[metric]
-                results['metrics'][suf + metric] += h.history[suf + metric]
+                if validation:
+                    results['metrics'][
+                        suf + metric] += h.history[suf + metric]
+                else:
+                    results['metrics'][suf + metric] += [np.nan] * \
+                        len(h.history[metric])
         results['metrics']['iter'] = h.epoch[-1] * len(data)
     else:
         raise NotImplementedError("This type of model"
