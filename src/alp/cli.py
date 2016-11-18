@@ -50,6 +50,8 @@ def service(conf, force, action, config):
         results = action_config(config, 'restart', conf.verbose, force=force)
     elif action == 'rm':
         results = action_config(config, 'rm', conf.verbose, force=force)
+    else:
+        raise Exception('Action must be in start, stop, restart, rm')
     return results
 
 
@@ -129,6 +131,7 @@ def status(conf, config):
                 click.echo(click.style(a_text(k, print_im[k]),
                                        fg=col_info))
             click.echo('\n')
+    return 0
 
 
 @main.command()
