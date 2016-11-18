@@ -9,6 +9,7 @@ from .cli_utils import a_text
 from .cli_utils import action_config
 from .cli_utils import banner
 from .cli_utils import col_info
+from .cli_utils import col_warn
 from .cli_utils import get_config_names
 from .cli_utils import open_config
 from .cli_utils import pass_config
