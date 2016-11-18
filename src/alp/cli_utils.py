@@ -280,7 +280,7 @@ def build_commands(config, action, verbose):
                       'results_db': results_db_ok,
                       'model_gen_db': model_gen_db_ok,
                       'workers': workers_ok,
-                      'controlers': controlers_ok,
+                      'controlers': controlers_ok
         }
         msg = ''
         for k, v in check_dict.items():

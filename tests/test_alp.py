@@ -1,8 +1,9 @@
-from alp.cli import main
 import click
-from click.testing import CliRunner
 import json
 import os
+from click.testing import CliRunner
+
+from alp.cli import main
 
 
 def init_test_config():
@@ -14,8 +15,8 @@ def init_test_config():
         config['broker'] = {
             "volumes": ["/opt/data/rabbitmq/dev/log:/dev/log",
                         "/opt/data/rabbitmq:/var/lib/rabbitmq"],
-            "ports": ["8080:15672", "5672:5672"],
-            "name": "rabbitmq_sched",
+            "ports": ["8081:15672", "5673:5672"],
+            "name": "rabbitmq_sched_test",
             "container_name": "rabbitmq:3-management",
             "mode": "-d"
         }
