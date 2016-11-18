@@ -1,4 +1,3 @@
-import click
 import json
 import os
 from click.testing import CliRunner

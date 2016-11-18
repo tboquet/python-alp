@@ -67,7 +67,7 @@ def status(conf, config):
     running_containers = []
     running_ids = dict()
 
-    names, workers_names, controlers_names = get_config_names(config)
+    names, _, controlers_names = get_config_names(config)
     for container in all_containers:
         name = container['Names'][0].replace('/', '')
         if name in names:
@@ -92,8 +92,8 @@ def status(conf, config):
             running_containers.append(print_cont)
         else:  # pragma: no cover
             click.echo(click.style(
-                a_text('{}', 'not running'.format(
-                    print_cont['name']).center(80, '-')), fg=col_warn))
+                a_text('{}'.format(print_cont['name']), 'not running'),
+                fg=col_warn))
 
     click.echo(click.style('Running containers'.center(80, '='),
                            fg=col_info, bold=True))

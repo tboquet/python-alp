@@ -1,10 +1,8 @@
 import json
-import os
 import subprocess
 from subprocess import PIPE
 import click
 from docker import Client
-from .appcom import _alp_dir
 
 
 col_ok = 'green'
@@ -166,7 +164,7 @@ def build_commands(config, action, verbose):
             if 'PublicPort' in port:
                 ports_in_use.append(port['PublicPort'])
 
-    names, workers_names, controlers_names = get_config_names(config)
+    names, _, controlers_names = get_config_names(config)
 
     if action == 'run':
         click.echo(click.style(

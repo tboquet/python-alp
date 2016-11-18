@@ -24,7 +24,6 @@ from keras.utils.test_utils import get_test_data
 
 import alp.appcom.utils as utls
 from alp.appcom.core import Experiment
-from alp.appcom.utils import imports
 from alp.appcom.utils import switch_backend
 from alp.appcom.utils import to_fuel_h5
 from alp.backend import keras_backend as KTB
