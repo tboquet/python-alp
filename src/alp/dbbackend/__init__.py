@@ -15,7 +15,7 @@ if not os.path.exists(_alp_dir):  # pragma: no cover
     os.makedirs(_alp_dir)
 
 _db_engine = 'mongodb'
-_host_adress = 'mongo_models'
+_host_adress = 'mongo_m'
 _host_port = 27017
 _db_name = 'modelization'
 _models_collection = 'models'
@@ -31,7 +31,7 @@ if os.path.exists(_config_path):  # pragma: no cover
     _config = json.load(open(_config_path))
     _db_engine = _config.get('db_engine', 'mongodb')
     assert _db_engine in {'mongodb'}
-    _host_adress = _config.get('host_adress', 'mongo_models')
+    _host_adress = _config.get('host_adress', 'mongo_m')
     _host_port = _config.get('host_port', 27017)
     _db_name = _config.get('db_name', 'modelization')
     _models_collection = _config.get('_models_collection', 'models')
