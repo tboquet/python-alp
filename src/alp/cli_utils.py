@@ -276,7 +276,7 @@ def build_commands(config, action, verbose):
                       'model_gen_db': model_gen_db_ok,
                       'workers': workers_ok,
                       'controlers': controlers_ok}
-        
+
         msg = ''
         for k, v in check_dict.items():
             if v is not True:  # pragma: no cover

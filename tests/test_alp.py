@@ -21,13 +21,13 @@ def init_test_config():
         }
         config['result_db'] = {
             "volumes": ["/opt/data/mongo_data/results:/data/db"],
-            "name": "mongo_results_test",
+            "name": "mongo_results",
             "container_name": "mongo",
             "mode": "-d"
         }
         config['model_gen_db'] = {
             "volumes": ["/opt/data/mongo_data/models:/data/db"],
-            "name": "mongo_models_test",
+            "name": "mongo_models",
             "container_name": "mongo",
             "mode": "-d",
         }
