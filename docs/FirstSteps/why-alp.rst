@@ -12,7 +12,7 @@ So far, the whole Keras_ neural network library is supported, as well as several
 
 
 ==============================================
-What is inside ALP? What do I need to run ALP?
+What do I need to run ALP? What is inside ALP?
 ==============================================
 
 You need a Linux machine to run ALP [1]_.
