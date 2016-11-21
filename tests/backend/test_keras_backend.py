@@ -285,310 +285,310 @@ def get_model(request):
     print(self)
 
 
-class TestExperiment:
-    @pytest.fixture(params=['classic', 'custom', 'list'])
-    def get_loss_metric(self, request):
-        if request.param == 'classic':
-            return 'categorical_crossentropy', 'accuracy'
-        elif request.param == 'custom':
-            return get_loss(), get_metric()
-        elif request.param == 'list':
-            return [get_loss()], get_metric()
-        print(self)
-
-    @pytest.fixture(params=['c_layer', ''])
-    def get_custom_l(self, request):
-        if request.param == 'c_layer':
-            return True
-        elif request.param == '':
-            return False
-        print(self)
-
-    def test_experiment_instance_utils(self, get_model):
-        model = get_model()
-
-        model.compile(loss='categorical_crossentropy',
-                      optimizer='rmsprop',
-                      metrics=['accuracy'])
-
-        expe = Experiment(model)
-        expe.model_dict = model
-        expe.backend_name = 'another_backend'
-        expe.model_dict = model
-        print(self)
-
-        assert expe.backend is not None
-
-    def test_experiment_fit(self, get_model, get_loss_metric,
-                            get_custom_l):
-        data, data_val = make_data()
-        model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
-                                                     get_loss_metric,
-                                                     get_custom_l)
-
-        expe = Experiment(model)
-
-        for mod in [None, model]:
-            for data_val_loc in [None, data_val]:
-                expe.fit([data], [data_val_loc], model=mod, nb_epoch=2,
-                         batch_size=batch_size, metrics=metrics,
-                         custom_objects=cust_objects, overwrite=True)
-
-        expe.backend_name = 'another_backend'
-        expe.load_model()
-        expe.load_model(expe.mod_id, expe.data_id)
-
-        assert expe.data_id is not None
-        assert expe.mod_id is not None
-        assert expe.params_dump is not None
-
-        if K.backend() == 'tensorflow':
-            K.clear_session()
-
-        print(self)
-
-    def test_experiment_fit_async(self, get_model, get_loss_metric,
-                                  get_custom_l):
-        data, data_val = make_data()
-        model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
-                                                     get_loss_metric,
-                                                     get_custom_l)
-
-        cust_objects['test_list'] = [1, 2]
-        expe = Experiment(model)
-
-        expected_value = 2
-        for mod in [None, model]:
-            for data_val_loc in [None, data_val]:
-                _, thread = expe.fit_async([data], [data_val_loc],
-                                           model=mod, nb_epoch=2,
-                                           batch_size=batch_size,
-                                           metrics=metrics,
-                                           custom_objects=cust_objects,
-                                           overwrite=True,
-                                           verbose=2)
-
-                thread.join()
-
-                for k in expe.full_res['metrics']:
-                    if 'iter' not in k:
-                        assert len(
-                            expe.full_res['metrics'][k]) == expected_value
-
-                if data_val_loc is not None:
-                    for k in expe.full_res['metrics']:
-                        if 'val' in k and 'iter' not in k:
-                            assert None not in expe.full_res['metrics'][k]
-                else:
-                    for k in expe.full_res['metrics']:
-                        if 'val' in k and 'iter' not in k:
-                            assert all([np.isnan(v)
-                                        for v in expe.full_res['metrics'][k]])
-
-        if K.backend() == 'tensorflow':
-            K.clear_session()
-
-        print(self)
-
-    def test_experiment_fit_gen(self, get_model, get_loss_metric,
-                                get_custom_l):
-        model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
-                                                     get_loss_metric,
-                                                     get_custom_l)
-
-        model_name = model.__class__.__name__
-        is_graph = model_name.lower() == 'graph'
-        _, data_val_use = make_data()
-        expe = Experiment(model)
-
-        for val in [1, data_val_use]:
-            gen, data, data_stream = make_gen(is_graph)
-            if val == 1:
-                val, data_2, data_stream_2 = make_gen(is_graph)
-            expe.fit_gen([gen], [val], nb_epoch=2,
-                         model=model,
-                         metrics=metrics,
-                         custom_objects=cust_objects,
-                         samples_per_epoch=64,
-                         nb_val_samples=128,
-                         verbose=2, overwrite=True)
-
-            close_gens(gen, data, data_stream)
-            if val == 1:
-                close_gens(val, data_2, data_stream_2)
-
-        if K.backend() == 'tensorflow':
-            K.clear_session()
-
-        print(self)
-
-    def test_experiment_fit_gen_async(self, get_model, get_loss_metric,
-                                      get_custom_l):
-        model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
-                                                     get_loss_metric,
-                                                     get_custom_l)
-
-        model_name = model.__class__.__name__
-        is_graph = model_name.lower() == 'graph'
-        _, data_val_use = make_data()
-        expe = Experiment(model)
-
-        expected_value = 2
-        for val in [None, 1, data_val_use]:
-            gen, data, data_stream = make_gen(is_graph)
-            if val == 1:
-                val, data_2, data_stream_2 = make_gen(is_graph)
-            _, thread = expe.fit_gen_async([gen], [val], nb_epoch=2,
-                                           model=model,
-                                           metrics=metrics,
-                                           custom_objects=cust_objects,
-                                           samples_per_epoch=64,
-                                           nb_val_samples=128,
-                                           verbose=2, overwrite=True)
-
-            thread.join()
-
-            for k in expe.full_res['metrics']:
-                if 'iter' not in k:
-                    assert len(
-                        expe.full_res['metrics'][k]) == expected_value
-
-            close_gens(gen, data, data_stream)
-            if val == 1:
-                close_gens(val, data_2, data_stream_2)
-
-        if K.backend() == 'tensorflow':
-            K.clear_session()
-
-        print(self)
-
-    def test_experiment_generator_setups(self, get_generators):
-        gen_t, data_t, d_stream_t, gen, data, d_stream, nb = get_generators
-        nb_train, nb_val = nb
-        test_model = model()
-
-        test_model.compile(loss='binary_crossentropy',
-                           optimizer='rmsprop')
-        expe = Experiment(test_model)
-        expe.fit_gen([gen_t], [gen], nb_epoch=2,
-                     samples_per_epoch=nb_train,
-                     nb_val_samples=nb_val,
-                     verbose=2, overwrite=True)
-        close_gens(gen_t, data_t, d_stream_t)
-        close_gens(gen, data, d_stream)
-
-        if K.backend() == 'tensorflow':
-            K.clear_session()
-
-        print(self)
-
-    def test_experiment_predict(self, get_model, get_loss_metric):
-
-        model, metrics, cust_objects = prepare_model(get_model(),
-                                                     get_loss_metric,
-                                                     False)
-
-        model_name = model.__class__.__name__
-        data, data_val = make_data()
-
-        expe = Experiment(model)
-        expe.fit([data], [data_val], nb_epoch=2,
-                 batch_size=batch_size,
-                 custom_objects=cust_objects,
-                 metrics=metrics, overwrite=True)
-
-        if model_name == 'Graph' or model_name == 'Model':
-            expe.predict({'X': data_val['X']})
-        expe.predict([data_val['X']])
-        expe.predict(data_val['X'])
-
-        print(self)
-
-
-class TestBackendFunctions:
-    def test_build_predict_func(self, get_model):
-        """Test the build of a model"""
-        import numpy as np
-        X_tr = np.ones((train_samples, input_dim))
-        model = get_model()
-        model.compile(loss='categorical_crossentropy',
-                      optimizer='rmsprop',
-                      metrics=['accuracy'])
-
-        model_name = model.__class__.__name__
-
-        pred_func = KTB.build_predict_func(model)
-
-        tensors = [X_tr]
-        if model_name != 'Model':
-            tensors.append(1.)
-
-        res = pred_func(tensors)
-
-        assert len(res[0]) == len(X_tr)
-
-        if K.backend() == 'tensorflow':
-            K.clear_session()
-
-        print(self)
-
-    def test_fit(self, get_model):
-        "Test the training of a serialized model"
-        data, data_val = make_data()
-
-        model = get_model()
-        model.compile(loss='categorical_crossentropy',
-                      optimizer='rmsprop',
-                      metrics=['accuracy'])
-
-        model_dict = dict()
-        model_dict['model_arch'] = to_dict_w_opt(model)
-
-        res = KTB.train(copy.deepcopy(model_dict['model_arch']), [data],
-                        [data_val], [])
-        res = KTB.fit(NAME, VERSION, model_dict, [data], 'test', [data_val],
-                      [])
-
-        assert len(res) == 4
-
-        if K.backend() == 'tensorflow':
-            K.clear_session()
-
-        print(self)
-
-    def test_predict(self, get_model):
-        """Test to predict using the backend"""
-        data, data_val = make_data()
-        model = get_model()
-        model.compile(optimizer='sgd', loss='categorical_crossentropy')
-
-        expe = Experiment(model)
-        expe.fit([data], [data_val])
-        KTB.predict(expe.model_dict, [data['X']])
-
-        if K.backend() == 'tensorflow':
-            K.clear_session()
-
-        print(self)
-
-    def test_serialization(self):
-        model = sequential()
-        to_dict_w_opt(model)
-        print(self)
-
-    def test_deserialization(self):
-        model = sequential()
-        model.compile(optimizer='sgd', loss='categorical_crossentropy')
-        ser_mod = to_dict_w_opt(model)
-        custom_objects = {'test_loss': [1, 2]}
-        custom_objects = {k: serialize(custom_objects[k])
-                          for k in custom_objects}
-        model_from_dict_w_opt(ser_mod, custom_objects=custom_objects)
-
-        if K.backend() == 'tensorflow':
-            K.clear_session()
-
-        print(self)
+# class TestExperiment:
+#     @pytest.fixture(params=['classic', 'custom', 'list'])
+#     def get_loss_metric(self, request):
+#         if request.param == 'classic':
+#             return 'categorical_crossentropy', 'accuracy'
+#         elif request.param == 'custom':
+#             return get_loss(), get_metric()
+#         elif request.param == 'list':
+#             return [get_loss()], get_metric()
+#         print(self)
+
+#     @pytest.fixture(params=['c_layer', ''])
+#     def get_custom_l(self, request):
+#         if request.param == 'c_layer':
+#             return True
+#         elif request.param == '':
+#             return False
+#         print(self)
+
+#     def test_experiment_instance_utils(self, get_model):
+#         model = get_model()
+
+#         model.compile(loss='categorical_crossentropy',
+#                       optimizer='rmsprop',
+#                       metrics=['accuracy'])
+
+#         expe = Experiment(model)
+#         expe.model_dict = model
+#         expe.backend_name = 'another_backend'
+#         expe.model_dict = model
+#         print(self)
+
+#         assert expe.backend is not None
+
+#     def test_experiment_fit(self, get_model, get_loss_metric,
+#                             get_custom_l):
+#         data, data_val = make_data()
+#         model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
+#                                                      get_loss_metric,
+#                                                      get_custom_l)
+
+#         expe = Experiment(model)
+
+#         for mod in [None, model]:
+#             for data_val_loc in [None, data_val]:
+#                 expe.fit([data], [data_val_loc], model=mod, nb_epoch=2,
+#                          batch_size=batch_size, metrics=metrics,
+#                          custom_objects=cust_objects, overwrite=True)
+
+#         expe.backend_name = 'another_backend'
+#         expe.load_model()
+#         expe.load_model(expe.mod_id, expe.data_id)
+
+#         assert expe.data_id is not None
+#         assert expe.mod_id is not None
+#         assert expe.params_dump is not None
+
+#         if K.backend() == 'tensorflow':
+#             K.clear_session()
+
+#         print(self)
+
+#     def test_experiment_fit_async(self, get_model, get_loss_metric,
+#                                   get_custom_l):
+#         data, data_val = make_data()
+#         model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
+#                                                      get_loss_metric,
+#                                                      get_custom_l)
+
+#         cust_objects['test_list'] = [1, 2]
+#         expe = Experiment(model)
+
+#         expected_value = 2
+#         for mod in [None, model]:
+#             for data_val_loc in [None, data_val]:
+#                 _, thread = expe.fit_async([data], [data_val_loc],
+#                                            model=mod, nb_epoch=2,
+#                                            batch_size=batch_size,
+#                                            metrics=metrics,
+#                                            custom_objects=cust_objects,
+#                                            overwrite=True,
+#                                            verbose=2)
+
+#                 thread.join()
+
+#                 for k in expe.full_res['metrics']:
+#                     if 'iter' not in k:
+#                         assert len(
+#                             expe.full_res['metrics'][k]) == expected_value
+
+#                 if data_val_loc is not None:
+#                     for k in expe.full_res['metrics']:
+#                         if 'val' in k and 'iter' not in k:
+#                             assert None not in expe.full_res['metrics'][k]
+#                 else:
+#                     for k in expe.full_res['metrics']:
+#                         if 'val' in k and 'iter' not in k:
+#                             assert all([np.isnan(v)
+#                                         for v in expe.full_res['metrics'][k]])
+
+#         if K.backend() == 'tensorflow':
+#             K.clear_session()
+
+#         print(self)
+
+#     def test_experiment_fit_gen(self, get_model, get_loss_metric,
+#                                 get_custom_l):
+#         model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
+#                                                      get_loss_metric,
+#                                                      get_custom_l)
+
+#         model_name = model.__class__.__name__
+#         is_graph = model_name.lower() == 'graph'
+#         _, data_val_use = make_data()
+#         expe = Experiment(model)
+
+#         for val in [1, data_val_use]:
+#             gen, data, data_stream = make_gen(is_graph)
+#             if val == 1:
+#                 val, data_2, data_stream_2 = make_gen(is_graph)
+#             expe.fit_gen([gen], [val], nb_epoch=2,
+#                          model=model,
+#                          metrics=metrics,
+#                          custom_objects=cust_objects,
+#                          samples_per_epoch=64,
+#                          nb_val_samples=128,
+#                          verbose=2, overwrite=True)
+
+#             close_gens(gen, data, data_stream)
+#             if val == 1:
+#                 close_gens(val, data_2, data_stream_2)
+
+#         if K.backend() == 'tensorflow':
+#             K.clear_session()
+
+#         print(self)
+
+#     def test_experiment_fit_gen_async(self, get_model, get_loss_metric,
+#                                       get_custom_l):
+#         model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
+#                                                      get_loss_metric,
+#                                                      get_custom_l)
+
+#         model_name = model.__class__.__name__
+#         is_graph = model_name.lower() == 'graph'
+#         _, data_val_use = make_data()
+#         expe = Experiment(model)
+
+#         expected_value = 2
+#         for val in [None, 1, data_val_use]:
+#             gen, data, data_stream = make_gen(is_graph)
+#             if val == 1:
+#                 val, data_2, data_stream_2 = make_gen(is_graph)
+#             _, thread = expe.fit_gen_async([gen], [val], nb_epoch=2,
+#                                            model=model,
+#                                            metrics=metrics,
+#                                            custom_objects=cust_objects,
+#                                            samples_per_epoch=64,
+#                                            nb_val_samples=128,
+#                                            verbose=2, overwrite=True)
+
+#             thread.join()
+
+#             for k in expe.full_res['metrics']:
+#                 if 'iter' not in k:
+#                     assert len(
+#                         expe.full_res['metrics'][k]) == expected_value
+
+#             close_gens(gen, data, data_stream)
+#             if val == 1:
+#                 close_gens(val, data_2, data_stream_2)
+
+#         if K.backend() == 'tensorflow':
+#             K.clear_session()
+
+#         print(self)
+
+#     def test_experiment_generator_setups(self, get_generators):
+#         gen_t, data_t, d_stream_t, gen, data, d_stream, nb = get_generators
+#         nb_train, nb_val = nb
+#         test_model = model()
+
+#         test_model.compile(loss='binary_crossentropy',
+#                            optimizer='rmsprop')
+#         expe = Experiment(test_model)
+#         expe.fit_gen([gen_t], [gen], nb_epoch=2,
+#                      samples_per_epoch=nb_train,
+#                      nb_val_samples=nb_val,
+#                      verbose=2, overwrite=True)
+#         close_gens(gen_t, data_t, d_stream_t)
+#         close_gens(gen, data, d_stream)
+
+#         if K.backend() == 'tensorflow':
+#             K.clear_session()
+
+#         print(self)
+
+#     def test_experiment_predict(self, get_model, get_loss_metric):
+
+#         model, metrics, cust_objects = prepare_model(get_model(),
+#                                                      get_loss_metric,
+#                                                      False)
+
+#         model_name = model.__class__.__name__
+#         data, data_val = make_data()
+
+#         expe = Experiment(model)
+#         expe.fit([data], [data_val], nb_epoch=2,
+#                  batch_size=batch_size,
+#                  custom_objects=cust_objects,
+#                  metrics=metrics, overwrite=True)
+
+#         if model_name == 'Graph' or model_name == 'Model':
+#             expe.predict({'X': data_val['X']})
+#         expe.predict([data_val['X']])
+#         expe.predict(data_val['X'])
+
+#         print(self)
+
+
+# class TestBackendFunctions:
+#     def test_build_predict_func(self, get_model):
+#         """Test the build of a model"""
+#         import numpy as np
+#         X_tr = np.ones((train_samples, input_dim))
+#         model = get_model()
+#         model.compile(loss='categorical_crossentropy',
+#                       optimizer='rmsprop',
+#                       metrics=['accuracy'])
+
+#         model_name = model.__class__.__name__
+
+#         pred_func = KTB.build_predict_func(model)
+
+#         tensors = [X_tr]
+#         if model_name != 'Model':
+#             tensors.append(1.)
+
+#         res = pred_func(tensors)
+
+#         assert len(res[0]) == len(X_tr)
+
+#         if K.backend() == 'tensorflow':
+#             K.clear_session()
+
+#         print(self)
+
+#     def test_fit(self, get_model):
+#         "Test the training of a serialized model"
+#         data, data_val = make_data()
+
+#         model = get_model()
+#         model.compile(loss='categorical_crossentropy',
+#                       optimizer='rmsprop',
+#                       metrics=['accuracy'])
+
+#         model_dict = dict()
+#         model_dict['model_arch'] = to_dict_w_opt(model)
+
+#         res = KTB.train(copy.deepcopy(model_dict['model_arch']), [data],
+#                         [data_val], [])
+#         res = KTB.fit(NAME, VERSION, model_dict, [data], 'test', [data_val],
+#                       [])
+
+#         assert len(res) == 4
+
+#         if K.backend() == 'tensorflow':
+#             K.clear_session()
+
+#         print(self)
+
+#     def test_predict(self, get_model):
+#         """Test to predict using the backend"""
+#         data, data_val = make_data()
+#         model = get_model()
+#         model.compile(optimizer='sgd', loss='categorical_crossentropy')
+
+#         expe = Experiment(model)
+#         expe.fit([data], [data_val])
+#         KTB.predict(expe.model_dict, [data['X']])
+
+#         if K.backend() == 'tensorflow':
+#             K.clear_session()
+
+#         print(self)
+
+#     def test_serialization(self):
+#         model = sequential()
+#         to_dict_w_opt(model)
+#         print(self)
+
+#     def test_deserialization(self):
+#         model = sequential()
+#         model.compile(optimizer='sgd', loss='categorical_crossentropy')
+#         ser_mod = to_dict_w_opt(model)
+#         custom_objects = {'test_loss': [1, 2]}
+#         custom_objects = {k: serialize(custom_objects[k])
+#                           for k in custom_objects}
+#         model_from_dict_w_opt(ser_mod, custom_objects=custom_objects)
+
+#         if K.backend() == 'tensorflow':
+#             K.clear_session()
+
+#         print(self)
 
 
 def test_utils():
