@@ -92,7 +92,7 @@ def status(conf, config):
             running_containers.append(print_cont)
         else:  # pragma: no cover
             click.echo(click.style(
-                a_text('{}'.format(print_cont['name']), 'not running'),
+                a_text('{}'.format(name), 'not running'),
                 fg=col_warn))
 
     click.echo(click.style('Running containers'.center(80, '='),

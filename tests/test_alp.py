@@ -30,7 +30,6 @@ def init_test_config():
             "name": "mongo_models_test",
             "container_name": "mongo",
             "mode": "-d",
-            "not_build": True
         }
         config['workers'] = []
         config['controlers'] = []
