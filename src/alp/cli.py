@@ -27,9 +27,9 @@ def main(conf, verbose):
     kernel_version = docker_client.info()['ServerVersion']
     click.echo(click.style(banner, fg=col_info, bold=True))
     click.echo(click.style('Version: {}'.format(__version__),
-                           fg='cyan', bold=True))
+                           fg=col_info, bold=True))
     click.echo(click.style('Running with Docker version: {}'.format(
-        kernel_version), fg='cyan', bold=True))
+        kernel_version), fg=col_info, bold=True))
     click.echo(click.style('\n'))
     conf.verbose = verbose
     return 0
@@ -92,7 +92,7 @@ def status(conf, config):
             running_containers.append(print_cont)
         else:  # pragma: no cover
             click.echo(click.style(
-                a_text('{}'.format(name), 'not running'),
+                a_text('{}'.format(name), 'not in the config'),
                 fg=col_warn))
 
     click.echo(click.style('Running containers'.center(80, '='),

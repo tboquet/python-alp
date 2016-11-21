@@ -14,7 +14,7 @@ def init_test_config():
         config['broker'] = {
             "volumes": ["/opt/data/rabbitmq/dev/log:/dev/log",
                         "/opt/data/rabbitmq:/var/lib/rabbitmq"],
-            "ports": ["8081:15672", "5673:5672"],
+            "ports": ["8086:15672", "5676:5672"],
             "name": "rabbitmq_sched_test",
             "container_name": "rabbitmq:3-management",
             "mode": "-d"
