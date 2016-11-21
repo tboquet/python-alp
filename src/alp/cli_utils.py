@@ -139,7 +139,7 @@ def get_config_names(config):
     workers_names = [cont['name'] for cont in workers]
     controlers_names = [cont['name'] for cont in controlers]
     names += workers_names + controlers_names
-    return names, workers_names, controlers_names
+    return names
 
 
 def build_commands(config, action, verbose):
@@ -164,7 +164,7 @@ def build_commands(config, action, verbose):
             if 'PublicPort' in port:
                 ports_in_use.append(port['PublicPort'])
 
-    names, _, controlers_names = get_config_names(config)
+    names = get_config_names(config)
 
     if action == 'run':
         click.echo(click.style(

@@ -67,7 +67,7 @@ def status(conf, config):
     running_containers = []
     running_ids = dict()
 
-    names, _, controlers_names = get_config_names(config)
+    names = get_config_names(config)
     for container in all_containers:
         name = container['Names'][0].replace('/', '')
         if name in names:
