@@ -12,21 +12,21 @@ def init_test_config():
     if not os.path.exists(config_path):  # pragma: no cover
         config = dict()
         config['broker'] = {
-            "volumes": ["/opt/data/rabbitmq/dev/log:/dev/log",
-                        "/opt/data/rabbitmq:/var/lib/rabbitmq"],
+            "volumes": ["/opt/data2/rabbitmq/dev/log:/dev/log",
+                        "/opt/data2/rabbitmq:/var/lib/rabbitmq"],
             "ports": ["8086:15672", "5676:5672"],
             "name": "rabbitmq_sched_test",
             "container_name": "rabbitmq:3-management",
             "mode": "-d"
         }
         config['result_db'] = {
-            "volumes": ["/opt/data/mongo_data/results:/data/db"],
+            "volumes": ["/opt/data2/mongo_data/results:/data/db"],
             "name": "mongo_results_test",
             "container_name": "mongo",
             "mode": "-d"
         }
         config['model_gen_db'] = {
-            "volumes": ["/opt/data/mongo_data/models:/data/db"],
+            "volumes": ["/opt/data2/mongo_data/models:/data/db"],
             "name": "mongo_models_test",
             "container_name": "mongo",
             "mode": "-d",
