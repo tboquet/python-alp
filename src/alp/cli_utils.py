@@ -36,7 +36,14 @@ def open_config(config, verbose=False):
         click.echo()
     with open(config) as data_file:
         config = json.load(data_file)
+    check_config(config)
     return config
+
+
+def check_config(config):  # pragma: no cover
+    for k in ['broker', 'model_gen_db', 'result_db', 'workers', 'controlers']:
+        if k not in config:
+            raise Exception('{} is missing from the config'.format(k))
 
 
 def check_container(container, running_containers, dead_containers,
@@ -57,7 +64,7 @@ def check_container(container, running_containers, dead_containers,
             a_text('Not running', ''), fg=col_not_ok))
     elif name in dead_containers:  # pragma: no cover
         click.echo(click.style(
-            a_text('name already taken', ''), fg='yellow'))
+            a_text('name already taken', ''), fg=col_warn))
         res = False
 
     if res is True:
@@ -76,7 +83,7 @@ def check_container(container, running_containers, dead_containers,
             for c_port in container['ports']:
                 if c_port.split(':')[0] == str(port):  # pragma: no cover
                     if not not_build:
-                        click.echo(click.style(msg, fg='yellow'))
+                        click.echo(click.style(msg, fg=col_warn))
                         port_OK = False
 
     msg = a_text('Ports OK:', '{}'.format(port_OK))
@@ -206,9 +213,9 @@ def build_commands(config, action, verbose):
             if not not_build:  # pragma: no cover
                 broker_command = parse_cont(broker, 'run')
                 all_commands += [broker_command]
-            scheduler_ok = True
+            broker_ok = True
         else:  # pragma: no cover
-            scheduler_ok = False
+            broker_ok = False
 
         # database results
         if check_container(results_db, running_containers,
@@ -255,13 +262,13 @@ def build_commands(config, action, verbose):
         if verbose:
             click.echo(click.style('Global Check'.center(80, '='),
                                    fg=col_info, bold=True))
-            color_s = col_ok if scheduler_ok else col_not_ok
+            color_s = col_ok if broker_ok else col_not_ok
             color_rd = col_ok if results_db_ok else col_not_ok
             color_mgd = col_ok if model_gen_db_ok else col_not_ok
             color_wk = col_ok if workers_ok else col_not_ok
             color_ct = col_ok if controlers_ok else col_not_ok
-            click.echo(click.style(a_text('Scheduler OK:', '{}'.format(
-                scheduler_ok)), fg=color_s))
+            click.echo(click.style(a_text('Broker OK:', '{}'.format(
+                broker_ok)), fg=color_s))
             click.echo(click.style(a_text('Results db OK:', '{}'.format(
                 results_db_ok)), fg=color_rd))
             click.echo(click.style(a_text('Models db OK:', '{}'.format(
@@ -271,7 +278,7 @@ def build_commands(config, action, verbose):
             click.echo(click.style(a_text('Controlers OK:', '{}'.format(
                 controlers_ok)), fg=color_ct))
             click.echo('\n')
-        check_dict = {'scheduler': scheduler_ok,
+        check_dict = {'broker': broker_ok,
                       'results_db': results_db_ok,
                       'model_gen_db': model_gen_db_ok,
                       'workers': workers_ok,
@@ -281,7 +288,7 @@ def build_commands(config, action, verbose):
         for k, v in check_dict.items():
             if v is not True:  # pragma: no cover
                 msg += '{} '.format(k)
-        if not all([scheduler_ok, results_db_ok, model_gen_db_ok,
+        if not all([broker_ok, results_db_ok, model_gen_db_ok,
                     workers_ok, controlers_ok]):
             raise Exception('{} configuration not ok'.format(msg))
 
