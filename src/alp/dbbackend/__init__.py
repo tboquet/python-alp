@@ -38,12 +38,12 @@ if os.path.exists(_config_path):  # pragma: no cover
     _generators_collection = _config.get('_generators_collection', 'models')
 
 # save config file
-_config = {'_db_engine': _db_engine,
-           '_host_adress': _host_adress,
-           '_host_port': _host_port,
-           '_db_name': _db_name,
-           '_models_collection': _models_collection,
-           '_generators_collection': _generators_collection}
+_config = {'db_engine': _db_engine,
+           'host_adress': _host_adress,
+           'host_port': _host_port,
+           'db_name': _db_name,
+           'models_collection': _models_collection,
+           'generators_collection': _generators_collection}
 
 with open(_config_path, 'w') as f:
     f.write(json.dumps(_config, indent=4))

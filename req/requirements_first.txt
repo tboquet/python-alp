@@ -7,3 +7,6 @@ Pillow
 tables==3.2.2
 pyyaml
 six>=1.10
+Click
+pandas
+docker-py
