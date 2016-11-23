@@ -203,6 +203,7 @@ def build_commands(config, action, verbose):
             click.echo('\n')
         links = []
         links.append('--link={}'.format(model_gen_db['name']))
+        links.append('--link={}'.format(results_db['name']))
         links.append('--link={}'.format(broker['name']))
 
         # broker
