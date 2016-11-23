@@ -5,18 +5,14 @@ Welcome on ALP's documentation!
 .. toctree::
    :maxdepth: 2
 
-   readme
-   requirements
-   installation
-   dockersetup
-   tutorial
-   fitgen
-   customobjects
-   usage
+   
+   FirstSteps/index_first_steps
+   Setup/index_setup
+   Tutorials/index_tuto
+   Userguide/index_userguide
    reference/index
-   contributing
-   authors
-   changelog
+   projectevolution/index_projectevolution
+
 
 Indices and tables
 ==================
