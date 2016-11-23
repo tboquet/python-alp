@@ -62,7 +62,7 @@ To set up `python-alp` for local development:
 6. Submit a pull request through the GitHub website.
 
 Pull Request Guidelines
------------------------
+=======================
 
 If you need some code review or feedback while you're developing the code just make the pull request.
 
@@ -79,7 +79,7 @@ For merging, you should:
        It will be slower though ...
 
 Tips
-----
+====
 
 To run a subset of tests::
 

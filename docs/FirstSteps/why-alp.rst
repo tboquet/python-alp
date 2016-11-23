@@ -16,7 +16,7 @@ What do I need to run ALP? What is inside ALP?
 ==============================================
 
 You need a Linux machine to run ALP [1]_.
-ALP relies heavily on Docker, RabbitMQ, Celery Flower, MongoDB and Jupyter Notebook. It's implemented in Python. However since all services runs into a docker, your OS only needs Docker (and nvidia-docker if you want to use a NVIDIA GPU). The CLI will help you do the setup and launch a config in no time.
+ALP relies heavily on Docker, RabbitMQ, Celery, MongoDB and Jupyter Notebook. It also supports interfacing with Fuel thus depends on Theano. It's implemented in Python. However since all services runs into Docker containers, your OS only needs Docker (and nvidia-docker if you want to use a NVIDIA GPU). The CLI will help you do the setup and launch a config in no time.
 
 All of this concepts and dependencies are explained later in the Setup and Userguide sections.
 
