@@ -189,7 +189,7 @@ class Experiment(object):
         self.data_id = model_db['data_id']
         self.trained = True
 
-    def predict(self, data):
+    def predict(self, data, *args, **kwargs):
         """Make predictions given data
 
         Args:
@@ -198,7 +198,8 @@ class Experiment(object):
         Returns:
             an np.array of predictions"""
         if self.trained:
-            return self.backend.predict(self.model_dict, data)
+            return self.backend.predict(self.model_dict, data,
+                                        *args, **kwargs)
         else:
             raise Exception("You must have a trained model"
                             "in order to make predictions")

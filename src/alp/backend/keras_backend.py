@@ -442,7 +442,6 @@ def fit(self, backend_name, backend_version, model, data, data_hash, data_val,
         session = tf.Session(config=config)
         K.set_session(session)
 
-
     if kwargs.get("batch_size") is None:
         kwargs['batch_size'] = 32
 
@@ -506,6 +505,12 @@ def predict(model, data, *args, **kwargs):
         an np.array of predictions
     """
 
+    from keras.engine.training import make_batches
+    if kwargs.get("batch_size") is None:
+        kwargs['batch_size'] = 32
+
+    batch_size = kwargs['batch_size']
+
     custom_objects = kwargs.get('custom_objects')
 
     model_name = model['model_arch']['config'].get('class_name')
@@ -514,6 +519,7 @@ def predict(model, data, *args, **kwargs):
         pred_function = COMPILED_MODELS[model['mod_id']]['pred']
         model_k = COMPILED_MODELS[model['mod_id']]['model']
         learning_phase = COMPILED_MODELS[model['mod_id']]['learning_phase']
+        output_shape = COMPILED_MODELS[model['mod_id']]['model'].output_shape
     else:
         # get the model arch
         model_dict = model['model_arch']
@@ -533,6 +539,7 @@ def predict(model, data, *args, **kwargs):
         COMPILED_MODELS[model['mod_id']]['model'] = model_k
         learning_phase = model_k.uses_learning_phase
         COMPILED_MODELS[model['mod_id']]['learning_phase'] = learning_phase
+        output_shape = model_k.output_shape
 
     # predict according to the input/output type
     if model_name == 'Graph':
@@ -551,6 +558,19 @@ def predict(model, data, *args, **kwargs):
     else:
         raise NotImplementedError(
             '{}: This type of model is not supported'.format(model_name))
-    if learning_phase:
-        data.append(0.)
-    return pred_function(data)
+
+    # Predict by batch to control GPU memory
+    len_data = len(data[0])
+    batches = make_batches(len_data, batch_size)
+    index_array = np.arange(len_data)
+    results_array = np.empty((len_data, ) + output_shape[1:])
+    for batch_index, (batch_start, batch_end) in enumerate(batches):
+        batch_ids = index_array[batch_start:batch_end]
+        data_b = [d[batch_ids] for d in data]
+        if learning_phase:
+            data_b.append(0.)
+        batch_prediction = pred_function(data_b)
+        if isinstance(batch_prediction, list):
+            batch_prediction = batch_prediction[0]
+        results_array[batch_ids] = batch_prediction
+    return results_array

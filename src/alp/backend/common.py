@@ -95,7 +95,7 @@ def create_param_dump(_path_h5, hexdi_m, hexdi_d):
 
     Returns:
         the full path where to dump the params"""
-    return _path_h5 + hexdi_m + hexdi_d + '.h5'
+    return os.path.join(os.path.sep, _path_h5, hexdi_m + hexdi_d + '.h5')
 
 
 def make_all_hash(model_c, batch_size, data_hash, _path_h5):
@@ -189,7 +189,7 @@ def train_pipe(train_f, save_f, model, data, data_val, generator, size_gen,
 
     Args:
         train_f(function): the train function to use
-        save_f(function): the """
+        save_f(function): the function used to save parameters"""
     results, model = train_f(model['model_arch'], data,
                              data_val, size_gen,
                              generator=generator,
