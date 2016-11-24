@@ -45,6 +45,16 @@ except ImportError:
     import pickle
 
 
+import keras.backend as K
+if K.backend() == 'tensorflow' and not cm.on_worker():
+    import tensorflow as tf
+    K.clear_session()
+    config = tf.ConfigProto(allow_soft_placement=True)
+    config.gpu_options.allow_growth = True
+    session = tf.Session(config=config)
+    K.set_session(session)
+
+
 COMPILED_MODELS = dict()
 TO_SERIALIZE = ['custom_objects']
 
@@ -303,7 +313,6 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
         the loss (list), the validation loss (list), the number of iterations,
         and the model
         """
-
     if generator:
         from six.moves import reload_module as sreload
         import theano
@@ -410,20 +419,29 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
           rate_limit='120/m', queue='keras')
 def fit(self, backend_name, backend_version, model, data, data_hash, data_val,
         size_gen, generator=False, *args, **kwargs):
-    """a function to train models given a datagenerator,a serialized model,
+    """A function to train models given a datagenerator,a serialized model,
 
-    args:
+    Args:
         backend_name(str): the model dumped with the `to_json` method
         backend_version(str): the backend version
         model(keras.model): a keras model
         data(list): a list of np.arrays for training
         data_val(list): a list of np.arrays for validation
 
-    returns:
+    Returns:
         results similar to what the fit method of keras would return"""
     from alp import dbbackend as db
     from datetime import datetime
     import alp.backend.common as cm
+    import keras.backend as K
+    if K.backend() == 'tensorflow' and cm.on_worker():
+        import tensorflow as tf
+        K.clear_session()
+        config = tf.ConfigProto(allow_soft_placement=True)
+        config.gpu_options.allow_growth = True
+        session = tf.Session(config=config)
+        K.set_session(session)
+
 
     if kwargs.get("batch_size") is None:
         kwargs['batch_size'] = 32

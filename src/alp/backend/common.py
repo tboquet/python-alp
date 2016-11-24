@@ -2,6 +2,7 @@ import copy
 import hashlib
 import json
 import pickle
+import os
 from datetime import datetime
 
 import numpy as np
@@ -207,3 +208,7 @@ def train_pipe(train_f, save_f, model, data, data_val, generator, size_gen,
     results['data_id'] = data_hash
     results['params_dump'] = params_dump
     return results, res_dict
+
+
+def on_worker():
+    return os.getenv("ON_WORKER") == "TRUE"

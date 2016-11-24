@@ -50,25 +50,25 @@ def test_status():
     assert result.exit_code == 0
 
 
-def test_service():
-    runner = CliRunner()
-    for cm in ['stop', 'rm', 'start', 'restart']:
-        result = runner.invoke(main, ['service', cm, config_path])
-        assert result.exit_code == 0
-    for cm in ['stop', 'rm', 'start', 'restart']:
-        result = runner.invoke(main, ['--verbose', 'service', cm, config_path])
-        assert result.exit_code == 0
+# def test_service():
+#     runner = CliRunner()
+#     for cm in ['stop', 'rm', 'start', 'restart']:
+#         result = runner.invoke(main, ['service', cm, config_path])
+#         assert result.exit_code == 0
+#     for cm in ['stop', 'rm', 'start', 'restart']:
+#         result = runner.invoke(main, ['--verbose', 'service', cm, config_path])
+#         assert result.exit_code == 0
 
 
-def test_update():
-    runner = CliRunner()
-    result = runner.invoke(main, ['--verbose', 'update', config_path])
-    assert result.exit_code == 0
+# def test_update():
+#     runner = CliRunner()
+#     result = runner.invoke(main, ['--verbose', 'update', config_path])
+#     assert result.exit_code == 0
 
 
-def test_pull():
-    runner = CliRunner()
-    result = runner.invoke(main, ['pull', config_path])
-    assert result.exit_code == 0
-    result = runner.invoke(main, ['--verbose', 'pull', config_path])
-    assert result.exit_code == 0
+# def test_pull():
+#     runner = CliRunner()
+#     result = runner.invoke(main, ['pull', config_path])
+#     assert result.exit_code == 0
+#     result = runner.invoke(main, ['--verbose', 'pull', config_path])
+#     assert result.exit_code == 0
