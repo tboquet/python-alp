@@ -21,11 +21,12 @@ def _get_backend_attributes(ABE):
         the backend, the backend name and the backend version
 
     """
-    backend_version = None
     backend_m = ABE.get_backend()
     backend_name = backend_m.__name__
     if hasattr(backend_m, '__version__'):
         backend_version = backend_m.__version__
+    else:
+        backend_version = None
 
     return ABE, backend_name, backend_version
 
@@ -134,7 +135,7 @@ def window(seq, n=2):
     """Returns a sliding window (of width n) over data from the iterable"""
     it = iter(seq)
     result = tuple(islice(it, n))
-    if len(result) == n:
+    if len(result) == n:  # pragma: no cover
         yield result
     for elem in it:
         result = result[1:] + (elem,)
@@ -202,7 +203,7 @@ def max_v_len(iterable_to_check):
     """Returns the max length of a list of iterable"""
     max_v = 0
     for _, v in norm_iterator(iterable_to_check):
-        if len(v) > max_v:
+        if len(v) > max_v:  # pragma: no cover
             max_v = len(v)
     return max_v
 

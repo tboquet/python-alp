@@ -46,7 +46,7 @@ except ImportError:
 
 
 import keras.backend as K
-if K.backend() == 'tensorflow' and not cm.on_worker():
+if K.backend() == 'tensorflow' and not cm.on_worker():  # pragma: no cover
     import tensorflow as tf
     K.clear_session()
     config = tf.ConfigProto(allow_soft_placement=True)
@@ -434,7 +434,7 @@ def fit(self, backend_name, backend_version, model, data, data_hash, data_val,
     from datetime import datetime
     import alp.backend.common as cm
     import keras.backend as K
-    if K.backend() == 'tensorflow' and cm.on_worker():
+    if K.backend() == 'tensorflow' and cm.on_worker():  # pragma: no cover
         import tensorflow as tf
         K.clear_session()
         config = tf.ConfigProto(allow_soft_placement=True)
@@ -564,7 +564,7 @@ def predict(model, data, *args, **kwargs):
     batches = make_batches(len_data, batch_size)
     index_array = np.arange(len_data)
     results_array = np.empty((len_data, ) + output_shape[1:])
-    for batch_index, (batch_start, batch_end) in enumerate(batches):
+    for batch_start, batch_end in batches:
         batch_ids = index_array[batch_start:batch_end]
         data_b = [d[batch_ids] for d in data]
         if learning_phase:
