@@ -24,10 +24,10 @@ in memory compiled function, this function is used instead.
 """
 
 import inspect
-
 import types
 
 import dill
+import keras.backend as K
 import numpy as np
 import six
 
@@ -38,14 +38,12 @@ from ..appcom.utils import check_gen
 from ..backend import common as cm
 from ..celapp import app
 
-
 try:
     import cPickle as pickle
 except ImportError:
     import pickle
 
 
-import keras.backend as K
 if K.backend() == 'tensorflow' and not cm.on_worker():  # pragma: no cover
     import tensorflow as tf
     K.clear_session()
