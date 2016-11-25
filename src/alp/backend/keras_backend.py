@@ -240,13 +240,6 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
                           optimizer=optimizer,
                           sample_weight_mode=sample_weight_mode,
                           metrics=metrics)
-        elif model_name == "Graph":
-            sample_weight_modes = model_dict.get('sample_weight_modes', None)
-            loss_weights = model_dict.get('loss_weights', None)
-            model.compile(loss=loss,
-                          optimizer=optimizer,
-                          sample_weight_modes=sample_weight_modes,
-                          loss_weights=loss_weights)
         elif model_name == "Model":
             sample_weight_mode = model_dict.get('sample_weight_mode')
             loss_weights = model_dict.get('loss_weights', None)
@@ -256,8 +249,8 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
                           loss_weights=loss_weights,
                           metrics=metrics)
         else:  # pragma: no cover
-            raise Exception('Unknown model, must be in Sequential, '
-                            'Graph or Model')
+            raise Exception('{} model, must be in Sequential, '
+                            'Model'.format(model_name))
     return model
 
 
@@ -285,7 +278,7 @@ def build_predict_func(mod):
     (forward pass) is compiled for prediction purpose.
 
     Args:
-        mod(keras.models): a Model, Sequential, or Graph (deprecated) model
+        mod(keras.models): a Model or Sequential model
 
     Returns:
         a Keras (Theano or Tensorflow) function
@@ -358,29 +351,8 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
                             " data.")
 
     # fit the model according to the input/output type
-    if mod_name is "Graph":
-        for d, dv in szip(data, data_val):
-            validation = check_validation(dv)
-            if generator:
-                h = model.fit_generator(generator=d,
-                                        validation_data=dv,
-                                        *args,
-                                        **kwargs)
-            else:
-                h = model.fit(data=d,
-                              validation_data=dv,
-                              *args,
-                              **kwargs)
-            for metric in metrics_names:
-                results['metrics'][metric] += h.history[metric]
-                if validation:
-                    results['metrics'][suf + metric] += h.history[suf + metric]
-                else:
-                    results['metrics'][suf + metric] += [np.nan] * \
-                        len(h.history[metric])
-        results['metrics']['iter'] = h.epoch[-1] * len(data)
 
-    elif mod_name is "Sequential" or mod_name is "Model":
+    if mod_name is "Sequential" or mod_name is "Model":
         for d, dv in szip(data, data_val):
             validation = check_validation(dv)
             if not fit_gen_val:
@@ -540,12 +512,7 @@ def predict(model, data, *args, **kwargs):
         output_shape = model_k.output_shape
 
     # predict according to the input/output type
-    if model_name == 'Graph':
-        if isinstance(data, dict):
-            data = [data[n] for n in model_k.input_names]
-        if not isinstance(data, list):
-            data = [data]
-    elif model_name == 'Sequential':
+    if model_name == 'Sequential':
         if not isinstance(data, list):
             data = [data]
     elif model_name == 'Model':
