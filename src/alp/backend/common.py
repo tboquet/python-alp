@@ -149,36 +149,18 @@ def transform_gen(gen_train, mod_name):
             data = zip(d, names_dict)
             inputs_list = []
             outputs_list = []
-            inputs_dict = dict()
-            outputs_dict = dict()
             for arr, name in data:
                 if inp in name:
                     if li in name:
                         inputs_list.append(arr)
-                        list_inputs = True
-                    else:
-                        inputs_dict[name[6:]] = arr
                 elif out in name:
                     if li in name:
                         outputs_list.append(arr)
-                        list_outputs = True
-                    else:
-                        outputs_dict[name[7:]] = arr
                 elif 'index' in name:  # pragma: no cover
                     pass
                 else:  # pragma: no cover
                     raise("Not input nor output, please check your generator")
-            fin_outputs = outputs_dict
-            fin_inputs = inputs_dict
-
-            if list_outputs:
-                fin_outputs = outputs_list
-            if list_inputs:
-                fin_inputs = inputs_list
-            data_out = (fin_inputs, fin_outputs)
-            if mod_name == 'Graph':
-                fin_inputs.update(fin_outputs)
-                data_out = fin_inputs
+            data_out = (inputs_list, outputs_list)
             yield data_out
 
 
