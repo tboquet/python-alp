@@ -139,9 +139,6 @@ def transform_gen(gen_train, mod_name):
 
     li = 'list'
 
-    list_outputs = False
-    list_inputs = False
-
     open_dataset_gen(gen_train)
 
     while 1:
