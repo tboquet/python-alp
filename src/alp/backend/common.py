@@ -1,6 +1,7 @@
 import copy
 import hashlib
 import json
+import os
 import pickle
 from datetime import datetime
 
@@ -94,7 +95,7 @@ def create_param_dump(_path_h5, hexdi_m, hexdi_d):
 
     Returns:
         the full path where to dump the params"""
-    return _path_h5 + hexdi_m + hexdi_d + '.h5'
+    return os.path.join(os.path.sep, _path_h5, hexdi_m + hexdi_d + '.h5')
 
 
 def make_all_hash(model_c, batch_size, data_hash, _path_h5):
@@ -138,9 +139,6 @@ def transform_gen(gen_train, mod_name):
 
     li = 'list'
 
-    list_outputs = False
-    list_inputs = False
-
     open_dataset_gen(gen_train)
 
     while 1:
@@ -148,36 +146,18 @@ def transform_gen(gen_train, mod_name):
             data = zip(d, names_dict)
             inputs_list = []
             outputs_list = []
-            inputs_dict = dict()
-            outputs_dict = dict()
             for arr, name in data:
                 if inp in name:
                     if li in name:
                         inputs_list.append(arr)
-                        list_inputs = True
-                    else:
-                        inputs_dict[name[6:]] = arr
                 elif out in name:
                     if li in name:
                         outputs_list.append(arr)
-                        list_outputs = True
-                    else:
-                        outputs_dict[name[7:]] = arr
                 elif 'index' in name:  # pragma: no cover
                     pass
                 else:  # pragma: no cover
                     raise("Not input nor output, please check your generator")
-            fin_outputs = outputs_dict
-            fin_inputs = inputs_dict
-
-            if list_outputs:
-                fin_outputs = outputs_list
-            if list_inputs:
-                fin_inputs = inputs_list
-            data_out = (fin_inputs, fin_outputs)
-            if mod_name == 'Graph':
-                fin_inputs.update(fin_outputs)
-                data_out = fin_inputs
+            data_out = (inputs_list, outputs_list)
             yield data_out
 
 
@@ -188,7 +168,7 @@ def train_pipe(train_f, save_f, model, data, data_val, generator, size_gen,
 
     Args:
         train_f(function): the train function to use
-        save_f(function): the """
+        save_f(function): the function used to save parameters"""
     results, model = train_f(model['model_arch'], data,
                              data_val, size_gen,
                              generator=generator,
@@ -207,3 +187,7 @@ def train_pipe(train_f, save_f, model, data, data_val, generator, size_gen,
     results['data_id'] = data_hash
     results['params_dump'] = params_dump
     return results, res_dict
+
+
+def on_worker():
+    return os.getenv("ON_WORKER") == "TRUE"
