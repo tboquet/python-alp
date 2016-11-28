@@ -25,7 +25,7 @@ def _get_backend_attributes(ABE):
     backend_name = backend_m.__name__
     if hasattr(backend_m, '__version__'):
         backend_version = backend_m.__version__
-    else:
+    else:  # pragma: no cover
         backend_version = None
 
     return ABE, backend_name, backend_version
@@ -124,10 +124,8 @@ def norm_iterator(iterable):
     if isinstance(iterable, list):
         names = ['list_' + str(i) for i, j in enumerate(iterable)]
         return szip(names, iterable)
-    elif isinstance(iterable, dict):
-        return iterable.items()
     else:
-        raise NotImplementedError('Iterables other than lists and dicts '
+        raise NotImplementedError('Iterables other than lists '
                                   'cannot be passed to this function')
 
 

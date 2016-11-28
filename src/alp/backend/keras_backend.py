@@ -476,7 +476,7 @@ def predict(model, data, *args, **kwargs):
     """
 
     from keras.engine.training import make_batches
-    if kwargs.get("batch_size") is None:
+    if kwargs.get("batch_size") is None:  # pragma: no cover
         kwargs['batch_size'] = 32
 
     batch_size = kwargs['batch_size']
@@ -535,7 +535,7 @@ def predict(model, data, *args, **kwargs):
         if learning_phase:
             data_b.append(0.)
         batch_prediction = pred_function(data_b)
-        if isinstance(batch_prediction, list):
+        if isinstance(batch_prediction, list):  # pragma: no cover
             batch_prediction = batch_prediction[0]
         results_array[batch_ids] = batch_prediction
     return results_array
