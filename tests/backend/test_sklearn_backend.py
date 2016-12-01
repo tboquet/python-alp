@@ -130,9 +130,26 @@ for m in SKB.SUPPORTED:
     keyval[getname(m)] = m()
 
 
+@pytest.fixture(scope='module', params=['no_metric', 'accuracy', 'accuracy and mse'])
+def get_metric(request):
+    if request.param == 'no_metric':
+        return(None)
+    elif request.param == 'accuracy':
+        return(['accuracy_score'])
+    elif request.param == 'accuracy and mse':
+        return(['accuracy_score', 'mean_squared_error'])
+
+
 @pytest.fixture(scope='module', params=list(keyval.keys()))
-def get_model_data_expe(request):
+def get_model(request):
     model = keyval[request.param]
+    return(model)
+
+
+@pytest.fixture
+def get_model_data_expe(get_model, get_metric):
+    model, metric = get_model, get_metric
+
     expe = Experiment(model)
 
     data, data_val = data_R, data_val_R
@@ -140,13 +157,18 @@ def get_model_data_expe(request):
     if getname(model, False) in CLASSIF:
         data, data_val = data_C, data_val_C
         is_classif = True
+    else:  # if regression model, remove accuracy
+        if metric:
+            if "accuracy_score" in metric:
+                metric.remove("accuracy_score")
 
-    return data, data_val, is_classif, model, expe
+    return data, data_val, is_classif, model, metric, expe
 
 
 class TestExperiment:
+
     def test_experiment_instance_utils(self, get_model_data_expe):
-        _, _, _, model, expe = get_model_data_expe
+        _, _, _, model, _, expe = get_model_data_expe
         expe.model_dict = model
         expe.backend_name = 'another_backend'
         expe.model_dict = model
@@ -155,11 +177,12 @@ class TestExperiment:
         assert expe.backend is not None
 
     def test_experiment_fit(self, get_model_data_expe):
-        data, data_val, _, model, expe = get_model_data_expe
+        data, data_val, _, model, metric, expe = get_model_data_expe
 
         for mod in [None, model]:
             for data_val_loc in [None, data_val]:
-                expe.fit([data], [data_val_loc], model=mod, overwrite=True)
+                expe.fit([data], [data_val_loc], model=mod,
+                         overwrite=True, metrics=metric)
 
                 expe.backend_name = 'another_backend'
                 expe.load_model()
@@ -171,12 +194,12 @@ class TestExperiment:
         print(self)
 
     def test_experiment_predict(self, get_model_data_expe):
-        data, data_val, _, model, expe = get_model_data_expe
+        data, data_val, _, model, metric, expe = get_model_data_expe
         model._test_ = 'test'
 
         for mod in [None, model]:
             expe.fit([data], [data_val], model=mod, custom_objects={},
-                     overwrite=True)
+                     overwrite=True, metrics=metric)
         expe.load_model()
         alp_pred = expe.predict(data['X'])
 
@@ -193,26 +216,28 @@ class TestExperiment:
                 10 chunks on train B with and without val
                 1 chunk on train B with and without val
         '''
-        data, data_val, is_classif, model, expe = get_model_data_expe
+        data, data_val, is_classif, model, metric, expe = get_model_data_expe
 
         for Nchunks_gen, expected_value in szip([True, False], [10, 1]):
             gen_train, data_train, data_stream_train = make_gen(
                 Nchunks_gen, is_classif, train=True)
 
             for data_val_loc in [None, data_val]:
-                expe.fit_gen([gen_train], [data_val_loc], overwrite=True)
+                expe.fit_gen([gen_train], [data_val_loc],
+                             model=model,
+                             overwrite=True, metrics=metric)
 
                 assert len(expe.full_res['metrics'][
-                           'mean_absolute_error']) == expected_value
+                           'score']) == expected_value
                 assert len(expe.full_res['metrics'][
-                    'val_mean_absolute_error']) == expected_value
+                    'val_score']) == expected_value
 
                 if data_val_loc is not None:
                     assert None not in expe.full_res['metrics'][
-                        'val_mean_absolute_error']
+                        'val_score']
                 else:
                     assert np.all([np.isnan(v) for v in expe.full_res[
-                        'metrics']['val_mean_absolute_error']])
+                        'metrics']['val_score']])
 
             assert expe.data_id is not None
             assert expe.mod_id is not None
@@ -231,7 +256,7 @@ class TestExperiment:
                 10 chunks on train / 1 chunk on val C1
                 1 chunk on train / 10 chunks on val C2
         '''
-        data, data_val, is_classif, model, expe = get_model_data_expe
+        data, data_val, is_classif, model, metric, expe = get_model_data_expe
 
         for Nchunks_gen, Nchunks_val in szip([True, True, False],
                                              [True, False, True]):
@@ -240,16 +265,17 @@ class TestExperiment:
             gen_test, data_test, data_stream_test = make_gen(
                 Nchunks_val, is_classif, train=False)
 
-            expe.fit_gen([gen_train], [gen_test], overwrite=True)
+            expe.fit_gen([gen_train], [gen_test],
+                         overwrite=True, metrics=metric)
 
             expected_value_gen = 10
             if not Nchunks_gen:
                 expected_value_gen = 1
 
             assert len(expe.full_res['metrics'][
-                       'mean_absolute_error']) == expected_value_gen
+                       'score']) == expected_value_gen
             assert len(expe.full_res['metrics'][
-                       'val_mean_absolute_error']) == 10
+                       'val_score']) == 10
             assert expe.data_id is not None
             assert expe.mod_id is not None
             assert expe.params_dump is not None
@@ -260,13 +286,13 @@ class TestExperiment:
         print(self)
 
     def test_experiment_fit_async(self, get_model_data_expe):
-        data, data_val, _, model, expe = get_model_data_expe
+        data, data_val, _, model, metric, expe = get_model_data_expe
 
         for mod in [None, model]:
             for data_val_loc in [None, data_val]:
                 _, thread = expe.fit_async([data], [data_val_loc],
-                                           model=mod, overwrite=True)
-
+                                           model=mod, overwrite=True,
+                                           metrics=metric)
                 thread.join()
                 assert expe.data_id is not None
                 assert expe.mod_id is not None
@@ -283,7 +309,7 @@ class TestExperiment:
                 10 chunks on train
                 1 chunk on train
         '''
-        data, data_val, is_classif, model, expe = get_model_data_expe
+        data, data_val, is_classif, model, metric, expe = get_model_data_expe
 
         for Nchunks_gen, expected_value in szip([True, False], [10, 1]):
             gen_train, data_train, data_stream_train = make_gen(
@@ -292,7 +318,9 @@ class TestExperiment:
             for data_val_loc in [None, data_val]:
 
                 _, thread = expe.fit_gen_async(
-                    [gen_train], [data_val_loc], overwrite=True)
+                    [gen_train], [data_val_loc],
+                    model=model,
+                    overwrite=True, metrics=metric)
                 thread.join()
 
                 assert len(expe.full_res['metrics'][
@@ -324,7 +352,7 @@ class TestExperiment:
                 10 chunks on train / 1 chunk on val
                 1 chunk on train / 10 chunks on val
         '''
-        data, data_val, is_classif, model, expe = get_model_data_expe
+        data, data_val, is_classif, model, metric, expe = get_model_data_expe
 
         for Nchunks_gen, Nchunks_val in szip([True, True, False],
                                              [True, False, True]):
@@ -335,7 +363,7 @@ class TestExperiment:
                 Nchunks_val, is_classif, train=False)
 
             _, thread = expe.fit_gen_async(
-                [gen_train], [gen_test], overwrite=True)
+                [gen_train], [gen_test], overwrite=True, metrics=metric)
             thread.join()
 
             expected_value_gen = 10

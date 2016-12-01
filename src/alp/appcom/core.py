@@ -271,9 +271,7 @@ class Experiment(object):
            the data_hash
         """
         self._check_compile(model, kwargs)
-
         kwargs = self._check_serialize(kwargs)
-
         gen_setup = []
 
         if generator:
@@ -319,6 +317,7 @@ class Experiment(object):
             generator(bool): if True, transforms the generators
             delay(bool): if True, fits the model in asynchronous mode
             """
+
         data, data_val, data_hash, size_gen = self._prepare_message(model,
                                                                     data,
                                                                     data_val,
