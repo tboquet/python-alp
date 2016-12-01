@@ -264,9 +264,10 @@ class TestExperiment:
 
         for mod in [None, model]:
             for data_val_loc in [None, data_val]:
-                expe.fit_async([data], [data_val_loc],
-                               model=mod, overwrite=True)
+                _, thread = expe.fit_async([data], [data_val_loc],
+                                           model=mod, overwrite=True)
 
+                thread.join()
                 assert expe.data_id is not None
                 assert expe.mod_id is not None
                 assert expe.params_dump is not None
