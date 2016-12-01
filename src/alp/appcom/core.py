@@ -51,9 +51,9 @@ class Experiment(object):
         if isinstance(model_dict, dict) or model_dict is None:
             self.__model_dict = dict()
             self.__model_dict['model_arch'] = model_dict
-            self.__model_dict['mod_id'] = None
-            self.__model_dict['params_dump'] = None
-            self.__model_dict['data_id'] = None
+            self.mod_id = None
+            self.params_dump = None
+            self.data_id = None
         else:
             self.model = model_dict
             backend, backend_name, backend_version = init_backend(model_dict)
@@ -62,9 +62,9 @@ class Experiment(object):
             self.backend_version = backend_version
             self.__model_dict['model_arch'] = self.backend.to_dict_w_opt(
                 self.model, self.metrics)
-            self.__model_dict['mod_id'] = None
-            self.__model_dict['data_id'] = None
-            self.__model_dict['params_dump'] = None
+            self.mod_id = None
+            self.params_dump = None
+            self.data_id = None
 
     @property
     def params_dump(self):
