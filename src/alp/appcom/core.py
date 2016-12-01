@@ -31,17 +31,23 @@ class Experiment(object):
         metrics(list): a list of callables
     """
 
-    def __init__(self, model, metrics=None, verbose=0):
-        backend, backend_name, backend_version = init_backend(model)
-        self.backend = backend
-        self.backend_name = backend_name
-        self.backend_version = backend_version
-        self.metrics = metrics
+    def __init__(self, model=None, metrics=None, verbose=0):
         self.model = model
-        self.model_dict = self.backend.to_dict_w_opt(self.model,
-                                                     self.metrics)
         self.trained = False
         self.verbose = verbose
+        self.metrics = metrics
+        if model is not None:
+            backend, backend_name, backend_version = init_backend(model)
+            self.backend = backend
+            self.backend_name = backend_name
+            self.backend_version = backend_version
+            self.model_dict = self.backend.to_dict_w_opt(self.model,
+                                                         self.metrics)
+        else:
+            self.backend = None
+            self.backend_name = None
+            self.backend_version = None
+            self.model_dict = None
 
     @property
     def model_dict(self):
@@ -191,6 +197,8 @@ class Experiment(object):
         self.full_res = None
         self.async_res = None
         self.trained = True
+
+        return self
 
     def predict(self, data, *args, **kwargs):
         """Make predictions given data

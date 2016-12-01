@@ -285,9 +285,11 @@ class TestExperiment:
         expe.model_dict = model
         expe.backend_name = 'another_backend'
         expe.model_dict = model
-        print(self)
 
         assert expe.backend is not None
+        expe = Experiment()
+
+        print(self)
 
     def test_experiment_fit(self, get_model, get_loss_metric,
                             get_custom_l):
