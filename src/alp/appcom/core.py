@@ -31,7 +31,7 @@ class Experiment(object):
         metrics(list): a list of callables
     """
 
-    def __init__(self, model, metrics=None):
+    def __init__(self, model, metrics=None, verbose=0):
         backend, backend_name, backend_version = init_backend(model)
         self.backend = backend
         self.backend_name = backend_name
@@ -41,6 +41,7 @@ class Experiment(object):
         self.model_dict = self.backend.to_dict_w_opt(self.model,
                                                      self.metrics)
         self.trained = False
+        self.verbose = verbose
 
     @property
     def model_dict(self):
@@ -187,6 +188,8 @@ class Experiment(object):
         self.params_dump = model_db['params_dump']
         self.mod_id = model_db['mod_id']
         self.data_id = model_db['data_id']
+        self.full_res = None
+        self.async_res = None
         self.trained = True
 
     def predict(self, data, *args, **kwargs):
@@ -369,4 +372,6 @@ class Experiment(object):
         self.mod_id = self.full_res['model_id']  # pragma: no cover
         self.data_id = self.full_res['data_id']  # pragma: no cover
         self.params_dump = self.full_res['params_dump']  # pragma: no cover
-        print("Result {} ready".format(self.mod_id))  # pragma: no cover
+        if self.verbose > 0:  # pragma: no cover
+            print("Result {} | {} ready".format(
+                self.mod_id, self.data_id))  # pragma: no cover

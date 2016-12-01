@@ -491,7 +491,7 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
 
 
 @app.task(bind=True, default_retry_delay=60 * 10, max_retries=3,
-          rate_limit='120/m', queue='sklearn')
+          rate_limit='20/s', queue='sklearn')
 def fit(self, backend_name, backend_version, model, data, data_hash,
         data_val, size_gen, generator=False, *args, **kwargs):
     """A function that takes a model and data (with validation),
