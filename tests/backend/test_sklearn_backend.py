@@ -324,16 +324,16 @@ class TestExperiment:
                 thread.join()
 
                 assert len(expe.full_res['metrics'][
-                           'mean_absolute_error']) == expected_value
+                           'score']) == expected_value
                 assert len(expe.full_res['metrics'][
-                    'val_mean_absolute_error']) == expected_value
+                    'val_score']) == expected_value
 
                 if data_val_loc is not None:
                     assert None not in expe.full_res['metrics'][
-                        'val_mean_absolute_error']
+                        'val_score']
                 else:
                     assert np.all([np.isnan(v) for v in expe.full_res[
-                        'metrics']['val_mean_absolute_error']])
+                        'metrics']['val_score']])
 
                 assert expe.data_id is not None
                 assert expe.mod_id is not None
@@ -371,9 +371,9 @@ class TestExperiment:
                 expected_value_gen = 1
 
             assert len(expe.full_res['metrics'][
-                       'mean_absolute_error']) == expected_value_gen
+                       'score']) == expected_value_gen
             assert len(expe.full_res['metrics'][
-                       'val_mean_absolute_error']) == 10
+                       'val_score']) == 10
             assert expe.data_id is not None
             assert expe.mod_id is not None
             assert expe.params_dump is not None
