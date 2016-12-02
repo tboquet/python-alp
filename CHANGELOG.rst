@@ -6,11 +6,12 @@ Changelog
 Unreleased
 -----------------------------------------
 
-
-* sklearn backend is stable with 12 models supported and one metric (mae)
-* fuel generators are supported as training data and validation data source
-* asynchronous fit is stable
+* Command Line Interface to launch services.
+* sklearn backend is stable with 12 models supported and all sklearn metrics
 * Keras backend supports custom objects
+* asynchronous fit is stable for all backends
+* fuel generators are supported as training data and validation data source
+
 
 
 0.2.0 (2016-04-21)
