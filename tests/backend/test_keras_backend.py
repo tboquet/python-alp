@@ -5,6 +5,7 @@ import copy
 import inspect
 import keras
 import keras.backend as K
+import numpy as np
 import pytest
 import six
 
@@ -15,7 +16,6 @@ from fuel.transformers import ScaleAndShift
 from keras.layers import Dense
 from keras.layers import Dropout
 from keras.layers import Input
-from keras.models import Graph
 from keras.models import Model
 from keras.models import Sequential
 from keras.utils import np_utils
@@ -23,7 +23,6 @@ from keras.utils.test_utils import get_test_data
 
 import alp.appcom.utils as utls
 from alp.appcom.core import Experiment
-from alp.appcom.utils import imports
 from alp.appcom.utils import switch_backend
 from alp.appcom.utils import to_fuel_h5
 from alp.backend import keras_backend as KTB
@@ -70,7 +69,7 @@ def make_data():
     return data, data_val
 
 
-def dump_data(graph=False):
+def dump_data():
     import numpy as np
     data, data_val = make_data()
     inputs = [np.concatenate([data['X'], data_val['X']])]
@@ -79,10 +78,6 @@ def dump_data(graph=False):
     file_name = 'test_data'
     scale = 1.0 / inputs[0].std(axis=0)
     shift = - scale * inputs[0].mean(axis=0)
-    if graph:
-        inputs = {'X': np.concatenate([data['X'], data_val['X']])}
-        outputs = {'y': np.concatenate([data['y'], data_val['y']])}
-        file_name += "_graph"
 
     file_path, i_names, o_names = to_fuel_h5(inputs, outputs, [0, 256],
                                              ['train', 'test'],
@@ -91,15 +86,11 @@ def dump_data(graph=False):
     return file_path, scale, shift, i_names, o_names
 
 file_path, scale, shift, i_names, o_names = dump_data()
-file_path_g, scale_g, shift_g, i_names_g, o_names_g = dump_data(graph=True)
 
 
-def make_gen(graph=False, examples=4):
+def make_gen(examples=4):
     file_path_f = file_path
     names_select = i_names
-    if graph:
-        file_path_f = file_path_g
-        names_select = i_names_g
     train_set = H5PYDataset(file_path_f,
                             which_sets=('train', 'test'))
 
@@ -136,6 +127,7 @@ def return_custom():
             config = {'p': self.p}
             base_config = super(Dropout_cust, self).get_config()
             return dict(list(base_config.items()) + list(config.items()))
+
     return Dropout_cust
 
 
@@ -162,25 +154,6 @@ def model(custom=False):
     return model
 
 
-def graph(custom=False):
-    name = 'dense1'
-    model = Graph()
-    model.add_input(name='X', input_shape=(input_dim, ))
-
-    model.add_node(Dense(nb_hidden, activation="sigmoid"),
-                   name='dense1', input='X')
-    if custom:
-        name = 'do'
-        model.add_node(return_custom()(0.5), name=name, input='dense1')
-    model.add_node(Dense(nb_class, activation="softmax"),
-                   name='last_dense',
-                   input=name)
-    model.add_node(Dropout(0.5), name='last_dropout', input='last_dense')
-
-    model.add_output(name='y', input='last_dropout')
-    return model
-
-
 def prepare_model(get_model, get_loss_metric, custom):
     model = get_model
 
@@ -188,7 +161,11 @@ def prepare_model(get_model, get_loss_metric, custom):
 
     cust_objects = dict()
 
-    metrics = [metric]
+    if isinstance(metric, six.string_types):
+        metrics = [metric]
+    else:
+        cust_objects[metric.__name__] = metric
+        metrics = [metric()]
 
     if not isinstance(loss, six.string_types):
         cust_objects['cat_cross'] = loss
@@ -224,23 +201,23 @@ def prepare_model(get_model, get_loss_metric, custom):
 def get_generators(request):
     if request.param == 'one to many':
         nb_train, nb_val = 4, 48
-        gen_t, data_t, d_stream_t = make_gen(False, nb_train)
-        gen, data, d_stream = make_gen(False, nb_val)
+        gen_t, data_t, d_stream_t = make_gen(nb_train)
+        gen, data, d_stream = make_gen(nb_val)
 
     elif request.param == 'many to one':
         nb_train, nb_val = 48, 4
-        gen_t, data_t, d_stream_t = make_gen(False, nb_train)
-        gen, data, d_stream = make_gen(False, nb_val)
+        gen_t, data_t, d_stream_t = make_gen(nb_train)
+        gen, data, d_stream = make_gen(nb_val)
 
     elif request.param == 'val 1':
         nb_train, nb_val = 4, 4
-        gen_t, data_t, d_stream_t = make_gen(False, nb_train)
-        gen, data, d_stream = make_gen(False, nb_val)
+        gen_t, data_t, d_stream_t = make_gen(nb_train)
+        gen, data, d_stream = make_gen(nb_val)
 
     elif request.param == 'many to many':
         nb_train, nb_val = 48, 48
-        gen_t, data_t, d_stream_t = make_gen(False, nb_train)
-        gen, data, d_stream = make_gen(False, nb_val)
+        gen_t, data_t, d_stream_t = make_gen(nb_train)
+        gen, data, d_stream = make_gen(nb_val)
 
     return gen_t, data_t, d_stream_t, gen, data, d_stream, (nb_train, nb_val)
 
@@ -259,23 +236,22 @@ def get_loss():
 
 @pytest.fixture
 def get_metric():
-    import keras.backend as K
-    @imports({"K": K})
-    def cosine_proximity(y_true, y_pred):
-        y_true = K.l2_normalize(y_true, axis=-1)
-        y_pred = K.l2_normalize(y_pred, axis=-1)
-        return -K.mean(y_true * y_pred)
-    return cosine_proximity
+    def return_metric():
+        import keras.backend as K
+        def cosine_proximity(y_true, y_pred):
+            y_true = K.l2_normalize(y_true, axis=-1)
+            y_pred = K.l2_normalize(y_pred, axis=-1)
+            return -K.mean(y_true * y_pred)
+        return cosine_proximity
+    return return_metric
 
 
-@pytest.fixture(scope='module', params=['sequential', 'model', 'graph'])
+@pytest.fixture(scope='module', params=['sequential', 'model'])
 def get_model(request):
     if request.param == 'sequential':
         return sequential
     elif request.param == 'model':
         return model
-    elif request.param == 'graph':
-        return graph
     print(self)
 
 
@@ -309,9 +285,11 @@ class TestExperiment:
         expe.model_dict = model
         expe.backend_name = 'another_backend'
         expe.model_dict = model
-        print(self)
 
         assert expe.backend is not None
+        expe = Experiment()
+
+        print(self)
 
     def test_experiment_fit(self, get_model, get_loss_metric,
                             get_custom_l):
@@ -351,12 +329,33 @@ class TestExperiment:
         cust_objects['test_list'] = [1, 2]
         expe = Experiment(model)
 
+        expected_value = 2
         for mod in [None, model]:
             for data_val_loc in [None, data_val]:
-                expe.fit_async([data], [data_val_loc], model=mod, nb_epoch=2,
-                               batch_size=batch_size, metrics=metrics,
-                               custom_objects=cust_objects, overwrite=True,
-                               verbose=2)
+                _, thread = expe.fit_async([data], [data_val_loc],
+                                           model=mod, nb_epoch=2,
+                                           batch_size=batch_size,
+                                           metrics=metrics,
+                                           custom_objects=cust_objects,
+                                           overwrite=True,
+                                           verbose=2)
+
+                thread.join()
+
+                for k in expe.full_res['metrics']:
+                    if 'iter' not in k:
+                        assert len(
+                            expe.full_res['metrics'][k]) == expected_value
+
+                if data_val_loc is not None:
+                    for k in expe.full_res['metrics']:
+                        if 'val' in k and 'iter' not in k:
+                            assert None not in expe.full_res['metrics'][k]
+                else:
+                    for k in expe.full_res['metrics']:
+                        if 'val' in k and 'iter' not in k:
+                            assert all([np.isnan(v)
+                                        for v in expe.full_res['metrics'][k]])
 
         if K.backend() == 'tensorflow':
             K.clear_session()
@@ -370,14 +369,13 @@ class TestExperiment:
                                                      get_custom_l)
 
         model_name = model.__class__.__name__
-        is_graph = model_name.lower() == 'graph'
         _, data_val_use = make_data()
         expe = Experiment(model)
 
         for val in [1, data_val_use]:
-            gen, data, data_stream = make_gen(is_graph)
+            gen, data, data_stream = make_gen()
             if val == 1:
-                val, data_2, data_stream_2 = make_gen(is_graph)
+                val, data_2, data_stream_2 = make_gen()
             expe.fit_gen([gen], [val], nb_epoch=2,
                          model=model,
                          metrics=metrics,
@@ -402,21 +400,29 @@ class TestExperiment:
                                                      get_custom_l)
 
         model_name = model.__class__.__name__
-        is_graph = model_name.lower() == 'graph'
         _, data_val_use = make_data()
         expe = Experiment(model)
 
+        expected_value = 2
         for val in [None, 1, data_val_use]:
-            gen, data, data_stream = make_gen(is_graph)
+            gen, data, data_stream = make_gen()
             if val == 1:
-                val, data_2, data_stream_2 = make_gen(is_graph)
-            expe.fit_gen_async([gen], [val], nb_epoch=2,
-                               model=model,
-                               metrics=metrics,
-                               custom_objects=cust_objects,
-                               samples_per_epoch=64,
-                               nb_val_samples=128,
-                               verbose=2, overwrite=True)
+                val, data_2, data_stream_2 = make_gen()
+            _, thread = expe.fit_gen_async([gen], [val], nb_epoch=2,
+                                           model=model,
+                                           metrics=metrics,
+                                           custom_objects=cust_objects,
+                                           samples_per_epoch=64,
+                                           nb_val_samples=128,
+                                           verbose=2, overwrite=True)
+
+            thread.join()
+
+            for k in expe.full_res['metrics']:
+                if 'iter' not in k:
+                    assert len(
+                        expe.full_res['metrics'][k]) == expected_value
+
             close_gens(gen, data, data_stream)
             if val == 1:
                 close_gens(val, data_2, data_stream_2)
@@ -461,7 +467,7 @@ class TestExperiment:
                  custom_objects=cust_objects,
                  metrics=metrics, overwrite=True)
 
-        if model_name == 'Graph' or model_name == 'Model':
+        if model_name == 'Model':
             expe.predict({'X': data_val['X']})
         expe.predict([data_val['X']])
         expe.predict(data_val['X'])

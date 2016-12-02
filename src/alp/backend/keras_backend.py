@@ -24,10 +24,10 @@ in memory compiled function, this function is used instead.
 """
 
 import inspect
-
 import types
 
 import dill
+import keras.backend as K
 import numpy as np
 import six
 
@@ -38,11 +38,19 @@ from ..appcom.utils import check_gen
 from ..backend import common as cm
 from ..celapp import app
 
-
 try:
     import cPickle as pickle
 except ImportError:
     import pickle
+
+
+if K.backend() == 'tensorflow' and not cm.on_worker():  # pragma: no cover
+    import tensorflow as tf
+    K.clear_session()
+    config = tf.ConfigProto(allow_soft_placement=True)
+    config.gpu_options.allow_growth = True
+    session = tf.Session(config=config)
+    K.set_session(session)
 
 
 COMPILED_MODELS = dict()
@@ -147,7 +155,7 @@ def to_dict_w_opt(model, metrics=None):
         config['optimizer'] = model.optimizer.get_config()
         config['optimizer']['name'] = model.optimizer.__class__.__name__
         config['metrics'] = []
-        config['ser_metrics'] = dict()
+        config['ser_metrics'] = []
     if hasattr(model, 'loss'):
         name_out = [l.name for l in model.output_layers]
         if isinstance(model.loss, dict):
@@ -162,12 +170,15 @@ def to_dict_w_opt(model, metrics=None):
         elif isinstance(model.loss, six.string_types):
             config['loss'] = dict(zip(name_out,
                                       [get_function_name(model.loss)]))
+        else:  # pragma: no cover
+            raise TypeError('Loss must be a list a string or a callable.')
+
     if metrics is not None:
         for m in metrics:
             if isinstance(m, six.string_types):
                 config['metrics'].append(m)
             else:
-                config['ser_metrics'][m.__name__] = serialize(m)
+                config['ser_metrics'].append(m.__name__)
     return config
 
 
@@ -202,8 +213,12 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
 
     if 'optimizer' in model_dict:
         metrics = model_dict.get("metrics", [])
-        ser_metrics = model_dict.get("ser_metrics", dict())
-        metrics += [deserialize(**m) for k, m in ser_metrics.items()]
+        ser_metrics = model_dict.get("ser_metrics", [])
+        for k in custom_objects:
+            if inspect.isfunction(custom_objects[k]):
+                function_name = custom_objects[k].__name__
+                if k in ser_metrics or function_name in ser_metrics:
+                    metrics.append(custom_objects[k])
         model_name = model_dict['config'].get('class_name')
         # if it has an optimizer, the model is assumed to be compiled
         loss = model_dict.get('loss')
@@ -225,13 +240,6 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
                           optimizer=optimizer,
                           sample_weight_mode=sample_weight_mode,
                           metrics=metrics)
-        elif model_name == "Graph":
-            sample_weight_modes = model_dict.get('sample_weight_modes', None)
-            loss_weights = model_dict.get('loss_weights', None)
-            model.compile(loss=loss,
-                          optimizer=optimizer,
-                          sample_weight_modes=sample_weight_modes,
-                          loss_weights=loss_weights)
         elif model_name == "Model":
             sample_weight_mode = model_dict.get('sample_weight_mode')
             loss_weights = model_dict.get('loss_weights', None)
@@ -240,7 +248,7 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
                           sample_weight_mode=sample_weight_mode,
                           loss_weights=loss_weights,
                           metrics=metrics)
-
+            
     return model
 
 
@@ -268,7 +276,7 @@ def build_predict_func(mod):
     (forward pass) is compiled for prediction purpose.
 
     Args:
-        mod(keras.models): a Model, Sequential, or Graph (deprecated) model
+        mod(keras.models): a Model or Sequential model
 
     Returns:
         a Keras (Theano or Tensorflow) function
@@ -294,7 +302,6 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
         the loss (list), the validation loss (list), the number of iterations,
         and the model
         """
-
     if generator:
         from six.moves import reload_module as sreload
         import theano
@@ -342,29 +349,8 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
                             " data.")
 
     # fit the model according to the input/output type
-    if mod_name is "Graph":
-        for d, dv in szip(data, data_val):
-            validation = check_validation(dv)
-            if generator:
-                h = model.fit_generator(generator=d,
-                                        validation_data=dv,
-                                        *args,
-                                        **kwargs)
-            else:
-                h = model.fit(data=d,
-                              validation_data=dv,
-                              *args,
-                              **kwargs)
-            for metric in metrics_names:
-                results['metrics'][metric] += h.history[metric]
-                if validation:
-                    results['metrics'][suf + metric] += h.history[suf + metric]
-                else:
-                    results['metrics'][suf + metric] += [np.nan] * \
-                        len(h.history[metric])
-        results['metrics']['iter'] = h.epoch[-1] * len(data)
 
-    elif mod_name is "Sequential" or mod_name is "Model":
+    if mod_name is "Sequential" or mod_name is "Model":
         for d, dv in szip(data, data_val):
             validation = check_validation(dv)
             if not fit_gen_val:
@@ -398,23 +384,31 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
 
 
 @app.task(bind=True, default_retry_delay=60 * 10, max_retries=3,
-          rate_limit='120/m', queue='keras')
+          rate_limit='20/s', queue='keras')
 def fit(self, backend_name, backend_version, model, data, data_hash, data_val,
         size_gen, generator=False, *args, **kwargs):
-    """a function to train models given a datagenerator,a serialized model,
+    """A function to train models given a datagenerator,a serialized model,
 
-    args:
+    Args:
         backend_name(str): the model dumped with the `to_json` method
         backend_version(str): the backend version
         model(keras.model): a keras model
         data(list): a list of np.arrays for training
         data_val(list): a list of np.arrays for validation
 
-    returns:
+    Returns:
         results similar to what the fit method of keras would return"""
     from alp import dbbackend as db
     from datetime import datetime
     import alp.backend.common as cm
+    import keras.backend as K
+    if K.backend() == 'tensorflow' and cm.on_worker():  # pragma: no cover
+        import tensorflow as tf
+        K.clear_session()
+        config = tf.ConfigProto(allow_soft_placement=True)
+        config.gpu_options.allow_growth = True
+        session = tf.Session(config=config)
+        K.set_session(session)
 
     if kwargs.get("batch_size") is None:
         kwargs['batch_size'] = 32
@@ -479,6 +473,12 @@ def predict(model, data, *args, **kwargs):
         an np.array of predictions
     """
 
+    from keras.engine.training import make_batches
+    if kwargs.get("batch_size") is None:  # pragma: no cover
+        kwargs['batch_size'] = 32
+
+    batch_size = kwargs['batch_size']
+
     custom_objects = kwargs.get('custom_objects')
 
     model_name = model['model_arch']['config'].get('class_name')
@@ -487,6 +487,7 @@ def predict(model, data, *args, **kwargs):
         pred_function = COMPILED_MODELS[model['mod_id']]['pred']
         model_k = COMPILED_MODELS[model['mod_id']]['model']
         learning_phase = COMPILED_MODELS[model['mod_id']]['learning_phase']
+        output_shape = COMPILED_MODELS[model['mod_id']]['model'].output_shape
     else:
         # get the model arch
         model_dict = model['model_arch']
@@ -506,14 +507,10 @@ def predict(model, data, *args, **kwargs):
         COMPILED_MODELS[model['mod_id']]['model'] = model_k
         learning_phase = model_k.uses_learning_phase
         COMPILED_MODELS[model['mod_id']]['learning_phase'] = learning_phase
+        output_shape = model_k.output_shape
 
     # predict according to the input/output type
-    if model_name == 'Graph':
-        if isinstance(data, dict):
-            data = [data[n] for n in model_k.input_names]
-        if not isinstance(data, list):
-            data = [data]
-    elif model_name == 'Sequential':
+    if model_name == 'Sequential':
         if not isinstance(data, list):
             data = [data]
     elif model_name == 'Model':
@@ -524,6 +521,19 @@ def predict(model, data, *args, **kwargs):
     else:
         raise NotImplementedError(
             '{}: This type of model is not supported'.format(model_name))
-    if learning_phase:
-        data.append(0.)
-    return pred_function(data)
+
+    # Predict by batch to control GPU memory
+    len_data = len(data[0])
+    batches = make_batches(len_data, batch_size)
+    index_array = np.arange(len_data)
+    results_array = np.empty((len_data, ) + output_shape[1:])
+    for batch_start, batch_end in batches:
+        batch_ids = index_array[batch_start:batch_end]
+        data_b = [d[batch_ids] for d in data]
+        if learning_phase:
+            data_b.append(0.)
+        batch_prediction = pred_function(data_b)
+        if isinstance(batch_prediction, list):  # pragma: no cover
+            batch_prediction = batch_prediction[0]
+        results_array[batch_ids] = batch_prediction
+    return results_array
