@@ -1,7 +1,12 @@
 from progressbar import ProgressBar
-from progressbar import FormatLabel, Percentage, Bar, ETA, SimpleProgress
+from progressbar import Bar
 from progressbar import DynamicMessage
+from progressbar import ETA
+from progressbar import FormatLabel
+from progressbar import Percentage
+from progressbar import SimpleProgress
 from time import time
+import numpy as np
 
 
 def get_ops(metric):
@@ -27,7 +32,7 @@ widgets = [Percentage(), ' ',
            SimpleProgress(), ' ',
            Bar(marker='=', left='[', right=']'),
            ' ', FormatLabel('in: %(elapsed)s'), ' ',
-           ETA(), ' | ', 'mess/', DynamicMessage('s')]
+           ETA(), ' | ', 'job/', DynamicMessage('s')]
 
 
 class Ensemble(object):
@@ -38,7 +43,13 @@ class Ensemble(object):
     def fit(self, data, data_val, *args, **kwargs):
         raise NotImplementedError
 
+    def fit_gen(self, data, data_val, *args, **kwargs):
+        raise NotImplementedError
+
     def fit_async(self, data, data_val, *args, **kwargs):
+        raise NotImplementedError
+
+    def fit_gen_async(self, data, data_val, *args, **kwargs):
         raise NotImplementedError
 
     def predict(self, data, data_val, *args, **kwargs):
@@ -66,6 +77,46 @@ class HParamsSearch(Ensemble):
             self.results.append(res)
         return self.results
 
+    def fit_gen(self, data, data_val, *args, **kwargs):
+        with ProgressBar(max_value=len(self.experiments),
+                         redirect_stdout=True,
+                         widgets=widgets, term_width=80) as progress:
+            for i, expe in enumerate(self.experiments):
+                b = time()
+                res = expe.fit_gen(data, data_val, *args, **kwargs)
+                self.results.append(res)
+                if i == 0:
+                    spent = time() - b
+                else:
+                    spent += time() - b
+                    spent /= i + 1
+                progress.update(i, s=float(1/spent))
+                if expe.backend == 'keras':
+                    import keras.backend as K
+                    if K.backend() == 'tensorflow':
+                        K.clear_session()
+        return self.results
+
+    def fit__gen_async(self, data, data_val, *args, **kwargs):
+        with ProgressBar(max_value=len(self.experiments),
+                         redirect_stdout=True,
+                         widgets=widgets, term_width=80) as progress:
+            for i, expe in enumerate(self.experiments):
+                b = time()
+                res = expe.fit_gen_async(data, data_val, *args, **kwargs)
+                self.results.append(res)
+                if i == 0:
+                    spent = time() - b
+                else:
+                    spent += time() - b
+                    spent /= i + 1
+                progress.update(i, s=float(1/spent))
+                if expe.backend == 'keras':
+                    import keras.backend as K
+                    if K.backend() == 'tensorflow':
+                        K.clear_session()
+        return self.results
+
     def fit_async(self, data, data_val, *args, **kwargs):
         with ProgressBar(max_value=len(self.experiments),
                          redirect_stdout=True,
@@ -80,8 +131,10 @@ class HParamsSearch(Ensemble):
                     spent += time() - b
                     spent /= i + 1
                 progress.update(i, s=float(1/spent))
-                if K.backend() == 'tensorflow':
-                    K.clear_session()
+                if expe.backend == 'keras':
+                    import keras.backend as K
+                    if K.backend() == 'tensorflow':
+                        K.clear_session()
         return self.results
 
     def predict(self, data, *args, **kwargs):
