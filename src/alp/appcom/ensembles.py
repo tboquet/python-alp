@@ -9,6 +9,7 @@ from progressbar import Percentage
 from progressbar import SimpleProgress
 from time import time
 
+
 def get_ops(metric):
     if metric in ['loss', 'val_loss']:
         op = np.min

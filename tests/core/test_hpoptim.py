@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 import six
 
-from alp.hpoptim import HParamSearch
+from alp.ensembles import HParamSearch
 
 from fuel.datasets.hdf5 import H5PYDataset
 from fuel.schemes import SequentialScheme
