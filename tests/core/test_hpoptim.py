@@ -17,7 +17,7 @@ from keras.models import Sequential
 from keras.utils import np_utils
 from keras.utils.test_utils import get_test_data
 
-from alp.ensembles import HParamSearch
+from alp.appcom.ensembles import HParamSearch
 
 input_dim = 2
 nb_hidden = 4
