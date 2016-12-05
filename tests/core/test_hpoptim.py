@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 import six
 
-from alp.ensembles import HParamSearch
 
 from fuel.datasets.hdf5 import H5PYDataset
 from fuel.schemes import SequentialScheme
@@ -17,6 +16,8 @@ from keras.models import Model
 from keras.models import Sequential
 from keras.utils import np_utils
 from keras.utils.test_utils import get_test_data
+
+from alp.ensembles import HParamSearch
 
 input_dim = 2
 nb_hidden = 4
