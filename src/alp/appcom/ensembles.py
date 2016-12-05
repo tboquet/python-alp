@@ -1,3 +1,5 @@
+import numpy as np
+import pandas as pd
 from progressbar import ProgressBar
 from progressbar import Bar
 from progressbar import DynamicMessage
@@ -6,8 +8,6 @@ from progressbar import FormatLabel
 from progressbar import Percentage
 from progressbar import SimpleProgress
 from time import time
-import numpy as np
-
 
 def get_ops(metric):
     if metric in ['loss', 'val_loss']:
@@ -72,7 +72,7 @@ class HParamsSearch(Ensemble):
         self.results = []
 
     def fit(self, data, data_val, *args, **kwargs):
-        for expe in experiments:
+        for expe in self.experiments:
             res = expe.fit(data, data_val, *args, **kwargs)
             self.results.append(res)
         return self.results
@@ -90,7 +90,7 @@ class HParamsSearch(Ensemble):
                 else:
                     spent += time() - b
                     spent /= i + 1
-                progress.update(i, s=float(1/spent))
+                progress.update(i, s=float(1 / spent))
                 if expe.backend == 'keras':
                     import keras.backend as K
                     if K.backend() == 'tensorflow':
@@ -110,7 +110,7 @@ class HParamsSearch(Ensemble):
                 else:
                     spent += time() - b
                     spent /= i + 1
-                progress.update(i, s=float(1/spent))
+                progress.update(i, s=float(1 / spent))
                 if expe.backend == 'keras':
                     import keras.backend as K
                     if K.backend() == 'tensorflow':
@@ -130,7 +130,7 @@ class HParamsSearch(Ensemble):
                 else:
                     spent += time() - b
                     spent /= i + 1
-                progress.update(i, s=float(1/spent))
+                progress.update(i, s=float(1 / spent))
                 if expe.backend == 'keras':
                     import keras.backend as K
                     if K.backend() == 'tensorflow':
@@ -152,7 +152,7 @@ class HParamsSearch(Ensemble):
             t.join()
             for k, v in expes[i].full_res['metrics'].items():
                 if isinstance(v, list):
-                    if k in min_metric:
+                    if k in ['loss', 'val_loss']:
                         op = np.min
                     else:
                         op = np.max
