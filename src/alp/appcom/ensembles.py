@@ -2,9 +2,9 @@ from time import time
 
 import numpy as np
 import pandas as pd
+from progressbar import ETA
 from progressbar import Bar
 from progressbar import DynamicMessage
-from progressbar import ETA
 from progressbar import FormatLabel
 from progressbar import Percentage
 from progressbar import ProgressBar
