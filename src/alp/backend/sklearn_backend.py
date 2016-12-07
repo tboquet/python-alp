@@ -361,7 +361,7 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
                         computed_metric = getattr(
                             sklearn.metrics, metric)(y_val, predonval[-1])
                     else:
-                        computed_metric = model.score(X, y)
+                        computed_metric = model.score(X_val, y_val)
                         # TODO : optimization
                     results['metrics']['val_' + metric].append(
                         computed_metric)
