@@ -16,14 +16,7 @@ alp
 
        alp.appcom
        alp.backend
-
-alp.databasecon module
------------------------
-
-.. automodule:: alp.databasecon
-    :members:
-    :undoc-members:
-    :show-inheritance:
+       alp.dbbackend
 
 alp.celapp module
 ------------------
