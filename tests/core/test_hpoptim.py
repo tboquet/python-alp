@@ -1,5 +1,6 @@
 """Tests Hyper parameter search"""
 
+import keras
 import numpy as np
 import pytest
 import six
@@ -14,10 +15,13 @@ from keras.layers import Dropout
 from keras.layers import Input
 from keras.models import Model
 from keras.models import Sequential
+from keras.optimizers import Adam
 from keras.utils import np_utils
 from keras.utils.test_utils import get_test_data
 
+from alp.appcom.core import Experiment
 from alp.appcom.ensembles import HParamsSearch
+from alp.appcom.utils import to_fuel_h5
 
 input_dim = 2
 nb_hidden = 4
@@ -108,6 +112,7 @@ class TestHParamsSearch:
         print(self)
 
     def test_fit(self):
+        experiments = []
         data, data_val = make_data()
         for i in range(5):
             nb_hidden = np.random.binomial(20, 0.5) * 8
@@ -117,15 +122,15 @@ class TestHParamsSearch:
             model = sequential(nb_hidden)
 
             model.compile(loss='categorical_crossentropy',
-                        optimizer=adam,
-                        metrics=['accuracy'])
+                          optimizer=adam,
+                          metrics=['accuracy'])
 
             expe = Experiment(model, metrics=['accuracy'])
 
             experiments.append(expe)
-            K.clear_session()
+            # K.clear_session()
 
         param_search = HParamsSearch(experiments, metric='loss')
         param_search.fit([data], [data_val], nb_epoch=50,
-                               batch_size=batch_size, verbose=2)
+                         batch_size=batch_size, verbose=2)
         print(self)

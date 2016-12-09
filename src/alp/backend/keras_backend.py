@@ -44,13 +44,13 @@ except ImportError:
     import pickle
 
 
-if K.backend() == 'tensorflow' and not cm.on_worker():  # pragma: no cover
-    import tensorflow as tf
-    K.clear_session()
-    config = tf.ConfigProto(allow_soft_placement=True)
-    config.gpu_options.allow_growth = True
-    session = tf.Session(config=config)
-    K.set_session(session)
+# if K.backend() == 'tensorflow' and not cm.on_worker():  # pragma: no cover
+#     import tensorflow as tf
+#     K.clear_session()
+#     config = tf.ConfigProto(allow_soft_placement=True)
+#     config.gpu_options.allow_growth = True
+#     session = tf.Session(config=config)
+#     K.set_session(session)
 
 
 COMPILED_MODELS = dict()
