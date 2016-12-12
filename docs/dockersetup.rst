@@ -41,7 +41,7 @@ Verify that you have the five core containers working using:
 
 .. code-block:: bash
 
-   docker ps
+    docker ps
 
 
 You should see something like this:
@@ -71,8 +71,9 @@ The first container runs flower_, a simple application to monitor the broker, th
 
 The architecture could be resumed as:
 
-.. image:: _static/architecture.svg
-            :width: 700
+.. raw:: html
+
+    <object data="_static/last_bouquetin.svg" type="image/svg+xml"></object>
 
 
 Add a controler
@@ -122,4 +123,3 @@ To launch an additionnal worker that will consume in the `sklearn` queue you can
 .. _flower: http://flower.readthedocs.io/en/latest/
 .. _`Dockers's documentation`: https://docs.docker.com/engine/reference/run/
 .. _wiki: https://github.com/NVIDIA/nvidia-docker/wiki
-
