@@ -73,7 +73,7 @@ The architecture could be resumed as:
 
 .. raw:: html
 
-    <object data="_static/last_bouquetin.svg" type="image/svg+xml"></object>
+    <object data="_static/architecture.svg" type="image/svg+xml"></object>
 
 
 Add a controler
