@@ -103,14 +103,6 @@ def sequential(nb_hidden):
 
 
 class TestHParamsSearch:
-    @pytest.fixture(params=['c_layer', ''])
-    def get_custom_l(self, request):
-        if request.param == 'c_layer':
-            return True
-        elif request.param == '':
-            return False
-        print(self)
-
     def test_fit(self):
         experiments = []
         data, data_val = make_data()
