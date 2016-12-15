@@ -120,9 +120,35 @@ class TestHParamsSearch:
             expe = Experiment(model, metrics=['accuracy'])
 
             experiments.append(expe)
-            # K.clear_session()
+            # k.clear_session()
 
         param_search = HParamsSearch(experiments, metric='loss')
-        param_search.fit([data], [data_val], nb_epoch=50,
+        param_search.fit([data], [data_val], nb_epoch=2,
                          batch_size=batch_size, verbose=2)
+        print(self)
+
+    def test_fit_async(self):
+        experiments = []
+        data, data_val = make_data()
+        for i in range(9):
+            nb_hidden = np.random.binomial(20, 0.5) * 8
+            adam = Adam(lr=1e-3)
+
+            # model
+            model = sequential(nb_hidden)
+
+            model.compile(loss='categorical_crossentropy',
+                          optimizer=adam,
+                          metrics=['accuracy'])
+
+            expe = Experiment(model, metrics=['accuracy'])
+
+            experiments.append(expe)
+            # k.clear_session()
+
+        param_search = HParamsSearch(experiments, metric='loss')
+        param_search.fit_async([data], [data_val], nb_epoch=2,
+                                     batch_size=batch_size, verbose=2)
+        param_search.summary()
+        param_search.summary(verbose=True)
         print(self)
