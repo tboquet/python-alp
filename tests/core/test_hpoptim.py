@@ -150,5 +150,56 @@ class TestHParamsSearch:
         param_search.fit_async([data], [data_val], nb_epoch=2,
                                      batch_size=batch_size, verbose=2)
         param_search.summary()
+        print(self)
+
+    def test_fit_gen(self):
+        experiments = []
+        gen, data, data_stream = make_gen()
+        val, data_2, data_stream_2 = make_gen()
+        for i in range(4):
+            nb_hidden = np.random.binomial(20, 0.5) * 8
+            adam = Adam(lr=1e-3)
+
+            # model
+            model = sequential(nb_hidden)
+
+            model.compile(loss='categorical_crossentropy',
+                          optimizer=adam,
+                          metrics=['accuracy'])
+
+            expe = Experiment(model, metrics=['accuracy'])
+
+            experiments.append(expe)
+            # k.clear_session()
+
+        param_search = HParamsSearch(experiments, metric='loss')
+        param_search.fit_gen([gen], [val], nb_epoch=2,
+                             batch_size=batch_size, verbose=2)
+        param_search.summary(verbose=True)
+        print(self)
+
+    def test_fit_gen(self):
+        experiments = []
+        gen, data, data_stream = make_gen()
+        val, data_2, data_stream_2 = make_gen()
+        for i in range(4):
+            nb_hidden = np.random.binomial(20, 0.5) * 8
+            adam = Adam(lr=1e-3)
+
+            # model
+            model = sequential(nb_hidden)
+
+            model.compile(loss='categorical_crossentropy',
+                          optimizer=adam,
+                          metrics=['accuracy'])
+
+            expe = Experiment(model, metrics=['accuracy'])
+
+            experiments.append(expe)
+            # k.clear_session()
+
+        param_search = HParamsSearch(experiments, metric='loss')
+        param_search.fit_gen([gen], [val], nb_epoch=2,
+                             batch_size=batch_size, verbose=2)
         param_search.summary(verbose=True)
         print(self)
