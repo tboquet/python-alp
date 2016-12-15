@@ -173,8 +173,10 @@ class TestHParamsSearch:
             # k.clear_session()
 
         param_search = HParamsSearch(experiments, metric='loss')
-        param_search.fit_gen([gen], [val], nb_epoch=2,
-                             batch_size=batch_size, verbose=2)
+        param_search.fit_gen_async([gen], [val], nb_epoch=2,
+                                   verbose=2,
+                                   nb_val_samples=128,
+                                   samples_per_epoch=64)
         param_search.summary(verbose=True)
         print(self)
 
@@ -200,6 +202,8 @@ class TestHParamsSearch:
 
         param_search = HParamsSearch(experiments, metric='loss')
         param_search.fit_gen([gen], [val], nb_epoch=2,
-                             batch_size=batch_size, verbose=2)
+                             verbose=2,
+                             nb_val_samples=128,
+                             samples_per_epoch=64)
         param_search.summary(verbose=True)
         print(self)
