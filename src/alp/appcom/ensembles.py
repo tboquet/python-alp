@@ -181,7 +181,8 @@ class HParamsSearch(Ensemble):
         expes = self.experiments
         for i, res in enumerate(self.results):
             res, t = res
-            t.join()
+            if t is not None:
+                t.join()
             for k, v in expes[i].full_res['metrics'].items():
                 if isinstance(v, list):
                     if k in ['loss', 'val_loss']:
