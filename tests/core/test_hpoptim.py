@@ -138,7 +138,7 @@ class TestHParamsSearch:
 
         param_search = HParamsSearch(experiments, metric='loss')
         param_search.fit_async([data], [data_val], nb_epoch=2,
-                                     batch_size=batch_size, verbose=2)
+                               batch_size=batch_size, verbose=2)
         param_search.summary()
         print(self)
 
@@ -155,15 +155,15 @@ class TestHParamsSearch:
         param_search.summary(verbose=True)
         print(self)
 
-    def test_fit_gen(self):
+    def test_fit_gen_async(self):
         gen, data, data_stream = make_gen()
         val, data_2, data_stream_2 = make_gen()
         experiments = make_experiments()
         param_search = HParamsSearch(experiments, metric='loss')
-        param_search.fit_gen([gen], [val], nb_epoch=2,
-                             verbose=2,
-                             nb_val_samples=128,
-                             samples_per_epoch=64)
+        param_search.fit_gen_async([gen], [val], nb_epoch=2,
+                                   verbose=2,
+                                   nb_val_samples=128,
+                                   samples_per_epoch=64)
         param_search.summary(verbose=True)
         print(self)
 
