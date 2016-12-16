@@ -102,25 +102,30 @@ def sequential(nb_hidden):
     return model
 
 
+def make_experiments():
+    experiments = []
+    nb_hiddens = [8, 16, 32]
+    data, data_val = make_data()
+    for i in range(3):
+        nb_hidden = nb_hiddens[i]
+
+        # model
+        model = sequential(nb_hidden)
+
+        model.compile(loss='categorical_crossentropy',
+                        optimizer='adam',
+                        metrics=['accuracy'])
+
+        expe = Experiment(model, metrics=['accuracy'])
+
+        experiments.append(expe)
+    return experiments
+
+
 class TestHParamsSearch:
     def test_fit(self):
-        experiments = []
         data, data_val = make_data()
-        for i in range(5):
-            nb_hidden = np.random.binomial(20, 0.5) * 8
-            adam = Adam(lr=1e-3)
-
-            # model
-            model = sequential(nb_hidden)
-
-            model.compile(loss='categorical_crossentropy',
-                          optimizer=adam,
-                          metrics=['accuracy'])
-
-            expe = Experiment(model, metrics=['accuracy'])
-
-            experiments.append(expe)
-            # k.clear_session()
+        experiments = make_experiments()
 
         param_search = HParamsSearch(experiments, metric='loss')
         param_search.fit([data], [data_val], nb_epoch=2,
@@ -128,23 +133,8 @@ class TestHParamsSearch:
         print(self)
 
     def test_fit_async(self):
-        experiments = []
         data, data_val = make_data()
-        for i in range(9):
-            nb_hidden = np.random.binomial(20, 0.5) * 8
-            adam = Adam(lr=1e-3)
-
-            # model
-            model = sequential(nb_hidden)
-
-            model.compile(loss='categorical_crossentropy',
-                          optimizer=adam,
-                          metrics=['accuracy'])
-
-            expe = Experiment(model, metrics=['accuracy'])
-
-            experiments.append(expe)
-            # k.clear_session()
+        experiments = make_experiments()
 
         param_search = HParamsSearch(experiments, metric='loss')
         param_search.fit_async([data], [data_val], nb_epoch=2,
@@ -153,24 +143,9 @@ class TestHParamsSearch:
         print(self)
 
     def test_fit_gen(self):
-        experiments = []
         gen, data, data_stream = make_gen()
         val, data_2, data_stream_2 = make_gen()
-        for i in range(4):
-            nb_hidden = np.random.binomial(20, 0.5) * 8
-            adam = Adam(lr=1e-3)
-
-            # model
-            model = sequential(nb_hidden)
-
-            model.compile(loss='categorical_crossentropy',
-                          optimizer=adam,
-                          metrics=['accuracy'])
-
-            expe = Experiment(model, metrics=['accuracy'])
-
-            experiments.append(expe)
-            # k.clear_session()
+        experiments = make_experiments()
 
         param_search = HParamsSearch(experiments, metric='loss')
         param_search.fit_gen_async([gen], [val], nb_epoch=2,
@@ -181,29 +156,24 @@ class TestHParamsSearch:
         print(self)
 
     def test_fit_gen(self):
-        experiments = []
         gen, data, data_stream = make_gen()
         val, data_2, data_stream_2 = make_gen()
-        for i in range(4):
-            nb_hidden = np.random.binomial(20, 0.5) * 8
-            adam = Adam(lr=1e-3)
-
-            # model
-            model = sequential(nb_hidden)
-
-            model.compile(loss='categorical_crossentropy',
-                          optimizer=adam,
-                          metrics=['accuracy'])
-
-            expe = Experiment(model, metrics=['accuracy'])
-
-            experiments.append(expe)
-            # k.clear_session()
-
+        experiments = make_experiments()
         param_search = HParamsSearch(experiments, metric='loss')
         param_search.fit_gen([gen], [val], nb_epoch=2,
                              verbose=2,
                              nb_val_samples=128,
                              samples_per_epoch=64)
         param_search.summary(verbose=True)
+        print(self)
+
+    def test_predict(self):
+        data, data_val = make_data()
+        experiments = make_experiments()
+
+        param_search = HParamsSearch(experiments, metric='loss')
+        param_search.fit([data], [data_val], nb_epoch=2,
+                         batch_size=batch_size, verbose=2)
+
+        param_search.predict([data])
         print(self)
