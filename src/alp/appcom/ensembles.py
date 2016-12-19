@@ -25,8 +25,11 @@ def get_ops(metric):
 
 def get_best(experiments, metric):
     op, op_arg, is_max = get_ops(metric)
-    best_perf_expes = [op(expe.full_res['metrics'][metric])
-                       for expe in experiments]
+    best_perf_expes = []
+    for expe in experiments:
+        if not hasattr(expe, 'full_res'):
+            raise Exception('Results are not ready')
+        best_perf_expes.append(op(expe.full_res['metrics'][metric]))
     return experiments[op_arg(best_perf_expes)]
 
 

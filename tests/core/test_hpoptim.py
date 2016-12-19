@@ -105,7 +105,6 @@ def sequential(nb_hidden):
 def make_experiments():
     experiments = []
     nb_hiddens = [8, 16, 32]
-    data, data_val = make_data()
     for i in range(3):
         nb_hidden = nb_hiddens[i]
 
@@ -148,10 +147,10 @@ class TestHParamsSearch:
         experiments = make_experiments()
 
         param_search = HParamsSearch(experiments, metric='loss')
-        param_search.fit_gen_async([gen], [val], nb_epoch=2,
-                                   verbose=2,
-                                   nb_val_samples=128,
-                                   samples_per_epoch=64)
+        param_search.fit_gen([gen], [val], nb_epoch=2,
+                             verbose=2,
+                             nb_val_samples=128,
+                             samples_per_epoch=64)
         param_search.summary(verbose=True)
         print(self)
 
