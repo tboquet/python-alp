@@ -152,7 +152,7 @@ class HParamsSearch(Ensemble):
                     spent += time() - b
                     to_print = spent / (i + 1)
                 progress.update(i, s=float(1 / to_print))
-                if expe.backend == 'keras' and async:
+                if expe.backend == 'keras' and async:  # pragma: no cover
                     import keras.backend as K
                     if K.backend() == 'tensorflow':
                         K.clear_session()
