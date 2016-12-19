@@ -188,10 +188,7 @@ class HParamsSearch(Ensemble):
                 t.join()
             for k, v in expes[i].full_res['metrics'].items():
                 if isinstance(v, list):
-                    if k in ['loss', 'val_loss']:
-                        op = np.min
-                    else:
-                        op = np.max
+                    op, _, _ = get_ops(k)
                     if k in res_dict:
                         res_dict[k] += [op(v)]
                     else:

@@ -158,7 +158,7 @@ class TestHParamsSearch:
         gen, data, data_stream = make_gen()
         val, data_2, data_stream_2 = make_gen()
         experiments = make_experiments()
-        param_search = HParamsSearch(experiments, metric='loss')
+        param_search = HParamsSearch(experiments, metric='val_acc')
         param_search.fit_gen_async([gen], [val], nb_epoch=2,
                                    verbose=2,
                                    nb_val_samples=128,
