@@ -3,8 +3,6 @@
 import keras
 import numpy as np
 import pytest
-import six
-
 
 from fuel.datasets.hdf5 import H5PYDataset
 from fuel.schemes import SequentialScheme
@@ -12,10 +10,7 @@ from fuel.streams import DataStream
 from fuel.transformers import ScaleAndShift
 from keras.layers import Dense
 from keras.layers import Dropout
-from keras.layers import Input
-from keras.models import Model
 from keras.models import Sequential
-from keras.optimizers import Adam
 from keras.utils import np_utils
 from keras.utils.test_utils import get_test_data
 
@@ -60,7 +55,6 @@ def make_data():
 
 
 def dump_data():
-    import numpy as np
     data, data_val = make_data()
     inputs = [np.concatenate([data['X'], data_val['X']])]
     outputs = [np.concatenate([data['y'], data_val['y']])]
@@ -152,6 +146,8 @@ class TestHParamsSearch:
                              nb_val_samples=128,
                              samples_per_epoch=64)
         param_search.summary(verbose=True)
+        close_gens(gen, data, data_stream)
+        close_gens(val, data_2, data_stream_2)
         print(self)
 
     def test_fit_gen_async(self):
@@ -164,6 +160,8 @@ class TestHParamsSearch:
                                    nb_val_samples=128,
                                    samples_per_epoch=64)
         param_search.summary(verbose=True)
+        close_gens(gen, data, data_stream)
+        close_gens(val, data_2, data_stream_2)
         print(self)
 
     def test_predict(self):
@@ -176,3 +174,7 @@ class TestHParamsSearch:
 
         param_search.predict(data['X'])
         print(self)
+
+
+if __name__ == "__main__":
+    pytest.main([__file__])

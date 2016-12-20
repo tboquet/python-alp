@@ -63,7 +63,7 @@ class Ensemble(object):
     def summary(self):
         raise NotImplementedError
 
-    def plt_summary(self):
+    def plt_summary(self, verbose=False):
         raise NotImplementedError
 
 
