@@ -24,7 +24,7 @@ def get_ops(metric):
 
 
 def get_best(experiments, metric):
-    op, op_arg, is_max = get_ops(metric)
+    op, op_arg, _ = get_ops(metric)
     best_perf_expes = []
     for expe in experiments:
         if not hasattr(expe, 'full_res'):
