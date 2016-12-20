@@ -70,7 +70,6 @@ def make_data():
 
 
 def dump_data():
-    import numpy as np
     data, data_val = make_data()
     inputs = [np.concatenate([data['X'], data_val['X']])]
     outputs = [np.concatenate([data['y'], data_val['y']])]
@@ -399,7 +398,6 @@ class TestExperiment:
                                                      get_loss_metric,
                                                      get_custom_l)
 
-        model_name = model.__class__.__name__
         _, data_val_use = make_data()
         expe = Experiment(model)
 
@@ -478,7 +476,6 @@ class TestExperiment:
 class TestBackendFunctions:
     def test_build_predict_func(self, get_model):
         """Test the build of a model"""
-        import numpy as np
         X_tr = np.ones((train_samples, input_dim))
         model = get_model()
         model.compile(loss='categorical_crossentropy',

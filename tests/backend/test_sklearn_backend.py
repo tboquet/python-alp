@@ -214,7 +214,7 @@ class TestExperiment:
                 10 chunks on train B with and without val
                 1 chunk on train B with and without val
         '''
-        data, data_val, is_classif, model, metric, expe = get_model_data_expe
+        data, data_val, is_classif, _, metric, expe = get_model_data_expe
 
         for Nchunks_gen, expected_value in szip([True, False], [10, 1]):
             gen_train, data_train, data_stream_train = make_gen(
@@ -280,6 +280,7 @@ class TestExperiment:
             assert expe
 
             close_gens(gen_train, data_train, data_stream_train)
+            close_gens(gen_test, data_test, data_stream_test)
 
         print(self)
 
