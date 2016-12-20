@@ -130,4 +130,3 @@ def return_custom():
             return dict(list(base_config.items()) + list(config.items()))
 
     return Dropout_cust
-
