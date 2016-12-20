@@ -130,12 +130,10 @@ for m in SKB.SUPPORTED:
     keyval[getname(m)] = m()
 
 
-@pytest.fixture(scope='module', params=['no_metric', 'accuracy', 'accuracy and mse'])
+@pytest.fixture(scope='module', params=['no_metric', 'accuracy and mse'])
 def get_metric(request):
     if request.param == 'no_metric':
         return(None)
-    elif request.param == 'accuracy':
-        return(['accuracy_score'])
     elif request.param == 'accuracy and mse':
         return(['accuracy_score', 'mean_squared_error'])
 
