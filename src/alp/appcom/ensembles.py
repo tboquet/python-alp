@@ -60,10 +60,10 @@ class Ensemble(object):
     def predict(self, data, data_val, *args, **kwargs):
         raise NotImplementedError
 
-    def summary(self):
+    def summary(self, verbose=False):
         raise NotImplementedError
 
-    def plt_summary(self, verbose=False):
+    def plt_summary(self):
         raise NotImplementedError
 
 
