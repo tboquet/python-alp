@@ -18,6 +18,7 @@ from alp.appcom.core import Experiment
 from alp.appcom.utils import to_fuel_h5
 from alp.backend import sklearn_backend as SKB
 from alp.backend.sklearn_backend import getname
+from alp.utils.utils_tests import close_gens
 
 
 np.random.seed(1336)
@@ -26,12 +27,6 @@ VERSION = sklearn.__version__
 CLASSIF = ['sklearn.linear_model.logistic.LogisticRegression',
            'sklearn.discriminant_analysis.LinearDiscriminantAnalysis',
            'sklearn.discriminant_analysis.QuadraticDiscriminantAnalysis']
-
-
-def close_gens(gen, data, data_stream):
-    gen.close()
-    data.close(None)
-    data_stream.close()
 
 
 def generate_data(classif=False):
@@ -214,7 +209,7 @@ class TestExperiment:
                 10 chunks on train B with and without val
                 1 chunk on train B with and without val
         '''
-        data, data_val, is_classif, _, metric, expe = get_model_data_expe
+        data, data_val, is_classif, model, metric, expe = get_model_data_expe
 
         for Nchunks_gen, expected_value in szip([True, False], [10, 1]):
             gen_train, data_train, data_stream_train = make_gen(
@@ -316,10 +311,9 @@ class TestExperiment:
 
             for data_val_loc in [None, data_val]:
 
-                _, thread = expe.fit_gen_async(
-                    [gen_train], [data_val_loc],
-                    model=model,
-                    overwrite=True, metrics=metric)
+                _, thread = expe.fit_gen_async([gen_train], [data_val_loc],
+                                               model=model,
+                                               overwrite=True, metrics=metric)
                 thread.join()
 
                 assert len(expe.full_res['metrics'][
