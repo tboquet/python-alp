@@ -174,6 +174,7 @@ class TestHParamsSearch:
 
         param_search.predict(data['X'])
 
+        experiments = make_experiments()
         param_search = HParamsSearch(experiments)
         param_search.fit([data], [data_val], nb_epoch=2,
                          batch_size=batch_size, verbose=2)
