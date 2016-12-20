@@ -108,6 +108,7 @@ def model(custom=False):
 def return_custom():
     import keras.backend as K
     from keras.engine import Layer
+
     class Dropout_cust(Layer):
         '''Applies Dropout to the input.
         '''
