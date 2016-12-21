@@ -1,4 +1,3 @@
-
 ================================================================================
 Tutorial 1 : Simple Hyperparameter Tuning with ALP - sklearn models
 ================================================================================
@@ -181,5 +180,3 @@ We can now create an untuned model (C=1 by default) and assess its precision on 
 .. parsed-literal::
 
     0.88
-
-

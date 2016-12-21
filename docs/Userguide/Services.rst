@@ -32,3 +32,13 @@ Job monitor
 ~~~~~~~~~~~
 
 he distributes the tasks
+=======
+broker
+~~~~~~
+
+he distributes the tasks
+
+worker
+~~~~~~~
+
+he runs computations

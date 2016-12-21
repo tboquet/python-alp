@@ -2,9 +2,9 @@
 Models
 ======
 
-A model does this and that.
+
+A model does.
 
 
 Model_dict
 ~~~~~~~~~~
-

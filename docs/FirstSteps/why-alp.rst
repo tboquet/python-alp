@@ -32,6 +32,7 @@ We believe it might be useful for several applications such as:
 - **post analysis**: extract and explore the parameters of models given their score on several data blocks. Sometimes it could be helpful to visualise the successful set of parameters. 
 
 
+
 .. [1] unfortunately at the time of the development, running MongoDB in a Windows Docker was not a possibility, but we will check out that soon.
 
 

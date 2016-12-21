@@ -5,8 +5,10 @@ Tutorial 0 : how to launch a basic experiment with keras or sklearn
 Step 1 : launching alp
 ~~~~~~~~~~~~~~~~~~~~~~
 
+
 Follow the instructions in the setup section.
 We assume at this point that you have a Jupyter notebook running on the controller.
+
 
 Step 2 : defining your model
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -244,5 +244,3 @@ validate a certain model.
       'model_id': 'c6f885968087dc779ce47f3f1af86a9b',
       'params_dump': u'/parameters_h5/c6f885968087dc779ce47f3f1af86a9b2767007837282c3da5a86cfe41b57cce.h5'},
      None)
-
-
