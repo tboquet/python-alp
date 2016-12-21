@@ -1,4 +1,4 @@
-from alp.appcom.utils import to_fuel_h5
+import numpy as np
 from fuel.datasets.hdf5 import H5PYDataset
 from fuel.schemes import SequentialScheme
 from fuel.streams import DataStream
@@ -10,7 +10,8 @@ from keras.models import Model
 from keras.models import Sequential
 from keras.utils import np_utils
 from keras.utils.test_utils import get_test_data
-import numpy as np
+
+from alp.appcom.utils import to_fuel_h5
 
 
 input_dim = 2
