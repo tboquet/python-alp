@@ -22,8 +22,6 @@ from alp.utils.utils_tests import close_gens
 from alp.utils.utils_tests import input_dim
 from alp.utils.utils_tests import make_data
 from alp.utils.utils_tests import make_gen
-from alp.utils.utils_tests import model
-from alp.utils.utils_tests import return_custom
 from alp.utils.utils_tests import sequential
 from alp.utils.utils_tests import test_samples
 from alp.utils.utils_tests import train_samples
