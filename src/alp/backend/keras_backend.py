@@ -37,9 +37,9 @@ from ..appcom.utils import check_gen
 from ..backend import common as cm
 from ..celapp import app
 
-try:
+try:  # pragma: no cover
     import cPickle as pickle
-except ImportError:
+except ImportError:  # pragma: no cover
     import pickle
 
 
