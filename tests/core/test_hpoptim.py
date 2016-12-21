@@ -19,7 +19,6 @@ from alp.appcom.ensembles import HParamsSearch
 from alp.appcom.utils import to_fuel_h5
 from alp.utils.utils_tests import batch_size
 from alp.utils.utils_tests import close_gens
-from alp.utils.utils_tests import input_dim
 from alp.utils.utils_tests import make_data
 from alp.utils.utils_tests import make_gen
 from alp.utils.utils_tests import sequential
