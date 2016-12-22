@@ -150,7 +150,7 @@ class HParamsSearch(Ensemble):
                     spent += time() - b
                     to_print = spent / (i + 1)
                 progress.update(i, s=float(1 / to_print))
-                if expe.backend == 'keras' and async:  # pragma: no cover
+                if expe.backend_name == 'keras' and async:  # pragma: no cover
                     import keras.backend as K
                     if K.backend() == 'tensorflow':
                         K.clear_session()
@@ -161,6 +161,9 @@ class HParamsSearch(Ensemble):
 
         Args:
             see :meth:`alp.appcom.core.Experiment.predict`
+            metric(str): the name of the metric to use
+            op(function): an operator returning the value to select an
+                experiment
 
         Returns:
             an array of results"""
