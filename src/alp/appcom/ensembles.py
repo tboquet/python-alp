@@ -11,18 +11,6 @@ from progressbar import ProgressBar
 from progressbar import SimpleProgress
 
 
-def get_ops(metric):
-    if metric in ['loss', 'val_loss']:
-        op = np.min
-        op_arg = np.argmin
-        is_max = False
-    else:
-        op = np.max
-        op_arg = np.argmax
-        is_max = True
-    return op, op_arg, is_max
-
-
 def get_best(experiments, metric, op):
     best_perf_expes = []
     for expe in experiments:
