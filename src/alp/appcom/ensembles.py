@@ -36,8 +36,8 @@ def get_best(experiments, metric, op):
     if (1 - perf_nans).sum() == 0:
         raise Exception('The selected metric evaluations are all nans')
 
-    best_perf_expes = perf_array[perf_nans == False]
-    best = experiments[op(best_perf_expes) == np.array(best_perf_expes)]
+    best_perf_expes = perf_array[perf_nans == False]  # NOQA
+    best = experiments[op(best_perf_expes) == np.array(best_perf_expes)]  # NOQA
     return best[0]
 
 
