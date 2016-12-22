@@ -135,12 +135,12 @@ class TestHParamsSearch:
         data, data_val = make_data(train_samples, test_samples)
         experiments = make_sklearn_experiments()
 
-        param_search = HParamsSearch(experiments, metric='score', op=np.min)
+        param_search = HParamsSearch(experiments, metric='score', op=np.max)
         data['y'] = np.argmax(data['y'], axis=1).ravel()
         data_val['y'] = np.argmax(data_val['y'], axis=1).ravel()
         param_search.fit([data], [data_val], overwrite=True)
 
-        param_search.predict(data['X'], metric='score', op=np.max)
+        param_search.predict(data['X'])
         print(self)
 
 
