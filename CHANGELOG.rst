@@ -11,7 +11,9 @@ Unreleased
 * Keras backend supports custom objects
 * asynchronous fit is stable for all backends
 * fuel generators are supported as training data and validation data source
-
+* Ensemble class in core (abstraction for many models)
+* Basic HyperParameter optimisation
+* Better documentation
 
 
 0.2.0 (2016-04-21)
