@@ -4,7 +4,9 @@ Set up of your containers
 
 The library takes advantage of the modularity of Docker. For now, you have to define your architecture and launch your containers before accessing your controler using docker's command line interface.
 
-To launch all the required containers so that the base config file works launch::
+To launch all the required containers so that the base config file works launch:
+
+.. code-block:: bash
 
     docker run --name mongo_models -v /opt/data/mongo_data/models:/data/db -d --restart=always mongo
 
@@ -39,7 +41,7 @@ Verify that you have the five core containers working using:
 
 .. code-block:: bash
 
-   docker ps
+    docker ps
 
 
 You should see something like this:
@@ -69,14 +71,17 @@ The first container runs flower_, a simple application to monitor the broker, th
 
 The architecture could be resumed as:
 
-.. image:: _static/architecture.svg
-            :width: 700
+.. raw:: html
+
+    <object data="_static/architecture.svg" type="image/svg+xml"></object>
 
 
 Add a controler
 ###############
 
-If you want to add a Jupter Notebook to send models to the system, you have to choose an available port number and a new name to use::
+If you want to add a Jupter Notebook to send models to the system, you have to choose an available port number and a new name to use:
+
+.. code-block:: bash
 
     NV_GPU=0 nvidia-docker run -d \
         -v /path/to/your/notebooks:/notebooks -v /.theano:/root/.theano \
@@ -91,7 +96,9 @@ The controler should be available on the port `new_port` of the host.
 Add a worker
 ############
 
-To launch an additionnal worker that will consume in the `keras` queue you can use::
+To launch an additionnal worker that will consume in the `keras` queue you can use:
+
+.. code-block:: bash
 
     NV_GPU=0 nvidia-docker run -d \
         -v /path/to/your/notebooks:/notebooks -v /.theano:/root/.theano \
@@ -101,7 +108,9 @@ To launch an additionnal worker that will consume in the `keras` queue you can u
         --name new_name -p new_port:8888 --restart always tboquet/full7hc5workeralpk
 
 
-To launch an additionnal worker that will consume in the `sklearn` queue you can use::
+To launch an additionnal worker that will consume in the `sklearn` queue you can use:
+
+.. code-block:: bash
 
     NV_GPU=0 nvidia-docker run -d \
         -v /path/to/your/notebooks:/notebooks -v /.theano:/root/.theano \
@@ -114,4 +123,3 @@ To launch an additionnal worker that will consume in the `sklearn` queue you can
 .. _flower: http://flower.readthedocs.io/en/latest/
 .. _`Dockers's documentation`: https://docs.docker.com/engine/reference/run/
 .. _wiki: https://github.com/NVIDIA/nvidia-docker/wiki
-
