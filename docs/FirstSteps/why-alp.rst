@@ -28,8 +28,9 @@ How could ALP help me?
 We believe it might be useful for several applications such as:
 
 - **hyperparameters tuning**: for instance if you want to test several architectures on your neural network model, ALP can help you in dealing with the tedious task of logging all the architectures, parameters and results. They are all automatically stored in the databases and you just have to select the best model given the validation(s) you specified.
-- **post analysis of several models**: 
-- **fitting several models on several data streams**: 
+- **fitting several models on several data streams**: you have data streams coming from a source and you want to fit a lot of online models, it is easy with ALP. With the support of Fuel generators, you could transform your data on the fly. The he learning is then done using the resources of the host and the parameters of the models are stored. You could even code an API that returns prediction to your data service.
+- **post analysis**: extract and explore the parameters of models given their score on several data blocks. Sometimes it could be helpful to visualise the successful set of parameters. 
+
 
 
 .. [1] unfortunately at the time of the development, running MongoDB in a Windows Docker was not a possibility, but we will check out that soon.
