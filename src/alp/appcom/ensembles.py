@@ -129,9 +129,10 @@ class HParamsSearch(Ensemble):
 
     def _fit_cm(self, data, data_val, gen, async, *args, **kwargs):
         progress = ProgressBar(max_value=len(self.experiments),
-                         redirect_stdout=True,
-                         widgets=widgets, term_width=80)
+                               redirect_stdout=True,
+                               widgets=widgets, term_width=80)
         progress.start()
+        print
         for i, expe in enumerate(self.experiments):
             b = time()
             if gen and async:
