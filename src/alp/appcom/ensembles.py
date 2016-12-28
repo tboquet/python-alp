@@ -132,7 +132,6 @@ class HParamsSearch(Ensemble):
                                redirect_stdout=True,
                                widgets=widgets, term_width=80)
         progress.start()
-        print
         for i, expe in enumerate(self.experiments):
             b = time()
             if gen and async:
