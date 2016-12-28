@@ -128,32 +128,34 @@ class HParamsSearch(Ensemble):
         return self.results
 
     def _fit_cm(self, data, data_val, gen, async, *args, **kwargs):
-        with ProgressBar(max_value=len(self.experiments),
+        progress = ProgressBar(max_value=len(self.experiments),
                          redirect_stdout=True,
-                         widgets=widgets, term_width=80) as progress:
-            for i, expe in enumerate(self.experiments):
-                b = time()
-                if gen and async:
-                    res = expe.fit_gen_async(data, data_val, *args, **kwargs)
-                elif gen and not async:
-                    res = expe.fit_gen(data, data_val, *args, **kwargs)
-                elif not gen and async:
-                    res = expe.fit_async(data, data_val, *args, **kwargs)
-                else:
-                    res = expe.fit(data, data_val, *args, **kwargs)
+                         widgets=widgets, term_width=80)
+        progress.start()
+        for i, expe in enumerate(self.experiments):
+            b = time()
+            if gen and async:
+                res = expe.fit_gen_async(data, data_val, *args, **kwargs)
+            elif gen and not async:
+                res = expe.fit_gen(data, data_val, *args, **kwargs)
+            elif not gen and async:
+                res = expe.fit_async(data, data_val, *args, **kwargs)
+            else:
+                res = expe.fit(data, data_val, *args, **kwargs)
 
-                self.results.append(res)
-                if i == 0:
-                    spent = time() - b
-                    to_print = spent
-                else:
-                    spent += time() - b
-                    to_print = spent / (i + 1)
-                progress.update(i, s=float(1 / to_print))
-                if expe.backend_name == 'keras' and async:  # pragma: no cover
-                    import keras.backend as K
-                    if K.backend() == 'tensorflow':
-                        K.clear_session()
+            self.results.append(res)
+            if i == 0:
+                spent = time() - b
+                to_print = spent
+            else:
+                spent += time() - b
+                to_print = spent / (i + 1)
+            progress.update(i, s=float(1 / to_print))
+            if expe.backend_name == 'keras' and async:  # pragma: no cover
+                import keras.backend as K
+                if K.backend() == 'tensorflow':
+                    K.clear_session()
+        progress.finish()
         return self.results
 
     def predict(self, data, metric=None, op=None, *args, **kwargs):
