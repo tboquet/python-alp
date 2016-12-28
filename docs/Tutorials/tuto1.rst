@@ -35,6 +35,7 @@ best.
     data_val["X"], data_val["y"] = X_test_val, y_test_val
     data_new["X"], data_new["y"] = X_test_new, y_test_new
 
+
 2 - Define an easy model and an ALP Experiment in a loop
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -42,7 +43,7 @@ For the sake of simplicity, we will define a simple Logistic Regression,
 as the aim is not ultimate performance but demonstrate the capacities of
 ALP.
 
-Let us first define a helper function.
+Let us first define an helper function.
 
 .. code:: python
 
@@ -51,77 +52,53 @@ Let us first define a helper function.
     from alp.appcom.core import Experiment
     from operator import mul
     
-    def grid_search(data, data_val, grid_dict, tries, async = False, model_type = 'LogisticRegression'):
-        ''' This function randomly tries hyperparameters in Experiments and returns the best model.
+    def grid_search(grid_dict, tries, model_type='LogisticRegression'):
+        ''' This function randomly build Experiments with different hyperparameters and return the list of experiments.
         
         Args:    
-            data(dict) : data to be passed as a dictionary mapping
-                inputs names to np.arrays
-            data_val(dict) : same for validation
             grid_dict(dict) : hyperparameter grid from which to draw samples from
             tries(int) : number of model to be generated and tested
             async(bool) : should the fit be asynchronous
             model_type(string) : type of model to be tested (must be in sklearn.linear_model)
         
         Returns:
-            Expe (Experiment): an Experiment with (one of) the best model
+            expes(list): a list of Experiments.
   
         '''
         
         dict_res={}
+        expes = []
         
         # 1 - infos
-        size_grid = reduce(mul,[len(v) for v in grid_dict.values()])
-        print("grid size : "+ str(size_grid))
-        print("tries : "+ str(tries))
-        print
+        size_grid = reduce(mul, [len(v) for v in grid_dict.values()])
+        print("grid size : " + str(size_grid))
+        print("tries : " + str(tries))
+        print()
         
         
-        # 2 - main loop
+        # 2 - models loop
         for i in range(tries):
             select_params =  {}
-            for k,v in grid_dict.items():
+            for k, v in grid_dict.items():
                 select_params[k] = random.choice(v)
             model = getattr(sklearn.linear_model, model_type)(**select_params)
-            Expe = Experiment(model)
-            if async:
-                _, thread = Expe.fit_async([data], [data_val])
-                thread.join()            
-            else:
-                Expe.fit([data], [data_val])
-            dict_res[Expe.mod_id]=Expe.full_res["metrics"]["val_score"][0]
-        
-        # 3 - result extraction
-        results = dict_res.values()
-        best_score = max(results)
-        best_model_id = [k for k in dict_res.keys() if dict_res[k]==best_score][0] 
-        
-        # 4 - load the model in the last experiment
-        Expe.load_model(best_model_id, Expe.data_id)
-        
-        # 5 - verbose
-        print("the best parameters are:")
-        for k,v in grid_dict.items():
-              if k in Expe.model_dict['model_arch']:
-                print("    "+str(k)+" : "+str(Expe.model_dict['model_arch'][k]))
-       
-        return(Expe)
-        
+            expe = Experiment(model)
+            expes.append(expe)
+        return expes
+
 This helper function randomly (uniform, independent) samples hyperparameters combinations then fits the models within an ALP Experiment. It finally returns an Experiment where the best_model is loaded.
 
 
 Details of what this function does is:
 1. display some infos about the size of the grid.
-2. main loop: as many times as `tries`, it selects randomly a point in the hyperparameter grid, creates an Experiment object with the model parametrized with this point, fits the experiment (possibly asynchronously).
-3. extracts the result, note that we take the first element of the list of the keys that are associated to the best score, there is no mandatory uniqueness.  
-4. load the model in the last Experiment object. The `load_model` function wipes the results of the previous model in the Experiment. Note that the `load_model` function needs the id of the data. 
-5. display some verbose about the best parameters.
+2. models loop: as many times as `tries`, it selects randomly a point in the hyperparameter grid, creates an Experiment object with the model parametrized with this point.
 
 3 - Run the random search
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: python
 
+    from alp.appcom.ensemble import HParamsSearch
     # setting the seed for reproducibility: feel free to change it
     random.seed(12345)
     
@@ -132,7 +109,13 @@ Details of what this function does is:
     
     tries = 100
     
-    Expe_best = grid_search(data,data_val,grid,tries,async = False)
+    expes = grid_search(grid, tries)
+
+    # we define the ensemble with our experiments and a metric
+    ensemble = HParamsSearch(experiments=expes, metric='score', op=np.max)
+
+    results = ensemble.fit([data], [data_val])
+    ensemble.summary(verbose=True, metrics={'score': np.max})
 
 
 
@@ -141,10 +124,8 @@ Details of what this function does is:
     grid size : 432
     tries : 100
     
-    the best parameters are:
-        C : 50
-        tol : 0.0001
 
+   .. TODO: finish this!
 
 A word on the interpretation of the params: 
  * the parameter C is the regularisation parameter of the Logistic Regression. A small value of C means a higher L2 constraint on w (the L2 constraint is not applied on $c$, the intercept parameter). A larger C can lead to overfitting, while a smaller value can lead to too much regularization. As such, it is the ideal candidate for automatic tuning.
