@@ -7,7 +7,7 @@ In this section we describe the different services (such as the Jupyter Notebook
 Controller
 ~~~~~~~~~~
 
-The Controller is the user endpoint of the library. It serves a Jupyter notebook in which the user sends the commands (such as `import alp`). It is linked to all other containers. 
+The Controller is the user endpoint of the library. By default, it serves a Jupyter notebook in which the user sends commands (such as `import alp`). You can also use it to run an application using ALP for either training or prediction.
 
 Mongo Models
 ~~~~~~~~~~~~
@@ -18,27 +18,21 @@ Mongo Models is a container that runs a MongoDB service in which the architectur
 Mongo Results
 ~~~~~~~~~~~~~
 
+Mongo Results is a container that runs a MongoDB service in wich the meta informations about a tasks is saved.
+
 Broker
 ~~~~~~
 
-Also called scheduler, hhe distributes the tasks
+Also called scheduler in the architecture, it distributes the tasks and gather the results.
 
 Worker(s)
 ~~~~~~~~~
 
-he runs computations
+The workers run the tasks and send results to the MongoDB services. Each backend need at least one worker consuming from the right queue.
 
 Job monitor
 ~~~~~~~~~~~
 
-he distributes the tasks
-=======
-broker
-~~~~~~
+You can plug several containers to monitor jobs.
 
-he distributes the tasks
 
-worker
-~~~~~~~
-
-he runs computations

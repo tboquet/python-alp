@@ -1,7 +1,7 @@
 Userguide
 ---------
 
-This userguides aims at bla bla.
+In this user guide we explain with more details how to use the architecture and the main objects available in ALP.
 
 .. include ::  Services.rst
 .. include ::  Experiment.rst

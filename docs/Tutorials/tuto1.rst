@@ -96,6 +96,9 @@ Details of what this function does is:
 3 - Run the random search
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+We use the :meth:`alp.appcom.ensembles.HParamsSearch` class to wrap several :meth:`alp.appcom.core.Experiment`.
+For now, because the grid is defined outside of the class, you have to pass a dictionnary mapping experiments name to :meth:`alp.appcom.core.Experiment`.
+
 .. code:: python
 
     from alp.appcom.ensemble import HParamsSearch
@@ -116,7 +119,6 @@ Details of what this function does is:
 
     results = ensemble.fit([data], [data_val])
     ensemble.summary(verbose=True, metrics={'score': np.max})
-
 
 
 .. parsed-literal::

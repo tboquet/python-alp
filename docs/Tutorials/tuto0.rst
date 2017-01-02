@@ -22,46 +22,87 @@ The following code gets some data and declares a simple artificial neural networ
 
 .. code-block:: python
 
-    # some imports
-    from keras.layers import Dense
-    from keras.layers import Input
+    # we import numpy and fix the seed
+    import numpy as np
+    np.random.seed(1337)  # for reproducibility
+
+    # we import alp and Keras tools that we will use
+    import alp
+    from keras.datasets import mnist
     from keras.models import Sequential
+    from keras.layers import Dense, Dropout, Activation, Flatten
     from keras.utils import np_utils
-    from keras.utils.test_utils import get_test_data
+    import keras.backend as K
+    from keras.optimizers import Adam
+    from alp.appcom.ensembles import HParamsSearch
 
-    # some hyperparameters of the model
-    input_dim = 2
-    nb_hidden = 4
-    nb_class = 2
-    batch_size = 5
-    train_samples = 20
-    test_samples = 20
+    # if you use tensorflow you must use this configuration
+    # so that it doesn't use all of the GPU's memory (default config)
+    import tensorflow as tf
 
-    # get some data
-    (X_tr, y_tr), (X_te, y_te) = get_test_data(nb_train=train_samples,
-                                                nb_test=test_samples,
-                                                input_shape=(input_dim,),
-                                                classification=True,
-                                                nb_class=nb_class)
+    config = tf.ConfigProto(allow_soft_placement=True)
+    config.gpu_options.allow_growth = True
+    session = tf.Session(config=config)
+    K.set_session(session)
 
-    y_tr = np_utils.to_categorical(y_tr)
-    y_te = np_utils.to_categorical(y_te)
+    batch_size = 128
+    nb_classes = 10
+    nb_epoch = 12
+
+    # input image dimensions
+    img_rows, img_cols = 28, 28
+    # number of features to use
+    nb_filters = 32
+
+    # the data, shuffled and split between train and test sets
+    (X_train, y_train), (X_test, y_test) = mnist.load_data()
+
+    X_train = X_train.astype('float32')
+    X_test = X_test.astype('float32')
+    X_train /= 255
+    X_test /= 255
+    print('X_train shape:', X_train.shape)
+    print(X_train.shape[0], 'train samples')
+    print(X_test.shape[0], 'test samples')
+
+    if K.image_dim_ordering() == 'th':
+        X_train = X_train.reshape(X_train.shape[0], 1, img_rows, img_cols)
+        X_test = X_test.reshape(X_test.shape[0], 1, img_rows, img_cols)
+        input_shape = (1, img_rows, img_cols)
+    else:
+        X_train = X_train.reshape(X_train.shape[0], img_rows, img_cols, 1)
+        X_test = X_test.reshape(X_test.shape[0], img_rows, img_cols, 1)
+        input_shape = (img_rows, img_cols, 1)
+
+    # convert class vectors to binary class matrices
+    Y_train = np_utils.to_categorical(y_train, nb_classes)
+    Y_test = np_utils.to_categorical(y_test, nb_classes)
 
     # put the data in the form ALP expects
     data, data_val = dict(), dict()
-    data["X"] = X_tr
-    data["y"] = y_tr
-    data_val["X"] = X_te
-    data_val["y"] = y_te
+    data["X"] = X_train
+    data["y"] = Y_train
+    data_val["X"] = X_test
+    data_val["y"] = Y_test
 
     # finally define and compile the model
-    model = Sequential()
-    model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
-    model.add(Dense(nb_class, activation='softmax'))
-    model.compile(loss='categorical_crossentropy',
-                  optimizer='rmsprop',
-                  metrics=['accuracy'])
 
+    model = Sequential()
+
+    model.add(Flatten(input_shape=input_shape))
+    model.add(Dense(nb_filters))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.25))
+
+    model.add(Dense(128))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(nb_classes))
+    model.add(Activation('softmax'))
+
+    model.compile(loss='categorical_crossentropy',
+                  optimizer='adadelta',
+                  metrics=['accuracy'])
 
 Note that we compile the model so that we also have information about the optimizer.
 
