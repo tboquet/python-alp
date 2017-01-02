@@ -11,16 +11,21 @@ from progressbar import ProgressBar
 from progressbar import SimpleProgress
 
 
-def get_best(experiments, metric, op):
+def get_best(experiments, metric, op, partial=False):
     best_perf_expes = []
     list_experiments = []
     list_keys = []
     for k, expe in experiments.items():
         if not hasattr(expe, 'full_res'):
-            raise Exception('Results are not ready')
-        best_perf_expes.append(op(expe.full_res['metrics'][metric]))
-        list_experiments.append(expe)
-        list_keys.append(k)
+            if not partial:
+                raise Exception('Results are not ready')
+        else:
+            best_perf_expes.append(op(expe.full_res['metrics'][metric]))
+            list_experiments.append(expe)
+            list_keys.append(k)
+
+    if len(list_experiments) == 0:
+        raise Exception('No result is ready yet')
 
     ar_expes = np.array(list_experiments)
     ar_keys = np.array(list_keys)
@@ -176,7 +181,8 @@ class HParamsSearch(Ensemble):
                         K.clear_session()
         return self.results
 
-    def predict(self, data, metric=None, op=None, *args, **kwargs):
+    def predict(self, data, metric=None, op=None, partial=False,
+                *args, **kwargs):
         """Apply the predict method to all the experiments
 
         Args:
@@ -194,7 +200,7 @@ class HParamsSearch(Ensemble):
 
         if metric is None or op is None:
             raise Exception('You should provide a metric along with an op')
-        best_exp, best_key = get_best(self.experiments, metric, op)
+        best_exp, best_key = get_best(self.experiments, metric, op, partial)
         return best_key, best_exp.predict(data, *args, **kwargs)
 
     def summary(self, metrics, verbose=False):
