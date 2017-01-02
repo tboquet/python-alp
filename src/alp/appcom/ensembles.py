@@ -167,7 +167,7 @@ class HParamsSearch(Ensemble):
                 else:
                     res = expe.fit(data, data_val, *args, **kwargs)
 
-                self.results[k](res)
+                self.results[k] = res
                 if i == 0:
                     spent = time() - b
                     to_print = spent
