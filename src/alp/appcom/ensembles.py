@@ -155,7 +155,7 @@ class HParamsSearch(Ensemble):
         with ProgressBar(max_value=len(self.experiments),
                          redirect_stdout=True,
                          widgets=widgets, term_width=80) as progress:
-            for i, kv in enumerate(self.experiments):
+            for i, kv in enumerate(self.experiments.items()):
                 k, expe = kv
                 b = time()
                 if gen and async:
@@ -220,15 +220,15 @@ class HParamsSearch(Ensemble):
             res, t = res
             if t is not None:
                 t.join()
-            for k, v in expes[i].full_res['metrics'].items():
+            for kr, v in expes[k].full_res['metrics'].items():
                 if isinstance(v, list):
-                    if k in metrics:
-                        op = metrics[k]
-                        if k in res_dict:
-                            res_dict[k] += [op(v)]
+                    if kr in metrics:
+                        op = metrics[kr]
+                        if kr in res_dict:
+                            res_dict[kr] += [op(v)]
                         else:
-                            res_dict[k] = []
-                            res_dict[k] += [op(v)]
+                            res_dict[kr] = []
+                            res_dict[kr] += [op(v)]
         res_table = pd.DataFrame(res_dict)
         if verbose is True:
             print(res_table.describe())
