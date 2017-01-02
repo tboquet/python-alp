@@ -215,7 +215,7 @@ class HParamsSearch(Ensemble):
         # build results table
         res_dict = dict()
         expes = self.experiments
-        for i, kv in enumerate(self.results):
+        for i, kv in enumerate(self.results.items()):
             k, res = kv
             res, t = res
             if t is not None:
