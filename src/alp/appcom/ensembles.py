@@ -38,7 +38,18 @@ widgets = [Percentage(), ' ',
 
 class Ensemble(object):
 
+    """Base class to build experiments containers able to execute batch
+    sequences of action. Must implement the `fit`, `fit_gen`, `fit_async`
+    `fit_gen_async` methods
+
+    Args:
+        experiments(dict or list): experiments to be wrapped. If a dictionnary
+            is passed, it should map experiment names to experiments."""
     def __init__(self, experiments):
+        if isinstance(experiments, list):
+            experiments = {i: v for i, v in enumerate(experiments)}
+        if not isinstance(experiments, dict):
+            raise TypeError('You must pass either an experiments dict or list')
         self.experiments = experiments
 
     def fit(self, data, data_val, *args, **kwargs):
@@ -70,7 +81,8 @@ class HParamsSearch(Ensemble):
     Wraps the training process so that it's possible to access results easily.
 
     Args:
-        experiments(list): a list of experiments
+        experiments(dict or list): experiments to be wrapped. If a dictionnary
+            is passed, it should map experiment names to experiments
         hyperparams(dict): a dict of hyperparameters
         metric(str): the name of a metric used in the experiments
         op(str): an operator to select a model
@@ -81,7 +93,7 @@ class HParamsSearch(Ensemble):
         self.hyperparams = hyperparams
         self.metric = metric
         self.op = op
-        self.results = []
+        self.results = dict()
 
     def fit(self, data, data_val, *args, **kwargs):
         """Apply the fit method to all the experiments
@@ -131,7 +143,8 @@ class HParamsSearch(Ensemble):
         with ProgressBar(max_value=len(self.experiments),
                          redirect_stdout=True,
                          widgets=widgets, term_width=80) as progress:
-            for i, expe in enumerate(self.experiments):
+            for i, kv in enumerate(self.experiments):
+                k, expe = kv
                 b = time()
                 if gen and async:
                     res = expe.fit_gen_async(data, data_val, *args, **kwargs)
@@ -142,7 +155,7 @@ class HParamsSearch(Ensemble):
                 else:
                     res = expe.fit(data, data_val, *args, **kwargs)
 
-                self.results.append(res)
+                self.results[k](res)
                 if i == 0:
                     spent = time() - b
                     to_print = spent
@@ -189,7 +202,8 @@ class HParamsSearch(Ensemble):
         # build results table
         res_dict = dict()
         expes = self.experiments
-        for i, res in enumerate(self.results):
+        for i, kv in enumerate(self.results):
+            k, res = kv
             res, t = res
             if t is not None:
                 t.join()
