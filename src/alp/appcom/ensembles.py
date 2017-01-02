@@ -22,7 +22,7 @@ def get_best(experiments, metric, op):
         list_experiments.append(expe)
         list_keys.append(k)
 
-    ar_expes = np.array(list_expes)
+    ar_expes = np.array(list_experiments)
     ar_keys = np.array(list_keys)
     perf_array = np.array(best_perf_expes)
     perf_nans = np.isnan(perf_array)
