@@ -13,20 +13,27 @@ from progressbar import SimpleProgress
 
 def get_best(experiments, metric, op):
     best_perf_expes = []
-    for expe in experiments:
+    list_experiments = []
+    list_keys = []
+    for k, expe in experiments.items():
         if not hasattr(expe, 'full_res'):
             raise Exception('Results are not ready')
         best_perf_expes.append(op(expe.full_res['metrics'][metric]))
+        list_experiments.append(expe)
+        list_keys.append(k)
 
-    experiments = np.array(experiments)
+    ar_expes = np.array(list_expes)
+    ar_keys = np.array(list_keys)
     perf_array = np.array(best_perf_expes)
     perf_nans = np.isnan(perf_array)
     if (1 - perf_nans).sum() == 0:
         raise Exception('The selected metric evaluations are all nans')
 
     best_perf_expes = perf_array[perf_nans == False]  # NOQA
-    best = experiments[op(best_perf_expes) == np.array(best_perf_expes)]  # NOQA
-    return best[0]
+    bool_choice = op(best_perf_expes) == np.array(best_perf_expes)
+    best = ar_expes[bool_choice]  # NOQA
+    best_key = ar_keys[bool_choice]
+    return best[0], best_key[0]
 
 
 widgets = [Percentage(), ' ',
@@ -187,8 +194,8 @@ class HParamsSearch(Ensemble):
 
         if metric is None or op is None:
             raise Exception('You should provide a metric along with an op')
-        best = get_best(self.experiments, metric, op)
-        return best.predict(data, *args, **kwargs)
+        best_exp, best_key = get_best(self.experiments, metric, op)
+        return best_key, best_exp.predict(data, *args, **kwargs)
 
     def summary(self, metrics, verbose=False):
         """Build a results table using individual results from models
