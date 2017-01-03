@@ -1,4 +1,6 @@
 import warnings
+from time import time
+
 import numpy as np
 import pandas as pd
 from progressbar import ETA
