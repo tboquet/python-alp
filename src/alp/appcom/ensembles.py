@@ -1,3 +1,4 @@
+import warnings
 from time import time
 
 import numpy as np
@@ -11,22 +12,53 @@ from progressbar import ProgressBar
 from progressbar import SimpleProgress
 
 
-def get_best(experiments, metric, op):
-    best_perf_expes = []
-    for expe in experiments:
-        if not hasattr(expe, 'full_res'):
-            raise Exception('Results are not ready')
-        best_perf_expes.append(op(expe.full_res['metrics'][metric]))
+def get_best(experiments, metric, op, partial=False):
+    """Helper function for manipulation of a list of experiments
 
-    experiments = np.array(experiments)
+    In case of equality in the metric, the behaviour of op_arg determines the
+    result.
+
+    Args:
+        experiments(list): a list of experiments
+        metric(str): the name of a metric used in the experiments
+        op (function): operation to perform with the metric (optional)
+        partial(bool): if True will pass an experiment without result. Raise
+            an error otherwise.
+    """
+    best_perf_expes = []
+    list_experiments = []
+    list_keys = []
+    not_ready = False
+    for k, expe in experiments.items():
+        if not hasattr(expe, 'full_res'):  # pragma: no cover
+            if not partial:
+                raise Exception('Results are not ready')
+            else:
+                not_ready = True
+        else:
+            best_perf_expes.append(op(expe.full_res['metrics'][metric]))
+            list_experiments.append(expe)
+            list_keys.append(k)
+
+    if not_ready is True:  # pragma: no cover
+        warnings.warn('Some results are not ready: Using the best available'
+                      ' model.')
+
+    if len(list_experiments) == 0:
+        raise Exception('No result is ready yet')
+
+    ar_expes = np.array(list_experiments)
+    ar_keys = np.array(list_keys)
     perf_array = np.array(best_perf_expes)
     perf_nans = np.isnan(perf_array)
     if (1 - perf_nans).sum() == 0:
         raise Exception('The selected metric evaluations are all nans')
 
     best_perf_expes = perf_array[perf_nans == False]  # NOQA
-    best = experiments[op(best_perf_expes) == np.array(best_perf_expes)]  # NOQA
-    return best[0]
+    bool_choice = op(best_perf_expes) == np.array(best_perf_expes)
+    best = ar_expes[bool_choice]  # NOQA
+    best_key = ar_keys[bool_choice]
+    return best[0], best_key[0]
 
 
 widgets = [Percentage(), ' ',
@@ -38,7 +70,19 @@ widgets = [Percentage(), ' ',
 
 class Ensemble(object):
 
+    """Base class to build experiments containers able to execute batch
+    sequences of action. Must implement the `fit`, `fit_gen`, `fit_async`
+    `fit_gen_async` methods
+
+    Args:
+        experiments(dict or list): experiments to be wrapped. If a dictionnary
+            is passed, it should map experiment names to experiments.
+    """
     def __init__(self, experiments):
+        if isinstance(experiments, list):
+            experiments = {i: v for i, v in enumerate(experiments)}
+        if not isinstance(experiments, dict):  # pragma: no cover
+            raise TypeError('You must pass either an experiments dict or list')
         self.experiments = experiments
 
     def fit(self, data, data_val, *args, **kwargs):
@@ -70,7 +114,8 @@ class HParamsSearch(Ensemble):
     Wraps the training process so that it's possible to access results easily.
 
     Args:
-        experiments(list): a list of experiments
+        experiments(dict or list): experiments to be wrapped. If a dictionnary
+            is passed, it should map experiment names to experiments
         hyperparams(dict): a dict of hyperparameters
         metric(str): the name of a metric used in the experiments
         op(str): an operator to select a model
@@ -81,7 +126,7 @@ class HParamsSearch(Ensemble):
         self.hyperparams = hyperparams
         self.metric = metric
         self.op = op
-        self.results = []
+        self.results = dict()
 
     def fit(self, data, data_val, *args, **kwargs):
         """Apply the fit method to all the experiments
@@ -131,7 +176,8 @@ class HParamsSearch(Ensemble):
         with ProgressBar(max_value=len(self.experiments),
                          redirect_stdout=True,
                          widgets=widgets, term_width=80) as progress:
-            for i, expe in enumerate(self.experiments):
+            for i, kv in enumerate(self.experiments.items()):
+                k, expe = kv
                 b = time()
                 if gen and async:
                     res = expe.fit_gen_async(data, data_val, *args, **kwargs)
@@ -142,7 +188,7 @@ class HParamsSearch(Ensemble):
                 else:
                     res = expe.fit(data, data_val, *args, **kwargs)
 
-                self.results.append(res)
+                self.results[k] = res
                 if i == 0:
                     spent = time() - b
                     to_print = spent
@@ -156,7 +202,8 @@ class HParamsSearch(Ensemble):
                         K.clear_session()
         return self.results
 
-    def predict(self, data, metric=None, op=None, *args, **kwargs):
+    def predict(self, data, metric=None, op=None, partial=False,
+                *args, **kwargs):
         """Apply the predict method to all the experiments
 
         Args:
@@ -174,8 +221,8 @@ class HParamsSearch(Ensemble):
 
         if metric is None or op is None:
             raise Exception('You should provide a metric along with an op')
-        best = get_best(self.experiments, metric, op)
-        return best.predict(data, *args, **kwargs)
+        best_exp, best_key = get_best(self.experiments, metric, op, partial)
+        return best_key, best_exp.predict(data, *args, **kwargs)
 
     def summary(self, metrics, verbose=False):
         """Build a results table using individual results from models
@@ -189,19 +236,20 @@ class HParamsSearch(Ensemble):
         # build results table
         res_dict = dict()
         expes = self.experiments
-        for i, res in enumerate(self.results):
+        for kv in self.results.items():
+            k, res = kv
             res, t = res
             if t is not None:
                 t.join()
-            for k, v in expes[i].full_res['metrics'].items():
+            for kr, v in expes[k].full_res['metrics'].items():
                 if isinstance(v, list):
-                    if k in metrics:
-                        op = metrics[k]
-                        if k in res_dict:
-                            res_dict[k] += [op(v)]
+                    if kr in metrics:
+                        op = metrics[kr]
+                        if kr in res_dict:
+                            res_dict[kr] += [op(v)]
                         else:
-                            res_dict[k] = []
-                            res_dict[k] += [op(v)]
+                            res_dict[kr] = []
+                            res_dict[kr] += [op(v)]
         res_table = pd.DataFrame(res_dict)
         if verbose is True:
             print(res_table.describe())
