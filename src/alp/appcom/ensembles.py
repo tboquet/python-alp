@@ -60,7 +60,7 @@ class Ensemble(object):
     def __init__(self, experiments):
         if isinstance(experiments, list):
             experiments = {i: v for i, v in enumerate(experiments)}
-        if not isinstance(experiments, dict):
+        if not isinstance(experiments, dict):  # pragma: no cover
             raise TypeError('You must pass either an experiments dict or list')
         self.experiments = experiments
 
