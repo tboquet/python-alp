@@ -1,5 +1,6 @@
 from time import time
 
+import warnings
 import numpy as np
 import pandas as pd
 from progressbar import ETA
@@ -12,17 +13,36 @@ from progressbar import SimpleProgress
 
 
 def get_best(experiments, metric, op, partial=False):
+    """Helper function for manipulation of a list of experiments
+
+    In case of equality in the metric, the behaviour of op_arg determines the
+    result.
+
+    Args:
+        experiments(list): a list of experiments
+        metric(str): the name of a metric used in the experiments
+        op (function): operation to perform with the metric (optional)
+        partial(bool): if True will pass an experiment without result. Raise
+            an error otherwise.
+    """
     best_perf_expes = []
     list_experiments = []
     list_keys = []
+    not_ready = False
     for k, expe in experiments.items():
-        if not hasattr(expe, 'full_res'):
+        if not hasattr(expe, 'full_res'):  # pragma: no cover
             if not partial:
                 raise Exception('Results are not ready')
+            else:
+                not_ready = True
         else:
             best_perf_expes.append(op(expe.full_res['metrics'][metric]))
             list_experiments.append(expe)
             list_keys.append(k)
+
+    if not_ready is True:  # pragma: no cover
+        warnings.warn('Some results are not ready: Using the best available'
+                      ' model.')
 
     if len(list_experiments) == 0:
         raise Exception('No result is ready yet')
@@ -56,7 +76,8 @@ class Ensemble(object):
 
     Args:
         experiments(dict or list): experiments to be wrapped. If a dictionnary
-            is passed, it should map experiment names to experiments."""
+            is passed, it should map experiment names to experiments.
+    """
     def __init__(self, experiments):
         if isinstance(experiments, list):
             experiments = {i: v for i, v in enumerate(experiments)}
