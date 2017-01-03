@@ -83,7 +83,7 @@ def make_gen(batch_size, examples=4):
     return stand_stream_train, train_set, data_stream_train
 
 
-def sequential(custom=False):
+def sequential(custom=False, nb_hidden=4):
     model = Sequential()
     model.add(Dense(nb_hidden, input_dim=input_dim, activation='relu'))
     model.add(Dense(nb_class, activation='softmax'))

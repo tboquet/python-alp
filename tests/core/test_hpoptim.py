@@ -27,22 +27,26 @@ from alp.utils.utils_tests import test_samples
 from alp.utils.utils_tests import train_samples
 
 
-def make_experiments():
+def make_experiments(dict_exp=False):
     experiments = []
+    if dict_exp:
+        experiments = dict()
     nb_hiddens = [8, 16, 32]
     for i in range(3):
         nb_hidden = nb_hiddens[i]
 
         # model
-        model = sequential(False)
+        model = sequential(False, nb_hidden)
 
         model.compile(loss='categorical_crossentropy',
                         optimizer='adam',
                         metrics=['accuracy'])
 
         expe = Experiment(model, metrics=['accuracy'])
-
-        experiments.append(expe)
+        if dict_exp:
+            experiments[str(nb_hidden)] = expe
+        else:
+            experiments.append(expe)
     return experiments
 
 
