@@ -126,13 +126,13 @@ class TestHParamsSearch:
 
         param_search.predict(data['X'], metric='val_acc', op=np.max)
 
-        experiments = make_experiments()
+        experiments = make_experiments(dict_exp=True)
         param_search = HParamsSearch(experiments)
         param_search.fit([data], [data_val], nb_epoch=2,
                          batch_size=batch_size, verbose=2,
                          overwrite=True)
 
-        param_search.predict(data['X'], metric='acc', op=np.min)
+        param_search.predict(data['X'], metric='acc', op=np.min, partial=True)
         print(self)
 
     def test_predict_sklearn(self):
