@@ -13,7 +13,7 @@ We assume at this point that you have a Jupyter notebook running on the controll
 Step 2 : defining your model
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can follow one of 2.1 or 2.2 steps regarding if you want a Keras_ or a `scikit-learn`_ backend. In both case we will do the right imports, get or generate some classification data, put them in the ALP format and generate a model. The important thing at the end of step 2 is to have the :code:`data`, :code:`data_val` and :code:`model` objects ready.
+You can follow step 2.1 or 2.2 regarding if you want to use Keras_ or `scikit-learn`_. In both case we will do the right imports, get some classification data, put them in the ALP format and instanciate a model. The important thing at the end of step 2 is to have the :code:`data`, :code:`data_val` and :code:`model` objects and a model ready.
 
 Step 2.1 : Keras
 +++++++++++++++++
@@ -157,9 +157,9 @@ So the first step is to import and define the Experiment object.
 Step 3.2 : fit the model 
 ++++++++++++++++++++++++
 
-You have access to two methods to fit the model.
+You have access to two types of methods to fit the model.
 
-* The :code:`fit` method allows you to fit the model in the same process.
+* The :code:`fit` and `fit_gen` methods allows you to fit the model in the same process.
 
 	For the `scikit-learn` backend, you can launch the computation with the following command without extra arguments:
 

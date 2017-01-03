@@ -96,8 +96,8 @@ Details of what this function does is:
 3 - Run the random search
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We use the :meth:`alp.appcom.ensembles.HParamsSearch` class to wrap several :meth:`alp.appcom.core.Experiment`.
-For now, because the grid is defined outside of the class, you have to pass a dictionnary mapping experiments name to :meth:`alp.appcom.core.Experiment`.
+We use the :class:`alp.appcom.ensembles.HParamsSearch` class to wrap several :class:`alp.appcom.core.Experiment`.
+For now, because the grid is defined outside of the class, you have to pass a dictionnary mapping experiments name to :class:`alp.appcom.core.Experiment`.
 
 .. code:: python
 
