@@ -39,9 +39,7 @@ best.
 2 - Define an easy model and an ALP Experiment in a loop
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For the sake of simplicity, we will define a simple Logistic Regression,
-as the aim is not ultimate performance but demonstrate the capacities of
-ALP.
+We will define a simple `LogisticRegression`_ to demostrate how to use ensembles of experiments in ALP.
 
 Let us first define an helper function.
 
@@ -96,8 +94,8 @@ Details of what this function does is:
 3 - Run the random search
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We use the :class:`alp.appcom.ensembles.HParamsSearch` class to wrap several :class:`alp.appcom.core.Experiment`.
-For now, because the grid is defined outside of the class, you have to pass a dictionnary mapping experiments name to :class:`alp.appcom.core.Experiment`.
+We use the :class:`~alp.appcom.ensembles.HParamsSearch` class to wrap several :class:`~alp.appcom.core.Experiment`.
+For now, because the grid is defined outside of the class, you have to pass a dictionnary mapping experiments name to :class:`~alp.appcom.core.Experiment`.
 
 .. code:: python
 
@@ -163,3 +161,6 @@ We can now create an untuned model (C=1 by default) and assess its precision on 
 .. parsed-literal::
 
     0.88
+
+
+.. _LogisticRegression: http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
