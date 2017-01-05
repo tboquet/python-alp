@@ -81,7 +81,11 @@ def test_gen():
         os.makedirs(gen_dir)
     runner = CliRunner()
     result = runner.invoke(main, ['genconfig'])
+    result = runner.invoke(main, ['genconfig', '--namesuf=test'])
     assert result.exit_code == 0
-    result = runner.invoke(main, ['--verbose', 'genconfig', '--outdir',
-                                  gen_dir])
+    result = runner.invoke(main, ['--verbose', 'genconfig',
+                                  '--outdir={}'.format(gen_dir)])
+    assert result.exit_code == 0
+    result = runner.invoke(main, ['--verbose', 'genconfig',
+                                  '--rootfolder={}'.format(gen_dir)])
     assert result.exit_code == 0
