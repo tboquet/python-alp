@@ -72,3 +72,16 @@ def test_pull():
     assert result.exit_code == 0
     result = runner.invoke(main, ['--verbose', 'pull', config_path])
     assert result.exit_code == 0
+
+
+def test_gen():
+    user_path = os.path.expanduser('~')
+    gen_dir = os.path.join(user_path, '.alp')
+    if not os.path.exists(gen_dir):
+        os.makedirs(gen_dir)
+    runner = CliRunner()
+    result = runner.invoke(main, ['genconfig'])
+    assert result.exit_code == 0
+    result = runner.invoke(main, ['--verbose', 'genconfig', '--outdir',
+                                  gen_dir])
+    assert result.exit_code == 0
