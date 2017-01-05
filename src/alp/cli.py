@@ -1,6 +1,7 @@
 """
 CLI to launch ALP services
 """
+import os
 import click
 import pandas as pd
 from docker import Client
@@ -10,6 +11,7 @@ from .cli_utils import action_config
 from .cli_utils import banner
 from .cli_utils import col_info
 from .cli_utils import col_warn
+from .cli_utils import gen_all_configs
 from .cli_utils import get_config_names
 from .cli_utils import open_config
 from .cli_utils import pass_config
@@ -162,3 +164,43 @@ def pull(conf, config):
     config = open_config(config)
     res = pull_config(config, conf.verbose)
     return res
+
+
+@main.command()
+@click.argument('namesuf', type=click.STRING, required=False, default='')
+@click.argument('portshift', type=click.INT, required=False, default=0)
+@click.argument('rootfolder', type=click.Path(exists=True), required=False)
+@click.argument('controlers', type=click.INT, required=False, default=1)
+@click.argument('skworkers', type=click.INT, required=False, default=1)
+@click.argument('kworkers', type=click.INT, required=False, default=1)
+@click.argument('outdir', type=click.Path(exists=True), required=False)
+@pass_config
+def genconfig(conf, namesuf, portshift, rootfolder, controlers, skworkers,
+              kworkers, outdir):
+    """Generate and write configurations files in .alp"""
+
+    click.echo(namesuf)
+    user_root = os.path.expanduser('~')
+
+    alpapp, alpdb, containers = gen_all_configs(namesuf)
+
+    if conf.verbose:
+        click.echo(containers)
+        click.echo(alpapp)
+        click.echo(alpdb)
+    # dump configs in .alp
+
+    alpapp_json = os.path.join(outdir, 'alpapp.json')
+    alpdb_json = os.path.join(outdir, 'alpdb.json')
+    containers_json = os.path.join(outdir, 'containers.json')
+
+    with open(alpapp_json, 'w') as f:
+        f.write(alpapp)
+
+    with open(alpdb_json, 'w') as f:
+        f.write(alpdb)
+
+    with open(containers_json, 'w') as f:
+        f.write(containers)
+
+    return 0
