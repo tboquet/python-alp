@@ -405,8 +405,8 @@ def gen_containers_config(conf_folder, name_suffix='', port_shift=0,
 
     # broker config
     broker = dict()
-    volumes = [('rabbitmq/dev/log', '/dev/log'),
-               ('rabbitmq', '/var/lib/rabbitmq')]
+    volumes = [('alpdata/rabbitmq/dev/log', '/dev/log'),
+               ('alpdata/rabbitmq', '/var/lib/rabbitmq')]
 
     t_volumes = make_volumes(root_folder, volumes)
     broker['volumes'] = t_volumes
@@ -418,7 +418,7 @@ def gen_containers_config(conf_folder, name_suffix='', port_shift=0,
 
     # results db config
     result_db = dict()
-    volumes = [('mongo_data/results', '/data/db')]
+    volumes = [('alpdata/mongo_data/results', '/data/db')]
     t_volumes = make_volumes(root_folder, volumes)
     result_db['volumes'] = t_volumes
     result_db['name'] = 'mongo_results{}'.format(name_suffix)
@@ -427,50 +427,48 @@ def gen_containers_config(conf_folder, name_suffix='', port_shift=0,
 
     # results db config
     model_db = dict()
-    volumes = [('mongo_data/models', '/data/db')]
+    volumes = [('alpdata/mongo_data/models', '/data/db')]
     t_volumes = make_volumes(root_folder, volumes)
     model_db['volumes'] = t_volumes
     model_db['name'] = 'mongo_models{}'.format(name_suffix)
     model_db['container_name'] = 'mongo'
     model_db['mode'] = '-d'
 
+    volumes = [('alpdata/mongo_data/models', '/data/db'),
+               ('alpdata/parameters_h5', '/parameters_h5'),
+               ('alpdata/data_generator', '/data_generator')]
+    conf_full_folder = '{}:{}'.format(conf_folder, '/root/.alp')
+
+    # Build workers list
     workers = []
+    # Sklearn
     for i in range(workers_sklearn):
         worker = dict()
-        volumes = [('mongo_data/models', '/data/db')]
-        [('/opt/data/parameters_h5', '/parameters_h5'),
-         ('/opt/data/data_generator', '/data_generator'),
-         (conf_folder, '/root/.alp')]
         t_volumes = make_volumes(root_folder, volumes)
-        worker['volumes'] = t_volumes
+        worker['volumes'] = t_volumes + [conf_full_folder]
         worker['name'] = 'sklearn_worker{}_{}'.format(name_suffix, i)
         worker['container_name'] = 'tboquet/full7hc5workeralpsk'
         worker['mode'] = '-d'
         workers.append(worker)
 
+    # Keras
     for i in range(workers_keras):
         worker = dict()
-        volumes = [('mongo_data/models', '/data/db')]
-        [('/opt/data/parameters_h5', '/parameters_h5'),
-         ('/opt/data/data_generator', '/data_generator'),
-         (conf_folder, '/root/.alp')]
         t_volumes = make_volumes(root_folder, volumes)
-        worker['volumes'] = t_volumes
-        worker['name'] = 'sklearn_worker{}_{}'.format(name_suffix, i)
+        worker['volumes'] = t_volumes + [conf_full_folder]
+        worker['name'] = 'keras_worker{}_{}'.format(name_suffix, i)
         worker['container_name'] = 'tboquet/full7hc5workeralpk'
         worker['NV_GPU'] = '0'
         worker['mode'] = '-d'
         workers.append(worker)
 
+    # Build controlers
+    volumes += [('alpdata/notebooks', '/notebooks')]
     controlers_list = []
     for i in range(controlers):
         controler = dict()
-        volumes = [('mongo_data/models', '/data/db')]
-        [('/opt/data/parameters_h5', '/parameters_h5'),
-         ('/opt/data/data_generator', '/data_generator'),
-         (conf_folder, '/root/.alp')]
         t_volumes = make_volumes(root_folder, volumes)
-        controler['volumes'] = t_volumes
+        controler['volumes'] = t_volumes + [conf_full_folder]
         controler['name'] = 'controler{}_{}'.format(name_suffix, i)
         controler['container_name'] = 'tboquet/full7hc5controleralp'
         controler['NV_GPU'] = '0'
@@ -482,7 +480,7 @@ def gen_containers_config(conf_folder, name_suffix='', port_shift=0,
     config['result_db'] = result_db
     config['model_gen_db'] = model_db
     config['workers'] = workers
-    config['controlers'] = controlers
+    config['controlers'] = controlers_list
 
     return config
 
@@ -516,7 +514,7 @@ def gen_all_configs(conf_folder, name_suffix='', port_shift=0,
                     workers_keras=1):
     alpapp = gen_alpapp_config(name_suffix, port_shift)
     alpdb = gen_alpdb_config(name_suffix)
-    containers = gen_containers_config(conf_folder, name_suffix='',
+    containers = gen_containers_config(conf_folder, name_suffix=name_suffix,
                                        port_shift=0, root_folder=None,
                                        controlers=1, workers_sklearn=1,
                                        workers_keras=1)
