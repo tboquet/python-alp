@@ -363,12 +363,13 @@ def action_config(config, action, verbose=False, force=False):
 
 def make_volumes(root_folder, volumes):
     t_volumes = ['{}:{}'.format(os.path.join(root_folder, v_root), c_root)
-                    for v_root, c_root in volumes]
+                 for v_root, c_root in volumes]
     return t_volumes
 
 
-def gen_containers_config(name_suffix='', port_shift=0, root_folder=None,
-                          controlers=1, workers_sklearn=1, workers_keras=1):
+def gen_containers_config(conf_folder, name_suffix='', port_shift=0,
+                          root_folder=None, controlers=1, workers_sklearn=1,
+                          workers_keras=1):
     """ Generates containers config parsable with ALP CLI
 
     This function generates a JSON configuration usable with ALP CLI.
@@ -393,6 +394,7 @@ def gen_containers_config(name_suffix='', port_shift=0, root_folder=None,
         system. The support for multiple GPU machine is straightforward and
         will be added soon.
     """
+
     if len(name_suffix) > 0:
         name_suffix = '_{}'.format(name_suffix)
 
@@ -438,7 +440,7 @@ def gen_containers_config(name_suffix='', port_shift=0, root_folder=None,
         volumes = [('mongo_data/models', '/data/db')]
         [('/opt/data/parameters_h5', '/parameters_h5'),
          ('/opt/data/data_generator', '/data_generator'),
-         ('/.alp', '/root/.alp')]
+         (conf_folder, '/root/.alp')]
         t_volumes = make_volumes(root_folder, volumes)
         worker['volumes'] = t_volumes
         worker['name'] = 'sklearn_worker{}_{}'.format(name_suffix, i)
@@ -451,7 +453,7 @@ def gen_containers_config(name_suffix='', port_shift=0, root_folder=None,
         volumes = [('mongo_data/models', '/data/db')]
         [('/opt/data/parameters_h5', '/parameters_h5'),
          ('/opt/data/data_generator', '/data_generator'),
-         ('/.alp', '/root/.alp')]
+         (conf_folder, '/root/.alp')]
         t_volumes = make_volumes(root_folder, volumes)
         worker['volumes'] = t_volumes
         worker['name'] = 'sklearn_worker{}_{}'.format(name_suffix, i)
@@ -466,7 +468,7 @@ def gen_containers_config(name_suffix='', port_shift=0, root_folder=None,
         volumes = [('mongo_data/models', '/data/db')]
         [('/opt/data/parameters_h5', '/parameters_h5'),
          ('/opt/data/data_generator', '/data_generator'),
-         ('/.alp', '/root/.alp')]
+         (conf_folder, '/root/.alp')]
         t_volumes = make_volumes(root_folder, volumes)
         controler['volumes'] = t_volumes
         controler['name'] = 'controler{}_{}'.format(name_suffix, i)
@@ -509,14 +511,15 @@ def gen_alpapp_config(name_suffix='', port_shift=0):
     return config
 
 
-def gen_all_configs(name_suffix='', port_shift=0, root_folder=None,
-                          controlers=1, workers_sklearn=1, workers_keras=1):
+def gen_all_configs(conf_folder, name_suffix='', port_shift=0,
+                    root_folder=None, controlers=1, workers_sklearn=1,
+                    workers_keras=1):
     alpapp = gen_alpapp_config(name_suffix, port_shift)
     alpdb = gen_alpdb_config(name_suffix)
-    containers = gen_containers_config(name_suffix='', port_shift=0,
-                                              root_folder=None, controlers=1,
-                                              workers_sklearn=1,
-                                              workers_keras=1)
+    containers = gen_containers_config(conf_folder, name_suffix='',
+                                       port_shift=0, root_folder=None,
+                                       controlers=1, workers_sklearn=1,
+                                       workers_keras=1)
     alpapp_json = json.dumps(alpapp, indent=4)
     alpdb_json = json.dumps(alpdb, indent=4)
     containers_json = json.dumps(containers, indent=4)

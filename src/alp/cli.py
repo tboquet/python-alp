@@ -167,27 +167,42 @@ def pull(conf, config):
 
 
 @main.command()
-@click.argument('namesuf', type=click.STRING, required=False, default='')
-@click.argument('portshift', type=click.INT, required=False, default=0)
-@click.argument('rootfolder', type=click.Path(exists=True), required=False)
-@click.argument('controlers', type=click.INT, required=False, default=1)
-@click.argument('skworkers', type=click.INT, required=False, default=1)
-@click.argument('kworkers', type=click.INT, required=False, default=1)
-@click.argument('outdir', type=click.Path(exists=True), required=False)
+@click.option('--outdir', type=click.Path(exists=True))
+@click.option('--namesuf', type=click.STRING, default='')
+@click.option('--portshift', type=click.INT, default=0)
+@click.option('--rootfolder', type=click.Path(exists=True))
+@click.option('--controlers', type=click.INT, default=1)
+@click.option('--skworkers', type=click.INT, default=1)
+@click.option('--kworkers', type=click.INT, default=1)
 @pass_config
-def genconfig(conf, namesuf, portshift, rootfolder, controlers, skworkers,
-              kworkers, outdir):
-    """Generate and write configurations files in .alp"""
+def genconfig(conf, outdir, namesuf, portshift, rootfolder, controlers,
+              skworkers, kworkers):
+    """Generates and writes configurations files in .alp"""
 
-    click.echo(namesuf)
-    user_root = os.path.expanduser('~')
+    if outdir is None:
+        outdir = os.path.expanduser('~')
+        if not os.access(outdir, os.W_OK):  # pragma: no cover
+            outdir = '/tmp'
+        outdir = os.path.join(outdir, '.alp')
+    else:
+        if not os.access(outdir, os.W_OK):  # pragma: no cover
+            raise IOError('Cannot access directory')
+        outdir = os.path.join(outdir, '.alp')
+        if not os.path.exists(outdir):  # pragma: no cover
+            os.makedirs(outdir)
 
-    alpapp, alpdb, containers = gen_all_configs(namesuf)
+    alpapp, alpdb, containers = gen_all_configs(outdir, namesuf)
 
     if conf.verbose:
-        click.echo(containers)
-        click.echo(alpapp)
-        click.echo(alpdb)
+        click.echo(click.style('Auto generated configuration:', fg=col_info))
+        click.echo(click.style(a_text('    Controlers', str(controlers)),
+                            fg=col_info))
+        click.echo(click.style(a_text('    Sklearn workers', str(skworkers)),
+                            fg=col_info))
+        click.echo(click.style(a_text('    Keras workers', str(kworkers)),
+                            fg=col_info))
+        click.echo()
+
     # dump configs in .alp
 
     alpapp_json = os.path.join(outdir, 'alpapp.json')
