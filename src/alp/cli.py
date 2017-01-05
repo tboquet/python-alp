@@ -196,11 +196,11 @@ def genconfig(conf, outdir, namesuf, portshift, rootfolder, controlers,
     if conf.verbose:
         click.echo(click.style('Auto generated configuration:', fg=col_info))
         click.echo(click.style(a_text('    Controlers', str(controlers)),
-                            fg=col_info))
+                               fg=col_info))
         click.echo(click.style(a_text('    Sklearn workers', str(skworkers)),
-                            fg=col_info))
+                               fg=col_info))
         click.echo(click.style(a_text('    Keras workers', str(kworkers)),
-                            fg=col_info))
+                               fg=col_info))
         click.echo()
 
     # dump configs in .alp
