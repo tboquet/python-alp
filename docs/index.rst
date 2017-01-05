@@ -5,7 +5,6 @@ Welcome on ALP's documentation!
 .. toctree::
    :maxdepth: 2
 
-   
    FirstSteps/index_first_steps
    Setup/index_setup
    Tutorials/index_tuto
