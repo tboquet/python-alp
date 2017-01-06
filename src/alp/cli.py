@@ -1,6 +1,7 @@
 """
 CLI to launch ALP services
 """
+import os
 import click
 import pandas as pd
 from docker import Client
@@ -10,6 +11,7 @@ from .cli_utils import action_config
 from .cli_utils import banner
 from .cli_utils import col_info
 from .cli_utils import col_warn
+from .cli_utils import gen_all_configs
 from .cli_utils import get_config_names
 from .cli_utils import open_config
 from .cli_utils import pass_config
@@ -162,3 +164,60 @@ def pull(conf, config):
     config = open_config(config)
     res = pull_config(config, conf.verbose)
     return res
+
+
+@main.command()
+@click.option('--outdir', type=click.Path(exists=True))
+@click.option('--namesuf', type=click.STRING, default='')
+@click.option('--portshift', type=click.INT, default=0)
+@click.option('--rootfolder', type=click.Path(exists=True))
+@click.option('--controlers', type=click.INT, default=1)
+@click.option('--skworkers', type=click.INT, default=1)
+@click.option('--kworkers', type=click.INT, default=1)
+@pass_config
+def genconfig(conf, outdir, namesuf, portshift, rootfolder, controlers,
+              skworkers, kworkers):
+    """Generates and writes configurations files in .alp"""
+
+    if outdir is None:
+        outdir = os.path.expanduser('~')
+        if not os.access(outdir, os.W_OK):  # pragma: no cover
+            outdir = '/tmp'
+        outdir = os.path.join(outdir, '.alp')
+    else:
+        if not os.access(outdir, os.W_OK):  # pragma: no cover
+            raise IOError('Cannot access directory')
+        outdir = os.path.join(outdir, '.alp')
+        if not os.path.exists(outdir):  # pragma: no cover
+            os.makedirs(outdir)
+
+    alpapp, alpdb, containers = gen_all_configs(outdir, namesuf, portshift,
+                                                rootfolder, controlers,
+                                                skworkers, kworkers)
+
+    if conf.verbose:
+        click.echo(click.style('Auto generated configuration:', fg=col_info))
+        click.echo(click.style(a_text('    Controlers', str(controlers)),
+                               fg=col_info))
+        click.echo(click.style(a_text('    Sklearn workers', str(skworkers)),
+                               fg=col_info))
+        click.echo(click.style(a_text('    Keras workers', str(kworkers)),
+                               fg=col_info))
+        click.echo()
+
+    # dump configs in .alp
+
+    alpapp_json = os.path.join(outdir, 'alpapp.json')
+    alpdb_json = os.path.join(outdir, 'alpdb.json')
+    containers_json = os.path.join(outdir, 'containers.json')
+
+    with open(alpapp_json, 'w') as f:
+        f.write(alpapp)
+
+    with open(alpdb_json, 'w') as f:
+        f.write(alpdb)
+
+    with open(containers_json, 'w') as f:
+        f.write(containers)
+
+    return 0
