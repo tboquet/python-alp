@@ -1,6 +1,6 @@
-================================================================================
+===================================================================
 Tutorial 1 : Simple Hyperparameter Tuning with ALP - sklearn models
-================================================================================
+===================================================================
 
 In this tutorial, we will get some data, build an Experiment with a
 simple model and tune the parameters of the model to get the best
@@ -10,7 +10,7 @@ better than the untuned model. The whole thing will be using the
 asynchronous fit to highlight the capacity of ALP.
 
 1 - Get some data
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 
 Let us start with the usual Iris dataset. Note that we will split the
 test set in 2 samples of size 25: the "validation" set to select the
@@ -37,7 +37,7 @@ best.
 
 
 2 - Define an easy model and an ALP Experiment in a loop
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We will define a simple `LogisticRegression`_ to demostrate how to use ensembles of experiments in ALP.
 
@@ -84,15 +84,15 @@ Let us first define an helper function.
             expes.append(expe)
         return expes
 
-This helper function randomly (uniform, independent) samples hyperparameters combinations then fits the models within an ALP Experiment. It finally returns an Experiment where the best_model is loaded.
-
 
 Details of what this function does is:
 1. display some infos about the size of the grid.
 2. models loop: as many times as `tries`, it selects randomly a point in the hyperparameter grid, creates an Experiment object with the model parametrized with this point.
 
-3 - Run the random search
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+3 - Run the grid search
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We use the :class:`~alp.appcom.ensembles.HParamsSearch` class to wrap several :class:`~alp.appcom.core.Experiment`.
 For now, because the grid is defined outside of the class, you have to pass a dictionnary mapping experiments name to :class:`~alp.appcom.core.Experiment`.
@@ -116,7 +116,13 @@ For now, because the grid is defined outside of the class, you have to pass a di
     ensemble = HParamsSearch(experiments=expes, metric='score', op=np.max)
 
     results = ensemble.fit([data], [data_val])
-    ensemble.summary(verbose=True, metrics={'score': np.max})
+
+    label, predictions = ensemble.predict(data['X'])
+    print('Best model: {}'.format(label)
+
+.. note::
+
+    You can also use the :meth:`~alp.appcom.ensembles.HParamsSearch.fit_async` method.
 
 
 .. parsed-literal::
@@ -124,8 +130,8 @@ For now, because the grid is defined outside of the class, you have to pass a di
     grid size : 432
     tries : 100
     
+    Best model: 52_C:100_tol:1e-06
 
-   .. TODO: finish this!
 
 A word on the interpretation of the params: 
  * the parameter C is the regularisation parameter of the Logistic Regression. A small value of C means a higher L2 constraint on w (the L2 constraint is not applied on $c$, the intercept parameter). A larger C can lead to overfitting, while a smaller value can lead to too much regularization. As such, it is the ideal candidate for automatic tuning.

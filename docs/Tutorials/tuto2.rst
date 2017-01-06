@@ -67,8 +67,6 @@ Fitting one data set with one validation set is done this way:
     Expe.fit([data],[data_val])
 
 
-
-
 .. parsed-literal::
 
     ({'data_id': '1c59c0c562a5abdb84ad4f4a2c1868bf',
@@ -103,8 +101,6 @@ attribut of the object.
 .. code:: python
 
     Expe.full_res
-
-
 
 
 .. parsed-literal::
