@@ -37,47 +37,137 @@ ALP helps you experiment with a lot of machine learning models quickly. It provi
 
 This library has been developped to work well with Keras and Scikit-learn but can suit a lot of other frameworks. 
 
-Installation to develop your own service
-========================================
-
-::
-
-    git clone https://github.com/tboquet/python-alp.git
-    cd python-alp
-    python setup.py install
-
-
-Launching the services
-======================
-
-Please see the `docker setup`_ part of the documentation.
-
-
 Documentation
 =============
 
-https://python-alp.readthedocs.org/
+http://python-alp.readthedocs.io/
 
-Development
-===========
+Quickstart
+==========
 
-To run the all tests run::
+Generate a base configuration:
 
-    tox
+.. code-block:: bash
 
-If you don't have the necessary requirements installed when you run `tox` but you have `Docker` running, you can `launch all the required services` and use::
+    alp --verbose genconfig --outdir=/path/to/a/directory
 
-    docker run -it --rm --privileged=true --volume=/path/to/the/library/python-alp:/app --volume=~/temp/data/parameters_h5:/parameters_h5 --link=mongo_models:mongo_m --link=mongo_results:mongo_r --link rabbitmq_sched:rabbitmq --name=testenvt tboquet/pythondev
+Launche the services::
 
-This docker container will launch sequentially `tox` and `detox`, test the library against all the supported python version and build the documentation.
+.. code-block:: bash
 
-Note, to combine the coverage data from all the tox environments run:
+    alp --verbose service start /path/to/a/directory
 
-::
+Check the status of your containers:
 
-    PYTEST_ADDOPTS=--cov-append tox
+.. code-block:: bash
+
+    alp --verbose status /path/to/a/directory
+
+
+Log in to the Jupyter notebook you just launched in your browser @ `localhost:440` using the password `default`.
+
+Launch some experiments!
+
+.. code-block:: python
+
+    # we import numpy and fix the seed
+    import numpy as np
+    np.random.seed(1337)  # for reproducibility
+
+    # we import alp and Keras tools that we will use
+    import alp
+    from keras.datasets import mnist
+    from keras.models import Sequential
+    from keras.layers import Dense, Dropout, Activation, Flatten
+    from keras.utils import np_utils
+    import keras.backend as K
+    from keras.optimizers import Adam
+    from alp.appcom.ensembles import HParamsSearch
+
+    # if you use tensorflow you must use this configuration
+    # so that it doesn't use all of the GPU's memory (default config)
+    import tensorflow as tf
+
+    config = tf.ConfigProto(allow_soft_placement=True)
+    config.gpu_options.allow_growth = True
+    session = tf.Session(config=config)
+    K.set_session(session)
+
+    batch_size = 128
+    nb_classes = 10
+    nb_epoch = 12
+
+    # input image dimensions
+    img_rows, img_cols = 28, 28
+    # number of features to use
+    nb_features = 32
+
+    # the data, shuffled and split between train and test sets
+    (X_train, y_train), (X_test, y_test) = mnist.load_data()
+
+    X_train = X_train.astype('float32')
+    X_test = X_test.astype('float32')
+    X_train /= 255
+    X_test /= 255
+    print('X_train shape:', X_train.shape)
+    print(X_train.shape[0], 'train samples')
+    print(X_test.shape[0], 'test samples')
+
+    if K.image_dim_ordering() == 'th':
+        X_train = X_train.reshape(X_train.shape[0], 1, img_rows, img_cols)
+        X_test = X_test.reshape(X_test.shape[0], 1, img_rows, img_cols)
+        input_shape = (1, img_rows, img_cols)
+    else:
+        X_train = X_train.reshape(X_train.shape[0], img_rows, img_cols, 1)
+        X_test = X_test.reshape(X_test.shape[0], img_rows, img_cols, 1)
+        input_shape = (img_rows, img_cols, 1)
+
+    # convert class vectors to binary class matrices
+    Y_train = np_utils.to_categorical(y_train, nb_classes)
+    Y_test = np_utils.to_categorical(y_test, nb_classes)
+
+    # put the data in the form ALP expects
+    data, data_val = dict(), dict()
+    data["X"] = X_train
+    data["y"] = Y_train
+    data_val["X"] = X_test
+    data_val["y"] = Y_test
+
+    # Define and compile the model
+
+    model = Sequential()
+
+    model.add(Flatten(input_shape=input_shape))
+    model.add(Dense(nb_features))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.25))
+
+    model.add(Dense(128))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(nb_classes))
+    model.add(Activation('softmax'))
+
+    model.compile(loss='categorical_crossentropy',
+                  optimizer='adadelta',
+                  metrics=['accuracy'])
+
+    # Define you experiment
+
+    from alp.appcom.core import Experiment
+
+    expe = Experiment(model)
+
+    # Fit the model linked to your experiment
+    expe.fit([data], [data_val], nb_epoch=2, batch_size=batch_size)
+
+    # Predict using your model
+    expe.predict(data['X])
+
+
+`Get started with the tutorial series!`_ 
 
 * Free software: Apache license
 
 .. _`docker setup`: http://python-alp.readthedocs.io/en/latest/dockersetup.html
-
+.. _`Get started with the tutorial series!: `http://python-alp.readthedocs.io/en/new_doc/Tutorials/index_tuto.html
