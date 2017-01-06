@@ -473,6 +473,8 @@ def gen_containers_config(conf_folder, name_suffix='', port_shift=0,
         controler['container_name'] = 'tboquet/full7hc5controleralp'
         controler['NV_GPU'] = '0'
         controler['mode'] = '-d'
+        ports = [(440 + i + port_shift, 8888)]
+        controler['ports'] = ['{}:{}'.format(p1, p2) for p1, p2 in ports]
         controlers_list.append(controler)
 
     config = dict()
@@ -515,9 +517,11 @@ def gen_all_configs(conf_folder, name_suffix='', port_shift=0,
     alpapp = gen_alpapp_config(name_suffix, port_shift)
     alpdb = gen_alpdb_config(name_suffix)
     containers = gen_containers_config(conf_folder, name_suffix=name_suffix,
-                                       port_shift=0, root_folder=None,
-                                       controlers=1, workers_sklearn=1,
-                                       workers_keras=1)
+                                       port_shift=port_shift,
+                                       root_folder=root_folder,
+                                       controlers=controlers,
+                                       workers_sklearn=workers_sklearn,
+                                       workers_keras=workers_keras)
     alpapp_json = json.dumps(alpapp, indent=4)
     alpdb_json = json.dumps(alpdb, indent=4)
     containers_json = json.dumps(containers, indent=4)

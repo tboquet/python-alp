@@ -191,7 +191,9 @@ def genconfig(conf, outdir, namesuf, portshift, rootfolder, controlers,
         if not os.path.exists(outdir):  # pragma: no cover
             os.makedirs(outdir)
 
-    alpapp, alpdb, containers = gen_all_configs(outdir, namesuf)
+    alpapp, alpdb, containers = gen_all_configs(outdir, namesuf, portshift,
+                                                rootfolder, controlers,
+                                                skworkers, kworkers)
 
     if conf.verbose:
         click.echo(click.style('Auto generated configuration:', fg=col_info))
