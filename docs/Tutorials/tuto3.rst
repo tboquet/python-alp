@@ -5,6 +5,9 @@ Tutorial 3 : Feed more data with Fuel or generators
 Because we aim at supporting online learning on streamed data, we think that generators support was a good start.
 We support Fuel_, a library that helps you to pre-process and yield chunks of data while being serializable.
 
+1 - Create some data
+~~~~~~~~~~~~~~~~~~~~
+
 You can easily use Fuel_ iterators in an Experiment.
 We will first create some fake data.
 
@@ -36,6 +39,9 @@ We will first create some fake data.
     outputs = [y]
 
 
+2 - Transform the data
+~~~~~~~~~~~~~~~~~~~~~~
+
 We then import an helper function that will convert our list of inputs to an HDF5 dataset.
 This dataset has a simple structure and we can divide it into multiple sets.
 
@@ -57,6 +63,9 @@ This dataset has a simple structure and we can divide it into multiple sets.
     file_path_f = to_fuel_h5(inputs, outputs, slices, names, file_name, '/data_generator')
 
 
+3 - Build your generator
+~~~~~~~~~~~~~~~~~~~~~~~~
+
 The next step is to construct our Fuel generator using our dataset, a scheme and to transform the data so it's prepared for our model.
 
 
@@ -73,6 +82,9 @@ The next step is to construct our Fuel generator using our dataset, a scheme and
                                        scale=scale, shift=shift,
                                        which_sources=('input_X',))
 
+
+4 - Build and wrap your model
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We finally build our model and wrap it in an experiment.
 
@@ -93,6 +105,9 @@ We finally build our model and wrap it in an experiment.
 
     expe = Experiment(model)
 
+
+5 - Train your model
+~~~~~~~~~~~~~~~~~~~~
 
 We can finally use the :meth:`alp.appcom.core.Experiment.fit_gen` method with our model and dataset.
 

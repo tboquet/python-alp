@@ -184,15 +184,16 @@ After wrapping the model in an :meth:`alp.appcom.core.Experiment`, we call the :
 
     expe = Experiment(model)
 
-    results = expe.fit_gen([train], [test], nb_epoch=nb_epoch,
-                           model=model,
-                           metrics=['accuracy'],
-                           samples_per_epoch=50000,
-                           nb_val_samples=10000,
-                           verbose=2,
-                           custom_objects=custom_objects))
+    results = expe.fit_gen_async([train], [test], nb_epoch=nb_epoch,
+                                 model=model,
+                                 metrics=['accuracy'],
+                                 samples_per_epoch=50000,
+                                 nb_val_samples=10000,
+                                 verbose=2,
+                                 custom_objects=custom_objects))
 
+.. note::
 
-Why do we wrap this class and all the dependencies?
+    Why do we wrap this class and all the dependencies?
 
-We use dill to be able to serialize object but unfortunatly, handling class with inheritance is not doable. It's also easier to pass the information about all the dependencies of the object. All the dependencies and your custom objects will be instanciated during the evaluation of the function so that it will be available in the `__main__`. This way the information could be sent to workers without problems.
+    We use dill to be able to serialize object but unfortunatly, handling class with inheritance is not doable. It's also easier to pass the information about all the dependencies of the object. All the dependencies and your custom objects will be instanciated during the evaluation of the function so that it will be available in the `__main__`. This way the information could be sent to workers without problems.
