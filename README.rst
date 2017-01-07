@@ -170,4 +170,4 @@ Launch some experiments!
 * Free software: Apache license
 
 .. _`docker setup`: http://python-alp.readthedocs.io/en/latest/dockersetup.html
-.. _`Get started with the tutorial series!: `http://python-alp.readthedocs.io/en/new_doc/Tutorials/index_tuto.html
+.. _`Get started with the tutorial series!`: http://python-alp.readthedocs.io/en/new_doc/Tutorials/index_tuto.html
