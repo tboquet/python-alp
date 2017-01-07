@@ -31,16 +31,23 @@ class Experiment(object):
         metrics(list): a list of callables
     """
 
-    def __init__(self, model, metrics=None):
-        backend, backend_name, backend_version = init_backend(model)
-        self.backend = backend
-        self.backend_name = backend_name
-        self.backend_version = backend_version
-        self.metrics = metrics
+    def __init__(self, model=None, metrics=None, verbose=0):
         self.model = model
-        self.model_dict = self.backend.to_dict_w_opt(self.model,
-                                                     self.metrics)
         self.trained = False
+        self.verbose = verbose
+        self.metrics = metrics
+        if model is not None:
+            backend, backend_name, backend_version = init_backend(model)
+            self.backend = backend
+            self.backend_name = backend_name
+            self.backend_version = backend_version
+            self.model_dict = self.backend.to_dict_w_opt(self.model,
+                                                         self.metrics)
+        else:
+            self.backend = None
+            self.backend_name = None
+            self.backend_version = None
+            self.model_dict = None
 
     @property
     def model_dict(self):
@@ -51,9 +58,9 @@ class Experiment(object):
         if isinstance(model_dict, dict) or model_dict is None:
             self.__model_dict = dict()
             self.__model_dict['model_arch'] = model_dict
-            self.__model_dict['mod_id'] = None
-            self.__model_dict['params_dump'] = None
-            self.__model_dict['data_id'] = None
+            self.mod_id = None
+            self.params_dump = None
+            self.data_id = None
         else:
             self.model = model_dict
             backend, backend_name, backend_version = init_backend(model_dict)
@@ -62,9 +69,9 @@ class Experiment(object):
             self.backend_version = backend_version
             self.__model_dict['model_arch'] = self.backend.to_dict_w_opt(
                 self.model, self.metrics)
-            self.__model_dict['mod_id'] = None
-            self.__model_dict['data_id'] = None
-            self.__model_dict['params_dump'] = None
+            self.mod_id = None
+            self.params_dump = None
+            self.data_id = None
 
     @property
     def params_dump(self):
@@ -187,9 +194,13 @@ class Experiment(object):
         self.params_dump = model_db['params_dump']
         self.mod_id = model_db['mod_id']
         self.data_id = model_db['data_id']
+        self.full_res = None
+        self.async_res = None
         self.trained = True
 
-    def predict(self, data):
+        return self
+
+    def predict(self, data, *args, **kwargs):
         """Make predictions given data
 
         Args:
@@ -198,7 +209,8 @@ class Experiment(object):
         Returns:
             an np.array of predictions"""
         if self.trained:
-            return self.backend.predict(self.model_dict, data)
+            return self.backend.predict(self.model_dict, data,
+                                        *args, **kwargs)
         else:
             raise Exception("You must have a trained model"
                             "in order to make predictions")
@@ -270,9 +282,7 @@ class Experiment(object):
            the data_hash
         """
         self._check_compile(model, kwargs)
-
         kwargs = self._check_serialize(kwargs)
-
         gen_setup = []
 
         if generator:
@@ -318,6 +328,7 @@ class Experiment(object):
             generator(bool): if True, transforms the generators
             delay(bool): if True, fits the model in asynchronous mode
             """
+
         data, data_val, data_hash, size_gen = self._prepare_message(model,
                                                                     data,
                                                                     data_val,
@@ -369,4 +380,6 @@ class Experiment(object):
         self.mod_id = self.full_res['model_id']  # pragma: no cover
         self.data_id = self.full_res['data_id']  # pragma: no cover
         self.params_dump = self.full_res['params_dump']  # pragma: no cover
-        print("Result {} ready".format(self.mod_id))  # pragma: no cover
+        if self.verbose > 0:  # pragma: no cover
+            print("Result {} | {} ready".format(
+                self.mod_id, self.data_id))  # pragma: no cover

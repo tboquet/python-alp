@@ -1,4 +1,5 @@
 numpy
+requests>=2.12.3
 keras
 pymongo
 scikit-learn

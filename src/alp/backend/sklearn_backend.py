@@ -202,6 +202,15 @@ def to_dict_w_opt(model, metrics=None):
         else:
             config[k] = typeconversion(v)
 
+    # to be discussed :
+    # we add the metrics to the config even if it doesnt
+    # make sense for a sklearn model
+    # the metrics are then catch in model_from_dict_w_opt
+    if metrics is not None:
+        config['metrics'] = []
+        for m in metrics:
+            config['metrics'].append(m)
+
     return config
 
 
@@ -228,6 +237,12 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
     if model_dict['config'] not in keyval:
         raise NotImplementedError("sklearn model not supported.")
 
+    # load the metrics
+    if 'metrics' in model_dict:
+        metrics = model_dict.pop('metrics')
+    else:
+        metrics = None
+
     # create a new instance of the appropriate model type
     model = copy.deepcopy(keyval[model_dict['config']])
 
@@ -238,7 +253,7 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
         else:
             setattr(model, k, v)
 
-    return model
+    return model, metrics
 
 
 def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
@@ -260,9 +275,8 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
         """
 
     # Local variables
-    from sklearn.metrics import mean_absolute_error
+    import sklearn.metrics
 
-    metrics = []
     results = dict()
     results['metrics'] = dict()
     custom_objects = None
@@ -270,45 +284,51 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
     predonval = []
     fit_gen_val = False
 
-    metrics.append(mean_absolute_error)
-    for metric in metrics:
-        results['metrics'][metric.__name__] = []
-        results['metrics']['val_' + metric.__name__] = []
-    # Load custom_objects and metrics
+    # Load custom_objects
     if 'custom_objects' in kwargs:  # pragma: no cover
         custom_objects = kwargs.pop('custom_objects')
 
-    if 'metrics' in kwargs:  # pragma: no cover
-        print("metrics not supported in sklearn_backend.")
-        # metrics = kwargs.pop('metrics')
+    # Load model and get metrics
+    model, metrics = model_from_dict_w_opt(model,
+                                           custom_objects=custom_objects)
 
-    # Load model
-    model = model_from_dict_w_opt(model, custom_objects=custom_objects)
+    # instantiates metrics
+    # there is at least one mandatory metric for sklearn models
+    metrics_names = ["score"]
+    if metrics:
+        for metric in metrics:
+            metrics_names.append(metric)
+    for metric in metrics_names:
+        results['metrics'][metric] = []
+        results['metrics']["val_" + metric] = []
 
+    # pickle data if generator
     if generator:
         data = [pickle.loads(d.encode('raw_unicode_escape')) for d in data]
 
+    # check if data_val is in generator
     if all(v is None for v in data_val):
         val_gen = 0
     else:
         val_gen = check_gen(data_val)
-
+    # if so pickle data_val
     if val_gen > 0:
         if generator:
-            data_val = [pickle.loads(dv.encode('raw_unicode_escape')) for dv in data_val]
+            data_val = [pickle.loads(dv.encode('raw_unicode_escape'))
+                        for dv in data_val]
             fit_gen_val = True
         else:
             raise Exception("You should also pass a generator for the training"
                             " data.")
+
     # Fit the model
     # and validates it
-
     if len(size_gen) == 0:
         size_gen = [0] * len(data)
     # loop over the data/generators
     for d, dv, s_gen in szip(data, data_val, size_gen):
         # check if we have a data_val object.
-        # if not, no evaluation of the metrics on val.
+        # if not, no evaluation of the metrics on data_val.
         if dv is None:
             validation = False
         else:
@@ -321,19 +341,34 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
             X, y = d['X'], d['y']
             model.fit(X, y, *args, **kwargs)
             predondata.append(model.predict(X))
-            for metric in metrics:
-                results['metrics'][metric.__name__].append(
-                    metric(y, predondata[-1]))
+            for metric in metrics_names:
+                if metric is not 'score':
+                    computed_metric = getattr(
+                        sklearn.metrics, metric)(y, predondata[-1])
+                    results['metrics'][metric].append(
+                        computed_metric)
+                else:
+                    computed_metric = model.score(X, y)
+                    results['metrics']['score'].append(
+                        computed_metric)
+                    # TODO : optimization
+
             if validation:
                 X_val, y_val = dv['X'], dv['y']
                 predonval.append(model.predict(X_val))
-                for metric in metrics:
-                    results['metrics']['val_' + metric.__name__].append(
-                        metric(y_val, predonval[-1]))
+                for metric in metrics_names:
+                    if metric is not 'score':
+                        computed_metric = getattr(
+                            sklearn.metrics, metric)(y_val, predonval[-1])
+                    else:
+                        computed_metric = model.score(X_val, y_val)
+                        # TODO : optimization
+                    results['metrics']['val_' + metric].append(
+                        computed_metric)
+
             else:
-                for metric in metrics:
-                    results['metrics']['val_' + metric.__name__].append(
-                        np.nan)
+                for metric in metrics_names:
+                    results['metrics']['val_' + metric].append(np.nan)
 
         # case B : generator for data and no generator for data_val
         # could be dict or None
@@ -345,17 +380,30 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
                 model.fit(X, y, *args, **kwargs)
                 predondata.append(model.predict(X))
                 if validation:
-                    predonval.append(model.predict(X_val))  # ?
-                for metric in metrics:
-                    results['metrics'][metric.__name__].append(
-                        metric(y, predondata[-1]))
+                    predonval.append(model.predict(X_val))
 
-                    if validation:
-                        results['metrics']['val_' + metric.__name__].append(
-                            metric(y_val, predonval[-1]))
+                for metric in metrics_names:
+                    if metric is not 'score':
+                        results['metrics'][metric].append(
+                            getattr(sklearn.metrics, metric)(y,
+                                                             predondata[-1]))
+
+                        if validation:
+                            results['metrics']['val_' +
+                                               metric].append(
+                                getattr(sklearn.metrics,
+                                        metric)(y_val, predonval[-1]))
+                        else:
+                            results['metrics'][
+                                'val_' + metric].append(np.nan)
                     else:
-                        results['metrics'][
-                            'val_' + metric.__name__].append(np.nan)
+                        results['metrics']['score'].append(
+                            model.score(X, y))
+                        if validation:
+                            results['metrics']['val_score'].append(
+                                model.score(X_val, y_val))
+                        else:
+                            results['metrics']['val_score'].append(np.nan)
 
         # case C : generator for data and for data_val
         else:
@@ -367,27 +415,46 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
                     model.fit(X, y, *args, **kwargs)
                     predondata.append(model.predict(X))
                     predonval.append(model.predict(X_val))
-                    for metric in metrics:
-                        results['metrics'][metric.__name__].append(
-                            metric(y, predondata[-1]))
-                        results['metrics']['val_' + metric.__name__].append(
-                            metric(y_val, predonval[-1]))
+                    for metric in metrics_names:
+                        if metric is not 'score':
+                            results['metrics'][metric].append(
+                                getattr(sklearn.metrics,
+                                        metric)(y, predondata[-1]))
+                            results['metrics']['val_' +
+                                               metric].append(
+                                getattr(sklearn.metrics,
+                                        metric)(y_val, predonval[-1]))
+                        else:
+                            results['metrics']['score'].append(
+                                model.score(X, y))
+                            results['metrics']['val_score'].append(
+                                model.score(X_val, y_val))
 
             # case C2 : 1 chunk in gen, N chunks in val, one to many
             elif s_gen == 2:
                 X, y = snext(d.get_epoch_iterator())
                 model.fit(X, y, *args, **kwargs)
                 predondata.append(model.predict(X))
-                for metric in metrics:
-                    results['metrics'][metric.__name__].append(
-                        metric(y, predondata[-1]))
+                for metric in metrics_names:
+                    if metric is not 'score':
+                        results['metrics'][metric].append(
+                            getattr(sklearn.metrics,
+                                    metric)(y, predondata[-1]))
+                    else:
+                        results['metrics']['score'].append(model.score(X, y))
 
                 for batch_val in dv.get_epoch_iterator():
                     X_val, y_val = batch_val
                     predonval.append(model.predict(X_val))
-                    for metric in metrics:
-                        results['metrics']['val_' + metric.__name__].append(
-                            metric(y_val, predonval[-1]))
+                    for metric in metrics_names:
+                        if metric is not 'score':
+                            results['metrics']['val_' +
+                                               metric].append(
+                                getattr(sklearn.metrics,
+                                        metric)(y_val, predonval[-1]))
+                        else:
+                            results['metrics']['val_score'].append(
+                                model.score(X_val, y_val))
 
             # case C3 : same numbers of chunks, many to many
             elif s_gen == 3:
@@ -398,11 +465,20 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
                     model.fit(X, y, *args, **kwargs)
                     predondata.append(model.predict(X))
                     predonval.append(model.predict(X_val))
-                    for metric in metrics:
-                        results['metrics'][metric.__name__].append(
-                            metric(y, predondata[-1]))
-                        results['metrics']['val_' + metric.__name__].append(
-                            metric(y_val, predonval[-1]))
+                    for metric in metrics_names:
+                        if metric is not 'score':
+                            results['metrics'][metric].append(
+                                getattr(sklearn.metrics,
+                                        metric)(y, predondata[-1]))
+                            results['metrics']['val_' +
+                                               metric].append(
+                                getattr(sklearn.metrics,
+                                        metric)(y_val, predonval[-1]))
+                        else:
+                            results['metrics']['score'].append(
+                                model.score(X, y))
+                            results['metrics']['val_score'].append(
+                                model.score(X_val, y_val))
 
             else:  # pragma: no cover
                 raise Exception(
@@ -415,7 +491,7 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
 
 
 @app.task(bind=True, default_retry_delay=60 * 10, max_retries=3,
-          rate_limit='120/m', queue='sklearn')
+          rate_limit='20/s', queue='sklearn')
 def fit(self, backend_name, backend_version, model, data, data_hash,
         data_val, size_gen, generator=False, *args, **kwargs):
     """A function that takes a model and data (with validation),
@@ -509,8 +585,9 @@ def predict(model, data, *args, **kwargs):
         model_dict = model['model_arch']
 
         # load model
-        model_instance = model_from_dict_w_opt(model_dict,
-                                               custom_objects=custom_objects)
+        model_instance, _ = model_from_dict_w_opt(
+            model_dict,
+            custom_objects=custom_objects)
 
         # load the attributes
         model_instance = load_params(model_instance, model['params_dump'])
