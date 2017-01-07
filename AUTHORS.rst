@@ -2,6 +2,6 @@
 Authors
 =======
 
-* Thomas Boquet - https://tboquet.github.io
+* Thomas Boquet - https://github.com/tboquet
 * Paul Lemaître 
 
