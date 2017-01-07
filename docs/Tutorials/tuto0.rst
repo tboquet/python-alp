@@ -13,7 +13,7 @@ We assume at this point that you have a Jupyter notebook running on the controll
 Step 2 : defining your model
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can follow step from `Step 2.1: Keras`_ or from `Step 2.2 : Scikit learn`_ regarding if you want to use Keras_ or `scikit-learn`_. In both case we will do the right imports, get some classification data, put them in the ALP format and instanciate a model. The important thing at the end of step 2 is to have the :code:`data`, :code:`data_val` and :code:`model` objects and a model ready.
+You can follow step from `Step 2.1 : Keras`_ or from `Step 2.2 : Scikit learn`_ regarding if you want to use Keras_ or `scikit-learn`_. In both case we will do the right imports, get some classification data, put them in the ALP format and instanciate a model. The important thing at the end of step 2 is to have the :code:`data`, :code:`data_val` and :code:`model` objects and a model ready.
 
 Step 2.1 : Keras
 ++++++++++++++++
