@@ -2,4 +2,4 @@
 Experiment
 ==========
 
-Experimental section
+Experiment section
