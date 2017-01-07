@@ -5,6 +5,9 @@ Tutorial 4 : how to use custom layers for Keras with ALP
 Because serialization of complex Python objects is still a challenge we will present a way of sending a custom layer to a Keras model with ALP.
 
 
+1 - Get a dataset
+~~~~~~~~~~~~~~~~~
+
 We will work with the CIFAR10 dataset available via Keras.
 
 .. code-block:: python
@@ -54,6 +57,9 @@ We will work with the CIFAR10 dataset available via Keras.
     Y_test = np_utils.to_categorical(y_test, nb_classes)
 
 
+2 - Build the generators
+~~~~~~~~~~~~~~~~~~~~~~~~
+
 We build two generators, one for training and one for validation.
 
 
@@ -94,6 +100,10 @@ We build two generators, one for training and one for validation.
     train, data_tr, data_stream_tr = make_gen(('train',), 50000)
     test, data_te, data_stream_te = make_gen(('test',), 10000)
 
+
+3 - Build your custom layer
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Imagine you want to reimplement a dropout layer. We could wrap it in a function that returns the object:
 
 
@@ -124,6 +134,9 @@ Imagine you want to reimplement a dropout layer. We could wrap it in a function 
               return dict(list(base_config.items()) + list(config.items()))
       return Dropout_cust
 
+
+4 - Build you model
+~~~~~~~~~~~~~~~~~~~
 
 We then define our model and call our function to instanciate this custom layer.
 
@@ -158,6 +171,9 @@ We then define our model and call our function to instanciate this custom layer.
                   optimizer=sgd,
                   metrics=['accuracy'])
 
+
+5 - Fit your model
+~~~~~~~~~~~~~~~~~~
 
 We then map the name of the custom object to our function that returns the custom object in a dictionnary.
 After wrapping the model in an :meth:`alp.appcom.core.Experiment`, we call the :meth:`alp.appcom.core.Experiment.fit_gen` method and send the custom_objects.
