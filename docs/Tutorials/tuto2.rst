@@ -45,7 +45,7 @@ are created.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 2.1 - Defining the experiment and model
-:::::::::::::::::::::::::::::::::::::::
++++++++++++++++++++++++++++++++++++++++
 
 We then define a first simple sklearn logistic regression.
 
@@ -58,7 +58,7 @@ We then define a first simple sklearn logistic regression.
     Expe = Experiment(lr)
 
 2.2 - Fitting with one data set and one validation
-::::::::::::::::::::::::::::::::::::::::::::::::::
+++++++++++++++++++++++++++++++++++++++++++++++++++
 
 Fitting one data set with one validation set is done this way:
 
@@ -159,7 +159,7 @@ modified during the predict call.
 
 
 2.3 - Fitting with one data set and no validation:
-::::::::::::::::::::::::::::::::::::::::::::::::::
+++++++++++++++++++++++++++++++++++++++++++++++++++
 
 If you want to fit an experiment and don't have a validation set, you
 need to specify a None in the validation field. Note that all the fields
@@ -204,7 +204,7 @@ same.
 
 
 2.4 - Fitting several dataset
-:::::::::::::::::::::::::::::
++++++++++++++++++++++++++++++
 
 Now it's an important point since the behavior of sklearn differs from
 the keras one: if you feed different datasets to an Experiment with an
