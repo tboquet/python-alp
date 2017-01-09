@@ -110,7 +110,7 @@ Note that we compile the model so that we also have information about the optimi
 Step 2.2 : Scikit learn
 +++++++++++++++++++++++
 
-The following code gets some data and declares a simple logistic regression with `scikit-learn`:
+The following code gets some data and declares a simple logistic regression with :code:`scikit-learn`:
 
 .. code-block:: python
     
@@ -159,9 +159,9 @@ Step 3.2 : fit the model
 
 You have access to two types of methods to fit the model.
 
-* The :code:`fit` and `fit_gen` methods allows you to fit the model in the same process.
+* The :code:`fit` and :code:`fit_gen` methods allows you to fit the model in the same process.
 
-	For the `scikit-learn` backend, you can launch the computation with the following command without extra arguments:
+	For the :code:`scikit-learn` backend, you can launch the computation with the following command without extra arguments:
 
 	.. code-block:: python
 
@@ -179,7 +179,7 @@ You have access to two types of methods to fit the model.
 	In both cases, the model is trained and automatically saved in the databases.
 
 * The :code:`fit_async` method sends the model to the broker container that will manage the training using the workers you defined in the setup phase. The commands are then straightforward:
-	For the `scikit-learn` backend:
+	For the :code:`scikit-learn` backend:
 
 	.. code-block:: python
 

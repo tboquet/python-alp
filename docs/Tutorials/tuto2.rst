@@ -229,8 +229,6 @@ validate a certain model.
     Expe.fit([data,more_data],[None,some_more_data])
 
 
-
-
 .. parsed-literal::
 
     ({'data_id': '2767007837282c3da5a86cfe41b57cce',

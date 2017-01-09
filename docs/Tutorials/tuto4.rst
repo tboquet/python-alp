@@ -196,4 +196,4 @@ After wrapping the model in an :meth:`alp.appcom.core.Experiment`, we call the :
 
     Why do we wrap this class and all the dependencies?
 
-    We use dill to be able to serialize object but unfortunatly, handling class with inheritance is not doable. It's also easier to pass the information about all the dependencies of the object. All the dependencies and your custom objects will be instanciated during the evaluation of the function so that it will be available in the `__main__`. This way the information could be sent to workers without problems.
+    We use dill to be able to serialize object but unfortunatly, handling class with inheritance is not doable. It's also easier to pass the information about all the dependencies of the object. All the dependencies and your custom objects will be instanciated during the evaluation of the function so that it will be available in the :code:`__main__`. This way the information could be sent to workers without problems.

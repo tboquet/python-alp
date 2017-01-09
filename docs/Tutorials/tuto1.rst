@@ -49,45 +49,46 @@ Let us first define an helper function.
     import sklearn.linear_model
     from alp.appcom.core import Experiment
     from operator import mul
-    
+
     def grid_search(grid_dict, tries, model_type='LogisticRegression'):
         ''' This function randomly build Experiments with different hyperparameters and return the list of experiments.
-        
-        Args:    
+
+        Args:
             grid_dict(dict) : hyperparameter grid from which to draw samples from
             tries(int) : number of model to be generated and tested
             async(bool) : should the fit be asynchronous
             model_type(string) : type of model to be tested (must be in sklearn.linear_model)
-        
+
         Returns:
             expes(list): a list of Experiments.
-  
+
         '''
-        
-        dict_res={}
-        expes = []
-        
+
+        expes = dict()
+
         # 1 - infos
         size_grid = reduce(mul, [len(v) for v in grid_dict.values()])
-        print("grid size : " + str(size_grid))
-        print("tries : " + str(tries))
-        print()
-        
-        
+        print("grid size: {}".format(size_grid))
+        print("tries: {}".format(tries))
+
+
         # 2 - models loop
         for i in range(tries):
             select_params =  {}
+            key = [str(i)]
             for k, v in grid_dict.items():
-                select_params[k] = random.choice(v)
+                value = random.choice(v)
+                select_params[k] = value
+                key += ['{}:{}'.format(k, value)]
             model = getattr(sklearn.linear_model, model_type)(**select_params)
             expe = Experiment(model)
-            expes.append(expe)
+            expes['_'.join(key)] = expe
         return expes
 
 
 Details of what this function does is:
 1. display some infos about the size of the grid.
-2. models loop: as many times as `tries`, it selects randomly a point in the hyperparameter grid, creates an Experiment object with the model parametrized with this point.
+2. models loop: as many times as :code:`tries`, it selects randomly a point in the hyperparameter grid, creates an Experiment object with the model parametrized with this point.
 
 
 
@@ -100,13 +101,14 @@ For now, because the grid is defined outside of the class, you have to pass a di
 .. code:: python
 
     from alp.appcom.ensemble import HParamsSearch
+
     # setting the seed for reproducibility: feel free to change it
     random.seed(12345)
     
     # defining the grid that will be explored
-    grid_tol = [i*10**-j for i in (1,2,5) for j in (1,2,3,4,5,6)]
-    grid_C = [i*10**-j for i in (1,2,5) for j in (-2,-1,1,2,3,4,5,6)]
-    grid = {'tol':grid_tol,'C':grid_C}
+    grid_tol = [i*10**-j for i in (1,2,5) for j in (1, 2, 3, 4, 5, 6)]
+    grid_C = [i*10**-j for i in (1,2,5) for j in (-2, -1, 1, 2, 3, 4, 5, 6)]
+    grid = {'tol':grid_tol, 'C':grid_C}
     
     tries = 100
     
@@ -145,8 +147,8 @@ The accuracy of the best model is decent (one mistake over 25 points).
 
 .. code:: python
 
-    pred_best_new = Expe_best.predict(X_test_new)
-    print(sklearn.metrics.accuracy_score(pred_best_new,data_new["y"]))
+    label, predictions = ensemble.predict(data_new['X'])
+    print('Best model: {}'.format(label))
 
 
 .. parsed-literal::
@@ -158,10 +160,10 @@ We can now create an untuned model (C=1 by default) and assess its precision on 
 .. code:: python
 
     model = sklearn.linear_model.LogisticRegression()
-    Expe = Experiment(model)
-    Expe.fit([data],[data_val])
-    pred_worst_new = Expe.predict(X_test_new)
-    print(sklearn.metrics.accuracy_score(pred_worst_new,data_new["y"]))
+    expe = Experiment(model)
+    expe.fit([data], [data_val])
+    pred_worst_new = expe.predict(X_test_new)
+    print(sklearn.metrics.accuracy_score(pred_worst_new, data_new["y"]))
 
 
 .. parsed-literal::

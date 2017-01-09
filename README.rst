@@ -51,7 +51,7 @@ Generate a base configuration:
 
     alp --verbose genconfig --outdir=/path/to/a/directory
 
-Launche the services::
+Launche the services:
 
 .. code-block:: bash
 
@@ -64,7 +64,7 @@ Check the status of your containers:
     alp --verbose status /path/to/a/directory
 
 
-Log in to the Jupyter notebook you just launched in your browser @ `localhost:440` using the password `default`.
+Log in to the Jupyter notebook you just launched in your browser @ :code:`localhost:440` using the password :code:`default`.
 
 Launch some experiments!
 
