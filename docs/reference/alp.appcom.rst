@@ -6,6 +6,11 @@ alp.appcom package
     :undoc-members:
     :show-inheritance:
 
+.. automodule:: alp.appcom.ensembles
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 .. automodule:: alp.appcom.utils
     :members:
     :undoc-members:
