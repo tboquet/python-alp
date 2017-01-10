@@ -73,6 +73,8 @@ html_show_sourcelink = True
 if not on_rtd:  # only set the theme if we're building docs locally
     html_theme = 'alabaster'
     html_theme_path = [alabaster.get_path()]
+
+else:
     from mock import Mock as MagicMock
     import sys
 
