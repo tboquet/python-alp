@@ -1,3 +1,8 @@
+"""
+Ensembles module
+================
+"""
+
 import warnings
 from time import time
 

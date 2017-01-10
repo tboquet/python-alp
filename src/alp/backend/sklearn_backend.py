@@ -1,6 +1,6 @@
 """
 Adaptor for the sklearn backend
-=============================
+===============================
 """
 
 import copy

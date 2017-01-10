@@ -2,7 +2,7 @@
 .. codeauthor:: Thomas Boquet thomas.boquet@r2.ca
 
 A simple module to perform training and prediction of models
-------------------------------------------------------------------
+============================================================
 
 Using `celery <http://www.celeryproject.org/>`_, this module helps to schedule
 the training of models if the users send enough models in a short

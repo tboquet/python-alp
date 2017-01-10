@@ -2,17 +2,6 @@
 Adaptor for the Keras backend
 =============================
 
-Serialization
-~~~~~~~~~~~~~
-
-The models are serialized in a json format and pushed in a database.
-RabbitMQ also receives a training message and will release it to an
-available worker.
-
-.. note:
-
-    The syntax will evolve a lot and changes have to be expected.
-
 Compilation & cache
 ~~~~~~~~~~~~~~~~~~~
 

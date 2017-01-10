@@ -1,3 +1,8 @@
+"""
+Utilities for the CLI
+=====================
+"""
+
 import json
 import os
 import subprocess
