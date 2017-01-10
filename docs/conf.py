@@ -30,7 +30,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 project = u'ALP'
 year = '2016'
-author = u'Thomas Boquet'
+author = u'Thomas Boquet and Paul Lemaître'
 copyright = '{0}, {1}'.format(year, author)
 version = release = u'0.2.0'
 

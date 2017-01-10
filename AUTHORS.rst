@@ -1,7 +1,7 @@
-
+=======
 Authors
 =======
 
-* Thomas Boquet - https://tboquet.github.io
-* Paul Lemaitre 
+* Thomas Boquet - https://github.com/tboquet
+* Paul Lemaître 
 
