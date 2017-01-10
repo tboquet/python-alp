@@ -5,3 +5,9 @@ alp.backend package
     :members:
     :undoc-members:
     :show-inheritance:
+
+
+.. automodule:: alp.backend.sklearn_backend
+    :members:
+    :undoc-members:
+    :show-inheritance:
