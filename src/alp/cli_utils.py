@@ -519,7 +519,7 @@ def gen_alpapp_config(name_suffix=''):
 def gen_all_configs(conf_folder, name_suffix='', port_shift=0,
                     root_folder=None, controlers=1, workers_sklearn=1,
                     workers_keras=1):
-    alpapp = gen_alpapp_config(name_suffix, port_shift)
+    alpapp = gen_alpapp_config(name_suffix)
     alpdb = gen_alpdb_config(name_suffix)
     containers = gen_containers_config(conf_folder, name_suffix=name_suffix,
                                        port_shift=port_shift,
