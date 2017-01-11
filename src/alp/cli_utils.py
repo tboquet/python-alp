@@ -500,11 +500,11 @@ def gen_alpdb_config(name_suffix=''):
             'host_adress': 'mongo_models{}'.format(name_suffix)}
 
 
-def gen_alpapp_config(name_suffix='', port_shift=0):
+def gen_alpapp_config(name_suffix=''):
     if len(name_suffix) > 0:
         name_suffix = '_{}'.format(name_suffix)
 
-    port = 5672 + port_shift
+    port = 5672
     broker_url = 'amqp://guest:guest@rabbitmq_sched{}:{}'
 
     config = dict()
