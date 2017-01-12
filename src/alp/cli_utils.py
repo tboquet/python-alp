@@ -1,3 +1,8 @@
+"""
+Utilities for the CLI
+=====================
+"""
+
 import json
 import os
 import subprocess
@@ -495,11 +500,11 @@ def gen_alpdb_config(name_suffix=''):
             'host_adress': 'mongo_models{}'.format(name_suffix)}
 
 
-def gen_alpapp_config(name_suffix='', port_shift=0):
+def gen_alpapp_config(name_suffix=''):
     if len(name_suffix) > 0:
         name_suffix = '_{}'.format(name_suffix)
 
-    port = 5672 + port_shift
+    port = 5672
     broker_url = 'amqp://guest:guest@rabbitmq_sched{}:{}'
 
     config = dict()
@@ -514,7 +519,7 @@ def gen_alpapp_config(name_suffix='', port_shift=0):
 def gen_all_configs(conf_folder, name_suffix='', port_shift=0,
                     root_folder=None, controlers=1, workers_sklearn=1,
                     workers_keras=1):
-    alpapp = gen_alpapp_config(name_suffix, port_shift)
+    alpapp = gen_alpapp_config(name_suffix)
     alpdb = gen_alpdb_config(name_suffix)
     containers = gen_containers_config(conf_folder, name_suffix=name_suffix,
                                        port_shift=port_shift,

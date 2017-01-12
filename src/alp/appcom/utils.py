@@ -1,6 +1,6 @@
-"""Utility functions for the appcom module
-
-----------------------------------------------------------------------------
+"""
+Utility functions for the appcom module
+=======================================
 """
 
 import functools

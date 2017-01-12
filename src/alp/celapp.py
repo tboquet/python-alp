@@ -1,4 +1,7 @@
-"""Simple celery config"""
+"""
+Celery config
+=============
+"""
 
 from celery import Celery
 from . import appcom as apc

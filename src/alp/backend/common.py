@@ -1,3 +1,8 @@
+"""
+Functions used in every backend
+===============================
+"""
+
 import copy
 import hashlib
 import json

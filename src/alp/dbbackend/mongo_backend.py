@@ -1,6 +1,6 @@
-"""Model database setup
-
-----------------------------------------------------------------------------
+"""
+Model database setup
+====================
 """
 
 from pymongo import DESCENDING
