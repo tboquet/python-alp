@@ -3,7 +3,7 @@ Changelog
 =========
 
 
-0.2.0 (2017-01-17)
+0.3.0 (2017-01-17)
 -----------------------------------------
 
 * Command Line Interface to launch services.
