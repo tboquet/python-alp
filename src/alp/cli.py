@@ -45,7 +45,7 @@ def main(conf, verbose):
 @click.argument('action', type=click.STRING, required=True)
 @click.argument('config', type=click.Path(exists=True), required=True)
 @pass_config
-def service(conf, force, action, config):
+def service(conf, force, dry_run, action, config):
     """Subcommand to take action on services"""
     config = open_config(config, conf.verbose)
     if action == 'start':

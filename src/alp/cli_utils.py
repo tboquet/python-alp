@@ -72,7 +72,7 @@ def check_container(container, running_containers, dead_containers,
         res = False
         color = col_not_ok
         click.echo(click.style(
-            a_text('Name already taken', ''), fg=col_not_ok))
+            a_text('Name already taken', ''), fg=col_warn))
 
     elif name in dead_containers:  # pragma: no cover
         click.echo(click.style(
@@ -161,7 +161,7 @@ def get_config_names(config):
     return names
 
 
-def build_commands(config, action, verbose):
+def build_commands(config, action, verbose, dry_run):
     broker = config['broker']
     results_db = config['result_db']
     model_gen_db = config['model_gen_db']
@@ -232,7 +232,7 @@ def build_commands(config, action, verbose):
 
         # database results
         if check_container(results_db, running_containers,
-                           dead_containers, ports_in_use, verbose):
+                           dead_containers, ports_in_use, verbose) or dry_run:
             results_db_command = parse_cont(results_db, 'run')
             all_commands += [results_db_command]
             results_db_ok = True
@@ -241,7 +241,7 @@ def build_commands(config, action, verbose):
 
         # database models generators
         if check_container(model_gen_db, running_containers,
-                           dead_containers, ports_in_use, verbose):
+                           dead_containers, ports_in_use, verbose) or dry_run:
             model_gen_db_command = parse_cont(model_gen_db, 'run')
             all_commands += [model_gen_db_command]
             model_gen_db_ok = True
@@ -253,7 +253,8 @@ def build_commands(config, action, verbose):
         workers_ok = True
         for worker in workers:  # pragma: no cover
             if check_container(worker, running_containers,
-                               dead_containers, ports_in_use, verbose):
+                               dead_containers, ports_in_use,
+                               verbose) or dry_run:
                 workers_commands.append(parse_cont(worker, 'run', links=links))
             else:  # pragma: no cover
                 workers_ok = False
@@ -263,7 +264,8 @@ def build_commands(config, action, verbose):
         controlers_ok = True
         for controler in controlers:  # pragma: no cover
             if check_container(controler, running_containers,
-                               dead_containers, ports_in_use, verbose):
+                               dead_containers, ports_in_use,
+                               verbose) or dry_run:
                 workers_commands.append(parse_cont(controler, 'run',
                                                    links=links))
             else:
@@ -275,22 +277,28 @@ def build_commands(config, action, verbose):
         if verbose:
             click.echo(click.style('Global Check'.center(80, '='),
                                    fg=col_info, bold=True))
-            color_s = col_ok if broker_ok else col_not_ok
-            color_rd = col_ok if results_db_ok else col_not_ok
-            color_mgd = col_ok if model_gen_db_ok else col_not_ok
-            color_wk = col_ok if workers_ok else col_not_ok
-            color_ct = col_ok if controlers_ok else col_not_ok
-            click.echo(click.style(a_text('Broker OK:', '{}'.format(
-                broker_ok)), fg=color_s))
-            click.echo(click.style(a_text('Results db OK:', '{}'.format(
-                results_db_ok)), fg=color_rd))
-            click.echo(click.style(a_text('Models db OK:', '{}'.format(
-                model_gen_db_ok)), fg=color_mgd))
-            click.echo(click.style(a_text('Workers OK:', '{}'.format(
-                workers_ok)), fg=color_wk))
-            click.echo(click.style(a_text('Controlers OK:', '{}'.format(
-                controlers_ok)), fg=color_ct))
-            click.echo('\n')
+            if dry_run is False:
+                color_s = col_ok if broker_ok else col_not_ok
+                color_rd = col_ok if results_db_ok else col_not_ok
+                color_mgd = col_ok if model_gen_db_ok else col_not_ok
+                color_wk = col_ok if workers_ok else col_not_ok
+                color_ct = col_ok if controlers_ok else col_not_ok
+                click.echo(click.style(a_text('Broker OK:', '{}'.format(
+                    broker_ok)), fg=color_s))
+                click.echo(click.style(a_text('Results db OK:', '{}'.format(
+                    results_db_ok)), fg=color_rd))
+                click.echo(click.style(a_text('Models db OK:', '{}'.format(
+                    model_gen_db_ok)), fg=color_mgd))
+                click.echo(click.style(a_text('Workers OK:', '{}'.format(
+                    workers_ok)), fg=color_wk))
+                click.echo(click.style(a_text('Controlers OK:', '{}'.format(
+                    controlers_ok)), fg=color_ct))
+                click.echo('\n')
+            else:
+                click.echo(click.style(a_text('Dry run:', '{}'.format(
+                    True)), fg=col_ok))
+                click.echo('\n')
+                
         check_dict = {'broker': broker_ok,
                       'results_db': results_db_ok,
                       'model_gen_db': model_gen_db_ok,
@@ -303,7 +311,8 @@ def build_commands(config, action, verbose):
                 msg += '{} '.format(k)
         if not all([broker_ok, results_db_ok, model_gen_db_ok,
                     workers_ok, controlers_ok]):
-            raise Exception('{} configuration not ok'.format(msg))
+            if dry_run is False:
+                raise Exception('{} configuration not ok'.format(msg))
 
     if action in ['stop', 'restart', 'remove']:
         click.echo(click.style(
@@ -355,18 +364,20 @@ def pull_config(config, verbose=False, dry_run=False):
 
 def action_config(config, action, verbose=False, force=False, dry_run=False):
     res = True
-    commands = build_commands(config, action, verbose)
+    commands = build_commands(config, action, verbose, dry_run)
     for command in commands:
         if verbose:
             click.echo(click.style(
                 'Running command:', fg=col_info))
             click.echo('{}\n'.format(' '.join(command)))
 
+        output = None
+        err = None
         if dry_run is False:
             p = subprocess.Popen(' '.join(command), shell=True, stdout=PIPE,
                                 stderr=PIPE)
             output, err = p.communicate()
-        if verbose:
+        if verbose and output is not None:
             click.echo(click.style('{}\n'.format(output)))
         if err is not None:  # pragma: no cover
             res = False
