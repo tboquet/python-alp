@@ -298,7 +298,7 @@ def build_commands(config, action, verbose, dry_run):
                 click.echo(click.style(a_text('Dry run:', '{}'.format(
                     True)), fg=col_ok))
                 click.echo('\n')
-                
+
         check_dict = {'broker': broker_ok,
                       'results_db': results_db_ok,
                       'model_gen_db': model_gen_db_ok,
@@ -352,7 +352,7 @@ def pull_config(config, verbose=False, dry_run=False):
             click.echo('{}\n'.format(' '.join(command)))
         if dry_run is False:
             p = subprocess.Popen(' '.join(command), shell=True, stdout=PIPE,
-                             stderr=PIPE)
+                                 stderr=PIPE)
             output, err = p.communicate()
         if verbose:
             click.echo(click.style('{}\n'.format(output)))
@@ -375,7 +375,7 @@ def action_config(config, action, verbose=False, force=False, dry_run=False):
         err = None
         if dry_run is False:
             p = subprocess.Popen(' '.join(command), shell=True, stdout=PIPE,
-                                stderr=PIPE)
+                                 stderr=PIPE)
             output, err = p.communicate()
         if verbose and output is not None:
             click.echo(click.style('{}\n'.format(output)))
