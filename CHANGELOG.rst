@@ -4,7 +4,7 @@ Changelog
 
 
 0.3.0 (2017-01-17)
------------------------------------------
+==================
 
 * Command Line Interface to launch services.
 * sklearn backend is stable with 12 models supported and all sklearn metrics
