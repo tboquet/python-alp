@@ -58,7 +58,10 @@ def test_service():
     for cm in ['stop', 'rm', 'start', 'restart']:
         result = runner.invoke(main, ['--verbose', 'service', cm, config_path])
         assert result.exit_code == 0
-
+    for cm in ['stop', 'rm', 'start', 'restart']:
+        result = runner.invoke(main, ['--verbose', 'service', '--dry_run',
+                                      cm, config_path])
+        assert result.exit_code == 0
 
 def test_update():
     runner = CliRunner()

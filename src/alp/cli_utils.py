@@ -68,7 +68,7 @@ def check_container(container, running_containers, dead_containers,
         color = col_not_ok
         click.echo(click.style(
             a_text('Not running', ''), fg=col_not_ok))
-    elif name in running_containers and not not_build:  # pragma no cover
+    elif name in running_containers and not not_build:  # pragma: no cover
         res = False
         color = col_not_ok
         click.echo(click.style(
