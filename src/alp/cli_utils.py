@@ -68,9 +68,15 @@ def check_container(container, running_containers, dead_containers,
         color = col_not_ok
         click.echo(click.style(
             a_text('Not running', ''), fg=col_not_ok))
+    elif name in running_containers and not not_build:  # pragma no cover
+        res = False
+        color = col_not_ok
+        click.echo(click.style(
+            a_text('Name already taken', ''), fg=col_not_ok))
+
     elif name in dead_containers:  # pragma: no cover
         click.echo(click.style(
-            a_text('name already taken', ''), fg=col_warn))
+            a_text('Name already taken', ''), fg=col_warn))
         res = False
 
     if res is True:
@@ -322,7 +328,7 @@ def build_commands(config, action, verbose):
     return all_commands
 
 
-def pull_config(config, verbose=False):
+def pull_config(config, verbose=False, dry_run=False):
     res = True
     broker = config['broker']
     results_db = config['result_db']
@@ -335,10 +341,10 @@ def pull_config(config, verbose=False):
             click.echo(click.style(
                 'Running command:', fg=col_info))
             click.echo('{}\n'.format(' '.join(command)))
-
-        p = subprocess.Popen(' '.join(command), shell=True, stdout=PIPE,
+        if dry_run is False:
+            p = subprocess.Popen(' '.join(command), shell=True, stdout=PIPE,
                              stderr=PIPE)
-        output, err = p.communicate()
+            output, err = p.communicate()
         if verbose:
             click.echo(click.style('{}\n'.format(output)))
             click.echo()
@@ -347,7 +353,7 @@ def pull_config(config, verbose=False):
     return res
 
 
-def action_config(config, action, verbose=False, force=False):
+def action_config(config, action, verbose=False, force=False, dry_run=False):
     res = True
     commands = build_commands(config, action, verbose)
     for command in commands:
@@ -356,9 +362,10 @@ def action_config(config, action, verbose=False, force=False):
                 'Running command:', fg=col_info))
             click.echo('{}\n'.format(' '.join(command)))
 
-        p = subprocess.Popen(' '.join(command), shell=True, stdout=PIPE,
-                             stderr=PIPE)
-        output, err = p.communicate()
+        if dry_run is False:
+            p = subprocess.Popen(' '.join(command), shell=True, stdout=PIPE,
+                                stderr=PIPE)
+            output, err = p.communicate()
         if verbose:
             click.echo(click.style('{}\n'.format(output)))
         if err is not None:  # pragma: no cover

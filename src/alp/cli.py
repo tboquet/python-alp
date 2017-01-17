@@ -41,6 +41,7 @@ def main(conf, verbose):
 
 @main.command()
 @click.option('--force', is_flag=True)
+@click.option('--dry_run', is_flag=True)
 @click.argument('action', type=click.STRING, required=True)
 @click.argument('config', type=click.Path(exists=True), required=True)
 @pass_config
@@ -48,13 +49,17 @@ def service(conf, force, action, config):
     """Subcommand to take action on services"""
     config = open_config(config, conf.verbose)
     if action == 'start':
-        results = action_config(config, 'run', conf.verbose, force=force)
+        results = action_config(config, 'run', conf.verbose, force=force,
+                                dry_run=dry_run)
     elif action == 'stop':
-        results = action_config(config, 'stop', conf.verbose, force=force)
+        results = action_config(config, 'stop', conf.verbose, force=force,
+                                dry_run=dry_run)
     elif action == 'restart':
-        results = action_config(config, 'restart', conf.verbose, force=force)
+        results = action_config(config, 'restart', conf.verbose, force=force,
+                                dry_run=dry_run)
     elif action == 'rm':
-        results = action_config(config, 'rm', conf.verbose, force=force)
+        results = action_config(config, 'rm', conf.verbose, force=force,
+                                dry_run=dry_run)
     else:
         raise Exception('Action must be in start, stop, restart, rm')
     return results
