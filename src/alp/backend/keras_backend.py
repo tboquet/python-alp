@@ -238,6 +238,9 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
                           sample_weight_mode=sample_weight_mode,
                           loss_weights=loss_weights,
                           metrics=metrics)
+        else:  # pragma: no cover
+            raise Exception('{} model, must be in Sequential, '
+                            'Model'.format(model_name))
 
     return model
 
