@@ -230,6 +230,7 @@ def model_from_dict_w_opt(model_dict, custom_objects=None):
         else:  # pragma: no cover
             raise Exception('{} model, must be in Sequential, '
                             'Model'.format(model_name))
+
     return model
 
 
