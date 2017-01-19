@@ -136,7 +136,7 @@ For now, because the grid is defined outside of the class, you have to pass a di
 
 
 A word on the interpretation of the params: 
- * the parameter C is the regularisation parameter of the Logistic Regression. A small value of C means a higher L2 constraint on w (the L2 constraint is not applied on $c$, the intercept parameter). A larger C can lead to overfitting, while a smaller value can lead to too much regularization. As such, it is the ideal candidate for automatic tuning.
+ * the parameter C is the regularisation parameter of the Logistic Regression. A small value of C means a higher L2 constraint on w (the L2 constraint is not applied on C, the intercept parameter). A larger C can lead to overfitting, while a smaller value can lead to too much regularization. As such, it is the ideal candidate for automatic tuning.
  * the tol parameter is the tolerance for stopping criteria. Our experiments did not show a strong impact of this parameter unless it was set to high values.
 
 4 - Validation that the best model is better than the untuned one

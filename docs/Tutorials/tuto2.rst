@@ -3,7 +3,7 @@ Tutorial 2 :  Feed simple data to your ALP Experiment
 =====================================================
 
 In this tutorial, we will build an Experiment with a simple model and
-fit it on various number of pieces of data The aim of this tutorial is
+fit it on various number of pieces of data. The aim of this tutorial is
 to explain the expected behaviour of ALP.
 
 1 - Get some data
@@ -85,7 +85,7 @@ Now let's take a look at the results:
 
 * there is a model\_id field: this is where the model architecture is stored. 
 
-*  theparam\_dump field is path of a file where the *attributes* of the fitted model are stored. 
+*  the param\_dump field is path of a file where the *attributes* of the fitted model are stored. 
 
 * the metrics field is itself a dictionary with several attributes: 
    * the iter field is here for compatibility with the keras backend. 
