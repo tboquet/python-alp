@@ -209,7 +209,7 @@ class Experiment(object):
         Returns:
             an np.array of predictions"""
         if self.trained:
-            return self.backend.predict(self.model_dict, data,
+            return self.backend.predict(copy.deepcopy(self.model_dict), data,
                                         *args, **kwargs)
         else:
             raise Exception("You must have a trained model"

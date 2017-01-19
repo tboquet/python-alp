@@ -5,6 +5,7 @@ Model database setup
 
 from pymongo import DESCENDING
 from pymongo import MongoClient
+from pymongo import ReturnDocument
 from ..dbbackend import _db_name
 from ..dbbackend import _generators_collection
 from ..dbbackend import _host_adress
@@ -49,7 +50,9 @@ def insert(full_json, collection, upsert=False):
         doc_id = doc_id['_id']
     if upsert is True:
         inserted = collection.find_one_and_update(
-            filter_db, {'$set': full_json}, upsert=upsert)
+            filter_db, {'$set': full_json}, upsert=upsert,
+            return_document=ReturnDocument.AFTER)
+        inserted = inserted['_id']
     else:
         inserted = collection.insert_one(full_json).inserted_id
     return inserted
@@ -62,9 +65,8 @@ def update(inserted_id, json_changes):
         insert_id(int): the id of the observation
         json_changes(dict): the changes to do in the db"""
     models = get_models()
-    dict_id = dict()
-    dict_id['_id'] = inserted_id
-    models.update(dict_id, json_changes)
+    updated = models.update_one(inserted_id, json_changes)
+    return updated
 
 
 def create_db(drop=True):

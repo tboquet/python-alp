@@ -551,10 +551,10 @@ def fit(self, backend_name, backend_version, model, data, data_hash,
                                           hexdi_m,
                                           *args, **kwargs)
 
-        db.update({"_id": mod_id}, {'$set': res_dict})
+        db.update({'_id': mod_id}, {'$set': res_dict})
 
     except Exception:
-        db.update({"_id": mod_id}, {'$set': {'error': 1}})
+        db.update({'_id': mod_id}, {'$set': {'error': 1}})
         raise
     return results
 
