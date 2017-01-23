@@ -256,7 +256,7 @@ class Experiment(object):
             if hasattr(backend, '__version__'):
                 check = self.backend_version != backend.__version__
                 self.backend_version = backend.__version__
-            if check and self.verbose >= 0:  # pragma: no cover
+            if check and self.verbose > 0:  # pragma: no cover
                 sys.stderr.write('Warning: the backend versions'
                                  'do not match.\n')  # pragma: no cover
 
