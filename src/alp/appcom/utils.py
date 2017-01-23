@@ -63,7 +63,7 @@ def switch_backend(backend_name):
     if backend_name == 'keras':
         from ..backend.keras_backend import get_backend
     elif backend_name == 'sklearn':
-        from ..backend.keras_backend import get_backend
+        from ..backend.sklearn_backend import get_backend
     else:
         raise NotImplementedError
     return get_backend()

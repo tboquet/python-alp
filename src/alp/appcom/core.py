@@ -247,10 +247,16 @@ class Experiment(object):
             backend = switch_backend(model_db['backend_name'])
             self.backend_name = backend.__name__
             self.backend_version = None
+            if self.backend_name == 'keras':
+                from ..backend import keras_backend
+                self.backend = keras_backend
+            elif self.backend_name == 'sklearn':
+                from ..backend import sklearn_backend
+                self.backend = sklearn_backend
             if hasattr(backend, '__version__'):
                 check = self.backend_version != backend.__version__
                 self.backend_version = backend.__version__
-            if check:  # pragma: no cover
+            if check and self.verbose >= 0:  # pragma: no cover
                 sys.stderr.write('Warning: the backend versions'
                                  'do not match.\n')  # pragma: no cover
 
