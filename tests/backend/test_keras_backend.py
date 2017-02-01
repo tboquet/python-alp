@@ -34,6 +34,19 @@ NAME = keras.__name__
 VERSION = keras.__version__
 
 
+def new_session():
+    if K.backend() == 'tensorflow':  # pragma: no cover
+        import tensorflow as tf
+        K.clear_session()
+        config = tf.ConfigProto(allow_soft_placement=True)
+        config.gpu_options.allow_growth = True
+        session = tf.Session(config=config)
+        K.set_session(session)
+
+
+new_session()
+
+
 def prepare_model(get_model, get_loss_metric, custom):
     model = get_model
 
@@ -155,6 +168,7 @@ class TestExperiment:
         print(self)
 
     def test_experiment_instance_utils(self, get_model):
+        new_session()
         model = get_model()
 
         model.compile(loss='categorical_crossentropy',
@@ -173,6 +187,7 @@ class TestExperiment:
 
     def test_experiment_fit(self, get_model, get_loss_metric,
                             get_custom_l):
+        new_session()
         data, data_val = make_data(train_samples, test_samples)
         model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
                                                      get_loss_metric,
@@ -201,6 +216,7 @@ class TestExperiment:
 
     def test_experiment_fit_async(self, get_model, get_loss_metric,
                                   get_custom_l):
+        new_session()
         data, data_val = make_data(train_samples, test_samples)
         model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
                                                      get_loss_metric,
@@ -244,6 +260,7 @@ class TestExperiment:
 
     def test_experiment_fit_gen(self, get_model, get_loss_metric,
                                 get_custom_l):
+        new_session()
         model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
                                                      get_loss_metric,
                                                      get_custom_l)
@@ -275,6 +292,7 @@ class TestExperiment:
 
     def test_experiment_fit_gen_async(self, get_model, get_loss_metric,
                                       get_custom_l):
+        new_session()
         model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
                                                      get_loss_metric,
                                                      get_custom_l)
@@ -332,7 +350,7 @@ class TestExperiment:
         print(self)
 
     def test_experiment_predict(self, get_model, get_loss_metric):
-
+        new_session()
         model, metrics, cust_objects = prepare_model(get_model(),
                                                      get_loss_metric,
                                                      False)
@@ -348,15 +366,46 @@ class TestExperiment:
 
         if model_name == 'Model':
             expe.predict({'X': data_val['X']})
-        expe.predict([data_val['X']])
-        expe.predict(data_val['X'])
+        list_pred = expe.predict([data_val['X']])
+        list_pred_2 = expe.predict(data_val['X'])
+
+        assert len(list_pred) == len(data_val['X'])
+        assert len(list_pred_2) == len(data_val['X'])
 
         print(self)
 
+    def test_experiment_predict_async(self, get_model, get_loss_metric):
+        new_session()
+        model, metrics, cust_objects = prepare_model(get_model(),
+                                                     get_loss_metric,
+                                                     False)
+
+        model_name = model.__class__.__name__
+        data, data_val = make_data(train_samples, test_samples)
+
+        expe = Experiment(model)
+        expe.fit([data], [data_val], nb_epoch=2,
+                 batch_size=batch_size,
+                 custom_objects=cust_objects,
+                 metrics=metrics, overwrite=True)
+
+        if model_name == 'Model':
+            expe.predict({'X': data_val['X']})
+        async_pred = expe.predict_async([data_val['X']])
+        async_pred_2 = expe.predict_async(data_val['X'])
+
+        list_pred = async_pred.wait()
+        list_pred_2 = async_pred_2.wait()
+
+        assert len(list_pred) == len(data_val['X'])
+        assert len(list_pred_2) == len(data_val['X'])
+
+        print(self)
 
 class TestBackendFunctions:
     def test_build_predict_func(self, get_model):
         """Test the build of a model"""
+        new_session()
         X_tr = np.ones((train_samples, input_dim))
         model = get_model()
         model.compile(loss='categorical_crossentropy',
@@ -382,6 +431,7 @@ class TestBackendFunctions:
 
     def test_fit(self, get_model):
         "Test the training of a serialized model"
+        new_session()
         data, data_val = make_data(train_samples, test_samples)
 
         model = get_model()
@@ -406,13 +456,15 @@ class TestBackendFunctions:
 
     def test_predict(self, get_model):
         """Test to predict using the backend"""
+        new_session()
         data, data_val = make_data(train_samples, test_samples)
         model = get_model()
         model.compile(optimizer='sgd', loss='categorical_crossentropy')
 
         expe = Experiment(model)
         expe.fit([data], [data_val])
-        KTB.predict(expe.model_dict, [data['X']])
+        KTB.predict(expe.model_dict, [data['X']], False)
+        KTB.predict(expe.model_dict, [data['X']], True)
 
         if K.backend() == 'tensorflow':
             K.clear_session()
@@ -425,6 +477,7 @@ class TestBackendFunctions:
         print(self)
 
     def test_deserialization(self):
+        new_session()
         model = sequential()
         model.compile(optimizer='sgd', loss='categorical_crossentropy')
         ser_mod = to_dict_w_opt(model)

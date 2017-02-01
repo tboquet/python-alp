@@ -27,6 +27,7 @@ from sklearn.linear_model import Ridge
 
 from ..appcom import _path_h5
 from ..appcom.utils import check_gen
+from ..celapp import RESULT_SERIALIZER
 from ..celapp import app
 
 SUPPORTED = [LogisticRegression, LinearRegression, Ridge, Lasso,
@@ -560,7 +561,7 @@ def fit(self, backend_name, backend_version, model, data, data_hash,
 
 
 @app.task(queue='sklearn')
-def predict(model, data, *args, **kwargs):
+def predict(model, data, async, *args, **kwargs):
     """Make predictions given a model and data
 
     Args:
@@ -571,10 +572,11 @@ def predict(model, data, *args, **kwargs):
     Returns:
         an np.array of predictions
     """
+    json_serializer = RESULT_SERIALIZER == 'json'
     custom_objects = kwargs.get('custom_objects')
 
     # check if the predict function is already compiled
-    m_id = model['mod_id']
+    m_id = model['mod_id'] + model['data_id']
     if m_id in COMPILED_MODELS:  # pragma: no cover
         model_instance = COMPILED_MODELS[m_id]['model']
         # load the attributes
@@ -598,5 +600,7 @@ def predict(model, data, *args, **kwargs):
 
     # to be discussed
     # data = data[0]['X']
-
-    return model_instance.predict(data)
+    results_array = model_instance.predict(data)
+    if async and json_serializer:  # pragma: no cover
+        results_array = results_array.tolist()
+    return results_array

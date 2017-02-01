@@ -208,9 +208,35 @@ class Experiment(object):
 
         Returns:
             an np.array of predictions"""
+        return self._predict(data, async=False, *args, **kwargs)
+
+    def predict_async(self, data, *args, **kwargs):
+        """Make predictions given data
+
+        Args:
+            data(np.array):
+
+        Returns:
+            an np.array of predictions"""
+        return self._predict(data, async=True, *args, **kwargs)
+
+    def _predict(self, data, async, *args, **kwargs):
+        """Make predictions given data
+
+        Args:
+            data(np.array):
+
+        Returns:
+            an np.array of predictions"""
         if self.trained:
-            return self.backend.predict(copy.deepcopy(self.model_dict), data,
-                                        *args, **kwargs)
+            if async:
+                return self.backend.predict.delay(
+                    copy.deepcopy(self.model_dict), data, async, *args,
+                    **kwargs)
+            else:
+                return self.backend.predict(
+                    copy.deepcopy(self.model_dict), data, async, *args,
+                    **kwargs)
         else:
             raise Exception("You must have a trained model"
                             "in order to make predictions")

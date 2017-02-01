@@ -186,21 +186,6 @@ class TestExperiment:
                 assert expe.params_dump is not None
         print(self)
 
-    def test_experiment_predict(self, get_model_data_expe):
-        data, data_val, _, model, metric, expe = get_model_data_expe
-        model._test_ = 'test'
-
-        for mod in [None, model]:
-            expe.fit([data], [data_val], model=mod, custom_objects={},
-                     overwrite=True, metrics=metric)
-        expe.load_model()
-        alp_pred = expe.predict(data['X'])
-
-        model.fit(data['X'], data['y'])
-        sklearn_pred = model.predict(data['X'])
-        assert(np.allclose(alp_pred, sklearn_pred))
-        print(self)
-
     def test_experiment_fit_gen_nogenval(self, get_model_data_expe):
         '''
             Main case: generator on train
@@ -375,6 +360,41 @@ class TestExperiment:
             close_gens(gen_train, data_train, data_stream_train)
 
         print(self)
+
+    def test_experiment_predict(self, get_model_data_expe):
+        data, data_val, _, model, metric, expe = get_model_data_expe
+        model._test_ = 'test'
+
+        for mod in [None, model]:
+            expe.fit([data], [data_val], model=mod, custom_objects={},
+                     overwrite=True, metrics=metric)
+        expe.load_model()
+        alp_pred = expe.predict(data['X'])
+        alp_pred_async = expe.predict_async(data['X'])
+
+        alp_pred_async = alp_pred_async.wait()
+
+        model.fit(data['X'], data['y'])
+        sklearn_pred = model.predict(data['X'])
+        assert(np.allclose(alp_pred, sklearn_pred))
+        assert(np.allclose(np.array(alp_pred_async), sklearn_pred))
+        print(self)
+
+    def test_experiment_predict_async(self, get_model_data_expe):
+        data, data_val, _, model, metric, expe = get_model_data_expe
+        model._test_ = 'test'
+
+        for mod in [None, model]:
+            expe.fit([data], [data_val], model=mod, custom_objects={},
+                     overwrite=True, metrics=metric)
+        expe.load_model()
+        alp_pred = expe.predict(data['X'])
+
+        model.fit(data['X'], data['y'])
+        sklearn_pred = model.predict(data['X'])
+        assert(np.allclose(alp_pred, sklearn_pred))
+        print(self)
+
 
 
 def test_utils():
