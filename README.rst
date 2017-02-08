@@ -49,7 +49,7 @@ Generate a base configuration:
 
 .. code-block:: bash
 
-    alp --verbose genconfig --outdir=/path/to/a/directory
+    alp --verbose genconfig --outdir=/path/to/a/directory --cpu
 
 Launche the services:
 

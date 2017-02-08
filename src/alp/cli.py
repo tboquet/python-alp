@@ -181,9 +181,10 @@ def pull(conf, config):
 @click.option('--controlers', type=click.INT, default=1)
 @click.option('--skworkers', type=click.INT, default=1)
 @click.option('--kworkers', type=click.INT, default=1)
+@click.option('--cpu', is_flag=True)
 @pass_config
 def genconfig(conf, outdir, namesuf, portshift, rootfolder, controlers,
-              skworkers, kworkers):
+              skworkers, kworkers, cpu):
     """Generates and writes configurations files in .alp"""
 
     if outdir is None:
@@ -200,7 +201,7 @@ def genconfig(conf, outdir, namesuf, portshift, rootfolder, controlers,
 
     alpapp, alpdb, containers = gen_all_configs(outdir, namesuf, portshift,
                                                 rootfolder, controlers,
-                                                skworkers, kworkers)
+                                                skworkers, kworkers, cpu)
 
     if conf.verbose:
         click.echo(click.style('Auto generated configuration:', fg=col_info))
