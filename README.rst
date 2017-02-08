@@ -128,10 +128,10 @@ Launch some experiments!
 
     # put the data in the form ALP expects
     data, data_val = dict(), dict()
-    data["X"] = X_train
-    data["y"] = Y_train
-    data_val["X"] = X_test
-    data_val["y"] = Y_test
+    data["X"] = X_train[:500]
+    data["y"] = Y_train[:500]
+    data_val["X"] = X_test[:500]
+    data_val["y"] = Y_test[:500]
 
     # Define and compile the model
 
@@ -159,10 +159,10 @@ Launch some experiments!
     expe = Experiment(model)
 
     # Fit the model linked to your experiment
-    expe.fit([data], [data_val], nb_epoch=2, batch_size=batch_size)
+    results = expe.fit([data], [data_val], nb_epoch=2, batch_size=batch_size)
 
     # Predict using your model
-    expe.predict(data['X])
+    expe.predict(data['X'])
 
 
 `Get started with the tutorial series!`_ 
