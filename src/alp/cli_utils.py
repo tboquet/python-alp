@@ -356,6 +356,7 @@ def pull_config(config, verbose=False, dry_run=False):
             output, err = p.communicate()
         if verbose:
             click.echo(click.style('{}\n'.format(output)))
+            click.echo(click.style('{}\n'.format(err)))
             click.echo()
         if err is not None:  # pragma: no cover
             res = False
@@ -379,6 +380,7 @@ def action_config(config, action, verbose=False, force=False, dry_run=False):
             output, err = p.communicate()
         if verbose and output is not None:
             click.echo(click.style('{}\n'.format(output)))
+            click.echo(click.style('{}\n'.format(err)))
         if err is not None:  # pragma: no cover
             res = False
     return res
