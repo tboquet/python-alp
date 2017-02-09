@@ -366,23 +366,26 @@ def pull_config(config, verbose=False, dry_run=False):
 def action_config(config, action, verbose=False, force=False, dry_run=False):
     res = True
     commands = build_commands(config, action, verbose, dry_run)
-    for command in commands:
-        if verbose:
-            click.echo(click.style(
-                'Running command:', fg=col_info))
-            click.echo('{}\n'.format(' '.join(command)))
+    try:
+        for command in commands:
+            if verbose:
+                click.echo(click.style(
+                    'Running command:', fg=col_info))
+                click.echo('{}\n'.format(' '.join(command)))
 
-        output = None
-        err = None
-        if dry_run is False:
-            p = subprocess.Popen(' '.join(command), shell=True, stdout=PIPE,
-                                 stderr=PIPE)
-            output, err = p.communicate()
-        if verbose and output is not None:
-            click.echo(click.style('{}\n'.format(output)))
-            click.echo(click.style('{}\n'.format(err)))
-        if err is not None:  # pragma: no cover
-            res = False
+            output = None
+            err = None
+            if dry_run is False:
+                p = subprocess.Popen(' '.join(command), shell=True, stdout=PIPE,
+                                    stderr=PIPE)
+                output, err = p.communicate()
+            if verbose and output is not None:
+                click.echo(click.style('{}\n'.format(output)))
+                click.echo(click.style('{}\n'.format(err)))
+            if err is not None:  # pragma: no cover
+                res = False
+    except KeyboardInterrupt:
+        raise KeyboardInterrupt('Please check the status of the configuration')
     return res
 
 

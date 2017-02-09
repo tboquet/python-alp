@@ -58,9 +58,9 @@ Install the Command Line Interface dependencies:
 .. code-block:: bash
 
    cd req
-   pip install requirements_cli.txt
+   pip install -r requirements_cli.txt
 
-Generate a base configuration:
+Generate a base configuration using an absolute path:
 
 .. code-block:: bash
 
@@ -70,13 +70,13 @@ Launch the services:
 
 .. code-block:: bash
 
-    alp --verbose service start /path/to/a/directory
+    alp --verbose service start /path/to/a/directory/.alp/containers.json
 
 Check the status of your containers:
 
 .. code-block:: bash
 
-    alp --verbose status /path/to/a/directory
+    alp --verbose status /path/to/a/directory/.alp/containers.json
 
 
 Log in to the Jupyter notebook you just launched in your browser @ :code:`localhost:440` using the password :code:`default`.

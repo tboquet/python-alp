@@ -2,7 +2,6 @@ wheel
 cython
 numpy
 pymongo
-tables==3.2.2
 pyyaml
 six>=1.10
 Click
