@@ -12,6 +12,7 @@ include .isort.cfg
 include *.sh
 include req/requirements.txt
 include req/requirements_first.txt
+include req/requirements_cli.txt
 
 include AUTHORS.rst
 include CHANGELOG.rst
