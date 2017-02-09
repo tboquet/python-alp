@@ -45,13 +45,28 @@ http://python-alp.readthedocs.io/
 Quickstart
 ==========
 
+Clone the repo and install the library:
+
+.. code-block:: bash
+
+   git clone https://github.com/tboquet/python-alp.git
+   cd python-alp
+   python setup.py install
+
+Install the Command Line Interface dependencies:
+
+.. code-block:: bash
+
+   cd req
+   pip install requirements_cli.txt
+
 Generate a base configuration:
 
 .. code-block:: bash
 
     alp --verbose genconfig --outdir=/path/to/a/directory --cpu
 
-Launche the services:
+Launch the services:
 
 .. code-block:: bash
 
