@@ -167,6 +167,7 @@ def build_commands(config, action, verbose, dry_run):
     model_gen_db = config['model_gen_db']
     workers = config['workers']
     controlers = config['controlers']
+    monitors = config['monitors']
     all_commands = []
 
     docker_client = Client('unix://var/run/docker.sock')
@@ -274,6 +275,23 @@ def build_commands(config, action, verbose, dry_run):
         all_commands += workers_commands
         all_commands += controlers_commands
 
+        monitors_commands = []
+        monitors_ok = False
+        links_monitors = []
+        for monitor in monitors:
+            if 'mongo' in monitor['name']:
+                links_monitors.append('--link={}:mongo')
+            else:
+                links_monitors.append(
+                    '--link={}:rabbitmq'.format(monitor['name']))
+            if check_container(monitor, running_containers,
+                               dead_containers, ports_in_use,
+                               verbose) or dry_run:
+                monitors_commands.append(parse_cont(monitor, 'run',
+                                                    links=links))
+            else:
+                monitors_ok = False
+
         if verbose:
             click.echo(click.style('Global Check'.center(80, '='),
                                    fg=col_info, bold=True))
@@ -283,6 +301,7 @@ def build_commands(config, action, verbose, dry_run):
                 color_mgd = col_ok if model_gen_db_ok else col_not_ok
                 color_wk = col_ok if workers_ok else col_not_ok
                 color_ct = col_ok if controlers_ok else col_not_ok
+                color_mt = col_ok if monitors_ok else col_not_ok
                 click.echo(click.style(a_text('Broker OK:', '{}'.format(
                     broker_ok)), fg=color_s))
                 click.echo(click.style(a_text('Results db OK:', '{}'.format(
@@ -293,6 +312,8 @@ def build_commands(config, action, verbose, dry_run):
                     workers_ok)), fg=color_wk))
                 click.echo(click.style(a_text('Controlers OK:', '{}'.format(
                     controlers_ok)), fg=color_ct))
+                click.echo(click.style(a_text('Monitors OK:', '{}'.format(
+                    controlers_ok)), fg=color_mt))
                 click.echo('\n')
             else:
                 click.echo(click.style(a_text('Dry run:', '{}'.format(
@@ -303,14 +324,15 @@ def build_commands(config, action, verbose, dry_run):
                       'results_db': results_db_ok,
                       'model_gen_db': model_gen_db_ok,
                       'workers': workers_ok,
-                      'controlers': controlers_ok}
+                      'controlers': controlers_ok,
+                      'monitors': monitors_ok}
 
         msg = ''
         for k, v in check_dict.items():
             if v is not True:  # pragma: no cover
                 msg += '{} '.format(k)
         if not all([broker_ok, results_db_ok, model_gen_db_ok,
-                    workers_ok, controlers_ok]):
+                    workers_ok, controlers_ok, monitors_ok]):
             if dry_run is False:
                 raise Exception('{} configuration not ok'.format(msg))
 
@@ -453,7 +475,7 @@ def gen_containers_config(conf_folder, name_suffix='', port_shift=0,
     result_db['container_name'] = 'mongo'
     result_db['mode'] = '-d'
 
-    # results db config
+    # models db config
     model_db = dict()
     volumes = [('alpdata/mongo_data/models', '/data/db')]
     t_volumes = make_volumes(root_folder, volumes)
@@ -512,12 +534,38 @@ def gen_containers_config(conf_folder, name_suffix='', port_shift=0,
         controler['ports'] = ['{}:{}'.format(p1, p2) for p1, p2 in ports]
         controlers_list.append(controler)
 
+    monitors_list = []
+    mongo_results_monitor = dict()
+    mongo_results_monitor['name'] = 'mongo_results_monitor'
+    mongo_results_monitor['container_name'] = 'mongo-express'
+    ports = [(8081 + port_shift, 8081)]
+    mongo_results_monitor['ports'] = ['{}:{}'.format(p1, p2) for p1, p2 in ports]
+    monitors_list.append(mongo_results_monitor)
+
+    mongo_models_monitor = dict()
+    mongo_models_monitor['name'] = 'mongo_models_monitor'
+    mongo_models_monitor['container_name'] = 'mongo-express'
+    ports = [(8082 + port_shift, 8081)]
+    mongo_models_monitor['ports'] = ['{}:{}'.format(p1, p2) for p1, p2 in ports]
+    monitors_list.append(mongo_models_monitor)
+
+    celery_flower = dict()
+    celery_flower['name'] = 'flower_monitor'
+    celery_flower['container_name'] = 'tboquet/anaceflo'
+    ports = [(5555 + port_shift, 5555)]
+    celery_flower['ports'] = ['{}:{}'.format(p1, p2) for p1, p2 in ports]
+    host_address = 'http://guest:guest@rabbitmq:15672/api/'
+    command = 'celery -A alp.appcom flower --port=5555 --broker_api={}'
+    celery_flower['command'] = command.format()
+    monitors_list.append(celery_flower)
+
     config = dict()
     config['broker'] = broker
     config['result_db'] = result_db
     config['model_gen_db'] = model_db
     config['workers'] = workers
     config['controlers'] = controlers_list
+    config['monitors'] = monitors_list
 
     return config
 
