@@ -170,7 +170,8 @@ def build_commands(config, action, verbose, dry_run):
     monitors = config['monitors']
     all_commands = []
 
-    docker_client = Client('unix://var/run/docker.sock')
+    # docker_client = Client('unix://var/run/docker.sock')
+    docker_client = docker.from_env()
 
     running_containers = []
     dead_containers = []
