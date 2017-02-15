@@ -8,7 +8,8 @@ import os
 import subprocess
 from subprocess import PIPE
 import click
-from docker import Client
+# from docker import Client
+import docker
 
 
 col_ok = 'green'
@@ -289,7 +290,7 @@ def build_commands(config, action, verbose, dry_run):
                                dead_containers, ports_in_use,
                                verbose) or dry_run:
                 monitors_commands.append(parse_cont(monitor, 'run',
-                                                    links=links))
+                                                    links=links_monitors))
             else:
                 monitors_ok = False
 
@@ -557,8 +558,8 @@ def gen_containers_config(conf_folder, name_suffix='', port_shift=0,
     celery_flower['ports'] = ['{}:{}'.format(p1, p2) for p1, p2 in ports]
     host_address = 'http://guest:guest@rabbitmq:15672/api/'
     command = 'celery -A alp.appcom flower --port=5555 --broker_api={}'
-    celery_flower['command'] = command.format()
-    monitors_list.append(celery_flower)
+    celery_flower['command'] = command.format(host_address)
+    monitors_list.append(celery_flower_address)
 
     config = dict()
     config['broker'] = broker

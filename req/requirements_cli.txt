@@ -6,4 +6,4 @@ pyyaml
 six>=1.10
 Click
 pandas
-docker-py
+docker
