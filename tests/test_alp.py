@@ -10,33 +10,9 @@ def init_test_config():
     if os.getenv('TEST_MODE') == 'ON':  # pragma: no cover
         config_path = 'containers_test.json'
     if not os.path.exists(config_path):  # pragma: no cover
-        config = dict()
-        config['broker'] = {
-            "volumes": ["/opt/data2/rabbitmq/dev/log:/dev/log",
-                        "/opt/data2/rabbitmq:/var/lib/rabbitmq"],
-            "ports": ["8080:15672", "5672:5672"],
-            "name": "rabbitmq_sched",
-            "container_name": "rabbitmq:3-management",
-            "mode": "-d"
-        }
-        config['result_db'] = {
-            "volumes": ["/opt/data2/mongo_data/results:/data/db"],
-            "name": "mongo_results_test",
-            "container_name": "mongo",
-            "mode": "-d"
-        }
-        config['model_gen_db'] = {
-            "volumes": ["/opt/data2/mongo_data/models:/data/db"],
-            "name": "mongo_models_test",
-            "container_name": "mongo",
-            "mode": "-d",
-        }
-        config['workers'] = []
-        config['controlers'] = []
-        config['monitors'] = []
-
-        with open(config_path, 'w') as f:
-            f.write(json.dumps(config, indent=4))
+        runner = CliRunner()
+        result = runner.invoke(main, ['genconfig',
+                                      '--outdir={}'.format(config_path)])
     return config_path
 
 

@@ -122,7 +122,10 @@ def parse_cont(container, action, volumes=None, links=None):
     container_command.append(action)
 
     if action == 'run':
-        container_command.append(container['mode'])
+        if 'mode' in container:
+            container_command.append(container['mode'])
+        else:
+            container_command.append('-d')
         if not not_build:  # pragma: no cover
             if 'volumes' in container:
                 for v in container['volumes']:
@@ -141,6 +144,8 @@ def parse_cont(container, action, volumes=None, links=None):
 
             container_command.append(
                 container['container_name'])
+            if 'command' in container:
+                container_command.append(container['command'])
     else:  # pragma: no cover
         container_command.append(container['name'])
     return container_command
@@ -152,12 +157,14 @@ def get_config_names(config):
     model_gen_db = config['model_gen_db']
     workers = config['workers']
     controlers = config['controlers']
+    monitors = config['monitors']
     names = []
     names += [broker['name']]
     names += [results_db['name']]
     names += [model_gen_db['name']]
     workers_names = [cont['name'] for cont in workers]
     controlers_names = [cont['name'] for cont in controlers]
+    monitors_names = [cont['name'] for cont in monitors]
     names += workers_names + controlers_names
     return names
 
