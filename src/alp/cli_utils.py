@@ -278,7 +278,7 @@ def build_commands(config, action, verbose, dry_run):
         all_commands += controlers_commands
 
         monitors_commands = []
-        monitors_ok = False
+        monitors_ok = True
         links_monitors = []
         for monitor in monitors:
             if 'mongo' in monitor['name']:
@@ -401,8 +401,9 @@ def action_config(config, action, verbose=False, force=False, dry_run=False):
             output = None
             err = None
             if dry_run is False:
-                p = subprocess.Popen(' '.join(command), shell=True, stdout=PIPE,
-                                    stderr=PIPE)
+                p = subprocess.Popen(' '.join(command), shell=True,
+                                     stdout=PIPE,
+                                     stderr=PIPE)
                 output, err = p.communicate()
             if verbose and output is not None:
                 click.echo(click.style('{}\n'.format(output)))
