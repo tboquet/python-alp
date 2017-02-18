@@ -282,7 +282,8 @@ def build_commands(config, action, verbose, dry_run):
         links_monitors = []
         for monitor in monitors:
             if 'mongo' in monitor['name']:
-                links_monitors.append('--link={}:mongo')
+                links_monitors.append(
+                    '--link={}:mongo'.format(monitor['name']))
             else:
                 links_monitors.append(
                     '--link={}:rabbitmq'.format(monitor['name']))
@@ -541,7 +542,8 @@ def gen_containers_config(conf_folder, name_suffix='', port_shift=0,
     mongo_results_monitor['name'] = 'mongo_results_monitor'
     mongo_results_monitor['container_name'] = 'mongo-express'
     ports = [(8081 + port_shift, 8081)]
-    mongo_results_monitor['ports'] = ['{}:{}'.format(p1, p2) for p1, p2 in ports]
+    mongo_results_monitor['ports'] = ['{}:{}'.format(p1, p2)
+                                      for p1, p2 in ports]
     monitors_list.append(mongo_results_monitor)
 
     mongo_models_monitor = dict()
@@ -559,7 +561,7 @@ def gen_containers_config(conf_folder, name_suffix='', port_shift=0,
     host_address = 'http://guest:guest@rabbitmq:15672/api/'
     command = 'celery -A alp.appcom flower --port=5555 --broker_api={}'
     celery_flower['command'] = command.format(host_address)
-    monitors_list.append(celery_flower_address)
+    monitors_list.append(celery_flower)
 
     config = dict()
     config['broker'] = broker

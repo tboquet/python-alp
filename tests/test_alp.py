@@ -33,6 +33,7 @@ def init_test_config():
         }
         config['workers'] = []
         config['controlers'] = []
+        config['monitors'] = []
 
         with open(config_path, 'w') as f:
             f.write(json.dumps(config, indent=4))
