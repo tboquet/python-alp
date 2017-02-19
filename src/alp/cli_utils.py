@@ -165,7 +165,7 @@ def get_config_names(config):
     workers_names = [cont['name'] for cont in workers]
     controlers_names = [cont['name'] for cont in controlers]
     monitors_names = [cont['name'] for cont in monitors]
-    names += workers_names + controlers_names
+    names += workers_names + controlers_names + monitors_names
     return names
 
 
