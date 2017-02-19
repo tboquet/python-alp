@@ -8,7 +8,7 @@ from alp.cli import main
 def init_test_config():
     config_path = '/root/.alp/containers_test.json'
     if os.getenv('TEST_MODE') == 'ON':  # pragma: no cover
-        config_path = 'containers_test.json'
+        config_path = 'containers.json'
     if not os.path.exists(config_path):  # pragma: no cover
         runner = CliRunner()
         result = runner.invoke(main, ['genconfig',
