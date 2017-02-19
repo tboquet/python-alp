@@ -12,7 +12,8 @@ def init_test_config():
     if not os.path.exists(config_path):  # pragma: no cover
         runner = CliRunner()
         result = runner.invoke(main, ['genconfig',
-                                      '--outdir={}'.format('.')])
+                                      '--outdir={}'.format('.'),
+                                      '--cpu'])
     return config_path
 
 
