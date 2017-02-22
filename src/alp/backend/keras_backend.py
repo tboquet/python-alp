@@ -293,6 +293,7 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
     results = dict()
     results['metrics'] = dict()
     custom_objects = None
+    callbacks = []
     fit_gen_val = False
     suf = 'val_'
 
@@ -304,9 +305,6 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
 
     if 'callbacks' in kwargs:
         callbacks = kwargs.pop('callbacks')
-
-    if callbacks is None:
-        callbacks = []
 
     callbacks = [deserialize(**callback)
                  for callback in callbacks]
