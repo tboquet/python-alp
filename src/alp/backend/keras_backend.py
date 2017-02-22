@@ -34,7 +34,7 @@ except ImportError:  # pragma: no cover
 
 
 COMPILED_MODELS = dict()
-TO_SERIALIZE = ['custom_objects']
+TO_SERIALIZE = ['custom_objects', 'callbacks']
 
 
 # general utilities
@@ -302,6 +302,19 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
     # load model
     model = model_from_dict_w_opt(model, custom_objects=custom_objects)
 
+    if 'callbacks' in kwargs:
+        callbacks = kwargs.pop('callbacks')
+
+    if callbacks is None:
+        callbacks = []
+
+    callbacks = [deserialize(**callback)
+                 for callback in callbacks]
+
+    for i, callback in enumerate(callbacks):
+        if inspect.isfunction(callback):
+            callbacks[i] = callback()
+
     metrics_names = model.metrics_names
     for metric in metrics_names:
         results['metrics'][metric] = []
@@ -342,6 +355,7 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
             if generator:
                 h = model.fit_generator(generator=d,
                                         validation_data=dv,
+                                        callbacks=callbacks,
                                         *args,
                                         **kwargs)
             else:
@@ -349,6 +363,7 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
                 h = model.fit(x=X,
                               y=y,
                               validation_data=dv,
+                              callbacks=callbacks,
                               *args,
                               **kwargs)
             for metric in metrics_names:
