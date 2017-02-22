@@ -128,6 +128,16 @@ def get_loss():
 
 
 @pytest.fixture
+def get_callback():
+    def return_callback():
+        from keras.callbacks import ReduceLROnPlateau
+        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2,
+                                      patience=5, min_lr=0.001)
+        return reduce_lr
+    return return_callback
+
+
+@pytest.fixture
 def get_metric():
     def return_metric():
         import keras.backend as K
@@ -149,6 +159,13 @@ def get_model(request):
 
 
 class TestExperiment:
+    @pytest.fixture(params=['callback', 'no_callback'])
+    def get_callback_fix(self, request):
+        if request.param == 'callback':
+            return [get_callback()]
+        elif request.param == 'no_callback':
+            return []
+
     @pytest.fixture(params=['classic', 'custom', 'list'])
     def get_loss_metric(self, request):
         if request.param == 'classic':
@@ -186,7 +203,7 @@ class TestExperiment:
         print(self)
 
     def test_experiment_fit(self, get_model, get_loss_metric,
-                            get_custom_l):
+                            get_custom_l, get_callback_fix):
         new_session()
         data, data_val = make_data(train_samples, test_samples)
         model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
@@ -199,7 +216,8 @@ class TestExperiment:
             for data_val_loc in [None, data_val]:
                 expe.fit([data], [data_val_loc], model=mod, nb_epoch=2,
                          batch_size=batch_size, metrics=metrics,
-                         custom_objects=cust_objects, overwrite=True)
+                         custom_objects=cust_objects, overwrite=True,
+                         callbacks=get_callback_fix)
 
         expe.backend_name = 'another_backend'
         expe.load_model()
