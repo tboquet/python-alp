@@ -377,7 +377,7 @@ def action_config(config, action, verbose=False, force=False, dry_run=False):
             err = None
             if dry_run is False:
                 p = subprocess.Popen(' '.join(command), shell=True, stdout=PIPE,
-                                    stderr=PIPE)
+                                     stderr=PIPE)
                 output, err = p.communicate()
             if verbose and output is not None:
                 click.echo(click.style('{}\n'.format(output)))
