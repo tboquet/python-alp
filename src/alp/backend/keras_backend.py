@@ -343,7 +343,6 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
                             " data.")
 
     # fit the model according to the input/output type
-
     if mod_name is "Sequential" or mod_name is "Model":
         for d, dv in szip(data, data_val):
             validation = check_validation(dv)

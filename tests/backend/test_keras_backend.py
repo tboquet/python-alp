@@ -233,7 +233,7 @@ class TestExperiment:
         print(self)
 
     def test_experiment_fit_async(self, get_model, get_loss_metric,
-                                  get_custom_l):
+                                  get_custom_l, get_callback_fix):
         new_session()
         data, data_val = make_data(train_samples, test_samples)
         model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
@@ -252,7 +252,8 @@ class TestExperiment:
                                            metrics=metrics,
                                            custom_objects=cust_objects,
                                            overwrite=True,
-                                           verbose=2)
+                                           verbose=2,
+                                           callbacks=get_callback_fix)
 
                 thread.join()
 
@@ -277,7 +278,7 @@ class TestExperiment:
         print(self)
 
     def test_experiment_fit_gen(self, get_model, get_loss_metric,
-                                get_custom_l):
+                                get_custom_l, get_callback_fix):
         new_session()
         model, metrics, cust_objects = prepare_model(get_model(get_custom_l),
                                                      get_loss_metric,
@@ -297,7 +298,8 @@ class TestExperiment:
                          custom_objects=cust_objects,
                          samples_per_epoch=64,
                          nb_val_samples=128,
-                         verbose=2, overwrite=True)
+                         verbose=2, overwrite=True,
+                         callbacks=get_callback_fix)
 
             close_gens(gen, data, data_stream)
             if val == 1:
