@@ -24,6 +24,8 @@ apt:
   packages:
     - libhdf5-dev
 before_install:
+  - echo $TRAVIS_PULL_REQUEST_BRANCH
+  - echo $TRAVIS_BRANCH
   - sudo mkdir /parameters_h5
   - sudo chmod 777 /parameters_h5
   - sudo mkdir /data_generator
