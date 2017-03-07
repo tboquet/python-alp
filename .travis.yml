@@ -27,8 +27,8 @@ before_install:
   - echo $TRAVIS_PULL_REQUEST_BRANCH
   - echo $TRAVIS_BRANCH
   - SUFFIX=''
-  - if [[ "$TRAVIS_BRANCH" =~ "X*devX*" ]]; then SUFFIX=dev; fi
-  - if [[ "$TRAVIS_PULL_REQUEST_BRANCH" =~ "X*devX*" ]]; then SUFFIX=dev; fi
+  - if [[ "$TRAVIS_BRANCH" =~ dev ]]; then SUFFIX=dev; fi
+  - if [[ "$TRAVIS_PULL_REQUEST_BRANCH" =~ dev ]]; then SUFFIX=dev; fi
   - echo $SUFFIX
   - sudo mkdir /parameters_h5
   - sudo chmod 777 /parameters_h5
