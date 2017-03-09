@@ -312,6 +312,8 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
     for i, callback in enumerate(callbacks):
         if inspect.isfunction(callback):
             callbacks[i] = callback()
+        else:
+            raise TypeError('Your callback is not wrapped in a function')
 
     metrics_names = model.metrics_names
     for metric in metrics_names:

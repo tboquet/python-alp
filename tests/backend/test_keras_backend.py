@@ -165,6 +165,7 @@ class TestExperiment:
             return [get_callback()]
         elif request.param == 'no_callback':
             return []
+        print(self)
 
     @pytest.fixture(params=['classic', 'custom', 'list'])
     def get_loss_metric(self, request):
