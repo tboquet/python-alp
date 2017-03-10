@@ -85,6 +85,7 @@ def test_gen():
     runner = CliRunner()
     result = runner.invoke(main, ['genconfig'])
     result = runner.invoke(main, ['genconfig', '--namesuf=test'])
+    result = runner.invoke(main, ['genconfig', '--cpu'])
     assert result.exit_code == 0
     result = runner.invoke(main, ['--verbose', 'genconfig',
                                   '--outdir={}'.format(gen_dir)])

@@ -19,3 +19,5 @@ exclude_lines =
     except Exception:
     raise NotImplementedError
     except MemoryError
+    raise TypeError
+    except KeyboardInterrupt

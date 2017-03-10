@@ -297,8 +297,14 @@ class Experiment(object):
         """
         for k in kwargs:
             if k in self.backend.TO_SERIALIZE:
-                kwargs[k] = {j: self.backend.serialize(kwargs[k][j])
-                             for j in kwargs[k]}
+                if isinstance(kwargs[k], dict):
+                    kwargs[k] = {j: self.backend.serialize(kwargs[k][j])
+                                 for j in kwargs[k]}
+                elif isinstance(kwargs[k], list):
+                    kwargs[k] = [self.backend.serialize(j)
+                                 for j in kwargs[k]]
+                else:
+                    raise TypeError('Your iterable should be a dict or a list')
         return kwargs
 
     def _prepare_message(self, model, data, data_val, kwargs, generator=False):

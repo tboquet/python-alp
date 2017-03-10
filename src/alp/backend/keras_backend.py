@@ -34,7 +34,7 @@ except ImportError:  # pragma: no cover
 
 
 COMPILED_MODELS = dict()
-TO_SERIALIZE = ['custom_objects']
+TO_SERIALIZE = ['custom_objects', 'callbacks']
 
 
 # general utilities
@@ -293,6 +293,7 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
     results = dict()
     results['metrics'] = dict()
     custom_objects = None
+    callbacks = []
     fit_gen_val = False
     suf = 'val_'
 
@@ -301,6 +302,18 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
 
     # load model
     model = model_from_dict_w_opt(model, custom_objects=custom_objects)
+
+    if 'callbacks' in kwargs:
+        callbacks = kwargs.pop('callbacks')
+
+    callbacks = [deserialize(**callback)
+                 for callback in callbacks]
+
+    for i, callback in enumerate(callbacks):
+        if inspect.isfunction(callback):
+            callbacks[i] = callback()
+        else:
+            raise TypeError('Your callback is not wrapped in a function')
 
     metrics_names = model.metrics_names
     for metric in metrics_names:
@@ -332,7 +345,6 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
                             " data.")
 
     # fit the model according to the input/output type
-
     if mod_name is "Sequential" or mod_name is "Model":
         for d, dv in szip(data, data_val):
             validation = check_validation(dv)
@@ -342,6 +354,7 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
             if generator:
                 h = model.fit_generator(generator=d,
                                         validation_data=dv,
+                                        callbacks=callbacks,
                                         *args,
                                         **kwargs)
             else:
@@ -349,6 +362,7 @@ def train(model, data, data_val, size_gen, generator=False, *args, **kwargs):
                 h = model.fit(x=X,
                               y=y,
                               validation_data=dv,
+                              callbacks=callbacks,
                               *args,
                               **kwargs)
             for metric in metrics_names:
